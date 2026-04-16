@@ -17,11 +17,13 @@ public class EntitasGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var generatorOptions = context.AnalyzerConfigOptionsProvider
-            .Select(static (optionsProvider, _) => EntitasGeneratorOptions.From(optionsProvider));
+        var compilationAndOptions = context.CompilationProvider.Combine(context.AnalyzerConfigOptionsProvider);
 
-        var shouldRun = context.CompilationProvider.Combine(generatorOptions)
-            .Select(static (input, _) => input.Right.ShouldRun(input.Left.AssemblyName));
+        var generatorOptions = compilationAndOptions
+            .Select(static (input, _) => EntitasGeneratorOptions.From(input.Right, input.Left));
+
+        var shouldRun = compilationAndOptions
+            .Select(static (input, _) => EntitasGeneratorOptions.From(input.Right, input.Left).ShouldRun(input.Left.AssemblyName));
 
         var contextsData = ContextGenerationHelper.GetContextsData(context);
         RegisterContextsGeneration(context, shouldRun, contextsData);
@@ -54,6 +56,9 @@ public class EntitasGenerator : IIncrementalGenerator
             return;
 
         var contextsData = input.Item2;
+        if (contextsData.IsDefaultOrEmpty)
+            return;
+
         ContextGenerationHelper.GenerateContexts(spc, contextsData);
     }
 
@@ -165,6 +170,8 @@ public class EntitasGenerator : IIncrementalGenerator
             return;
 
         var contextsData = input.Item2;
+        if (contextsData.IsDefaultOrEmpty)
+            return;
 
         // Context Observers, Feature
         VisualDebuggingGenerationHelper.Generate(spc, contextsData);

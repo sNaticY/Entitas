@@ -13,8 +13,8 @@
 
     <ItemGroup>
         <!-- Unity 6 supports up to CodeAnalysis 4.3 - https://docs.unity3d.com/6000.1/Documentation/Manual/create-source-generator.html -->
-        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.0" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>
