@@ -5,7 +5,7 @@ public static class FeatureTemplates
     public const string FeatureTemplate = 
         @"#if (!ENTITAS_DISABLE_VISUAL_DEBUGGING && UNITY_EDITOR)
 
-public class Feature : Entitas.VisualDebugging.Unity.DebugSystems
+public class Feature : Entitas.Unity.DebugSystems
 {
     public Feature(string name) : base(name)
     {
@@ -16,7 +16,7 @@ public class Feature : Entitas.VisualDebugging.Unity.DebugSystems
         var typeName = DesperateDevs.Extensions.TypeExtension.ToCompilableString(GetType());
         var shortType = DesperateDevs.Extensions.TypeExtension.ShortTypeName(typeName);
         var readableType = DesperateDevs.Extensions.StringExtension.ToSpacedCamelCase(shortType);
-        initialize(readableType);
+        Initialize(readableType);
     }
 }
 

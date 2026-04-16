@@ -15,16 +15,13 @@ namespace Entitas.CodeGeneration;
 [Generator]
 public class EntitasGenerator : IIncrementalGenerator
 {
-    const string MainAssembly = "Assembly-CSharp"; // TODO: Add config (in .editorconfig?)
-    const string TestsAssembly = "Entitas.CodeGeneration-Tests";
-    const string IntegrationTestsAssembly = "Entitas.CodeGeneration.Tests";
-
-    const bool VisualDebuggingGenerationEnabled = true; // TODO: Add config (in .editorconfig?)
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var shouldRun = context.CompilationProvider.Select(static (compilation, _)
-            => compilation.AssemblyName is MainAssembly or TestsAssembly or IntegrationTestsAssembly);
+        var generatorOptions = context.AnalyzerConfigOptionsProvider
+            .Select(static (optionsProvider, _) => EntitasGeneratorOptions.From(optionsProvider));
+
+        var shouldRun = context.CompilationProvider.Combine(generatorOptions)
+            .Select(static (input, _) => input.Right.ShouldRun(input.Left.AssemblyName));
 
         var contextsData = ContextGenerationHelper.GetContextsData(context);
         RegisterContextsGeneration(context, shouldRun, contextsData);
@@ -34,8 +31,7 @@ public class EntitasGenerator : IIncrementalGenerator
         RegisterIndividualComponentsGeneration(context, shouldRun, contextsData, componentsByContextNameLookup);
         RegisterSharedSourcesGeneration(context, shouldRun, contextsData, componentsData, componentsByContextNameLookup);
 
-        if (VisualDebuggingGenerationEnabled)
-            RegisterVisualDebuggingGeneration(context, contextsData);
+        RegisterVisualDebuggingGeneration(context, generatorOptions, contextsData);
     }
 
     void RegisterContextsGeneration(
@@ -150,11 +146,11 @@ public class EntitasGenerator : IIncrementalGenerator
 
     void RegisterVisualDebuggingGeneration(
         IncrementalGeneratorInitializationContext context,
+        IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
         in IncrementalValueProvider<ImmutableArray<ContextData>> contextsData)
     {
-        // skip for tests, to avoid bloating snapshots
-        var shouldRun = context.CompilationProvider.Select(static (compilation, _)
-            => compilation.AssemblyName is MainAssembly /*or TestsAssembly*/);
+        var shouldRun = context.CompilationProvider.Combine(generatorOptions)
+            .Select(static (input, _) => input.Right.ShouldGenerateVisualDebugging(input.Left.AssemblyName));
 
         var combinedInput = shouldRun.Combine(contextsData);
         context.RegisterSourceOutput(combinedInput,
