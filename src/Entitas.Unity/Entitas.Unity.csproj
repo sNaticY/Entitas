@@ -10,7 +10,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="$(UnityEngine)" />
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityEngineResolved)</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

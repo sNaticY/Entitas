@@ -27,13 +27,23 @@
   <Import Project="Unity3D.props" />
   <PropertyGroup Label="Unity3D">
     <UnityVersion>2021.3.0f1</UnityVersion>
-    <UnityEditor>$(UnityHubPath)/$(UnityVersion)/$(UnityEditorPath)</UnityEditor>
-    <UnityEngine>$(UnityHubPath)/$(UnityVersion)/$(UnityEnginePath)</UnityEngine>
+    <VendoredUnityPath>$(MSBuildThisFileDirectory)unity/Unity-$(UnityVersion)</VendoredUnityPath>
+    <UnityEditorDefault Condition="Exists('$(VendoredUnityPath)/UnityEditor.dll')">$(VendoredUnityPath)/UnityEditor.dll</UnityEditorDefault>
+    <UnityEngineDefault Condition="Exists('$(VendoredUnityPath)/UnityEngine.dll')">$(VendoredUnityPath)/UnityEngine.dll</UnityEngineDefault>
+    <UnityEditorDefault Condition="'$(UnityEditorDefault)' == ''">$(UnityHubPath)/$(UnityVersion)/$(UnityEditorPath)</UnityEditorDefault>
+    <UnityEngineDefault Condition="'$(UnityEngineDefault)' == ''">$(UnityHubPath)/$(UnityVersion)/$(UnityEnginePath)</UnityEngineDefault>
+    <UnityEditor Condition="'$(UnityEditor)' == ''">$(UnityEditorDefault)</UnityEditor>
+    <UnityEngine Condition="'$(UnityEngine)' == ''">$(UnityEngineDefault)</UnityEngine>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(DOTNET_RUNNING_IN_CONTAINER)' == 'true'">
     <UnityEditor>$(MSBuildStartupDirectory)/build/Managed/UnityEditor.dll</UnityEditor>
     <UnityEngine>$(MSBuildStartupDirectory)/build/Managed/UnityEngine.dll</UnityEngine>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Unity3D Resolved Paths">
+    <UnityEditorResolved>$([System.IO.Path]::GetFullPath('$(UnityEditor)', '$(MSBuildStartupDirectory)'))</UnityEditorResolved>
+    <UnityEngineResolved>$([System.IO.Path]::GetFullPath('$(UnityEngine)', '$(MSBuildStartupDirectory)'))</UnityEngineResolved>
   </PropertyGroup>
 
 </Project>

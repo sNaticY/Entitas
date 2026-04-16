@@ -17,8 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="$(UnityEditor)" />
-    <Reference Include="$(UnityEngine)" />
+    <Reference Include="UnityEditor">
+      <HintPath>$(UnityEditorResolved)</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityEngineResolved)</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
