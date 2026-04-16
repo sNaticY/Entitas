@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="readme/images/Entitas-Header.png" alt="Entitas">
+    <img src="images/Entitas-Header.png" alt="Entitas">
 </p>
 <p align="center">
     <a href="https://discord.gg/uHrVx5Z"><img src="https://img.shields.io/discord/599321316377624601.svg?logo=discord&logoColor=FFFFFF&label=Discord&labelColor=6A7EC2&color=7389D8" alt="Entitas on Discord"></a>
@@ -9,10 +9,10 @@
 </p>
 <p align="center">
     <b>Entitas is free, but powered by</b>
-    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BTMLSDQULZ852"><b>your donations</b></a>
+    <a href="https://www.paypal.com/donate/?hosted_button_id=BTMLSDQULZ852"><b>your donations</b></a>
 </p>
 <p align="center">
-    <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BTMLSDQULZ852"><img src="https://img.shields.io/static/v1.svg?logo=paypal&label=PayPal&labelColor=3F70B6&&message=Donate&color=gray" alt="Donate"></a>
+    <a href="https://www.paypal.com/donate/?hosted_button_id=BTMLSDQULZ852"><img src="https://img.shields.io/static/v1.svg?logo=paypal&label=PayPal&labelColor=3F70B6&&message=Donate&color=gray" alt="Donate"></a>
 </p>
 
 # Entitas - The Entity Component System Framework for C# and Unity
@@ -133,9 +133,9 @@ editor extensions to inspect and debug contexts, groups, entities, components an
 [Read more...](https://github.com/sschmid/Entitas/wiki/Unity-integration)
 
 <p align="center">
-    <img src="readme/images/Entitas.Unity-MenuItems.png" alt="Entitas.Unity MenuItems" height="200"><br />
-    <img src="readme/images/Entitas.Unity.VisualDebugging-Entity.png" alt="Entitas.Unity.VisualDebugging Entity" width="400">
-    <img src="readme/images/Entitas.Unity.VisualDebugging-DebugSystems.png" alt="Entitas.Unity.VisualDebugging Systems" width="400">
+    <img src="images/Entitas.Unity-MenuItems.png" alt="Entitas.Unity MenuItems" height="200"><br />
+    <img src="images/Entitas.Unity.VisualDebugging-Entity.png" alt="Entitas.Unity.VisualDebugging Entity" width="400">
+    <img src="images/Entitas.Unity.VisualDebugging-DebugSystems.png" alt="Entitas.Unity.VisualDebugging Systems" width="400">
 </p>
 
 # Entitas deep dive

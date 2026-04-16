@@ -29,7 +29,7 @@ namespace Entitas.Unity
                 ? _entityBehaviourPool.Pop()
                 : new GameObject().AddComponent<EntityBehaviour>();
 
-            entityBehaviour.Initialize(context, entity, _entityBehaviourPool);
+            entityBehaviour.Initialize(context, (Entity)entity, _entityBehaviourPool);
             entityBehaviour.transform.SetParent(transform, false);
             entityBehaviour.transform.SetAsLastSibling();
         }

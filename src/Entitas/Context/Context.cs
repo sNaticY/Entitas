@@ -238,6 +238,12 @@ namespace Entitas
             return _entitiesCache ??= _entities.ToArray();
         }
 
+        /// Returns all entities matching the specified matcher.
+        public TEntity[] GetEntities(IMatcher<TEntity> matcher)
+        {
+            return GetGroup(matcher).GetEntities();
+        }
+
         /// Returns a group for the specified matcher.
         /// Calling context.GetGroup(matcher) with the same matcher will always
         /// return the same instance of the group.

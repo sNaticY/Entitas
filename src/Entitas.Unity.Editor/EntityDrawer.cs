@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using DesperateDevs.Extensions;
 using DesperateDevs.Reflection;
-using DesperateDevs.Serialization;
 using DesperateDevs.Unity.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +11,7 @@ namespace Entitas.Unity.Editor
 {
     public static partial class EntityDrawer
     {
-        public static void DrawEntity(IEntity entity)
+        public static void DrawEntity(Entity entity)
         {
             var bgColor = GUI.backgroundColor;
             GUI.backgroundColor = Color.red;
@@ -47,7 +46,7 @@ namespace Entitas.Unity.Editor
             }
         }
 
-        public static void DrawMultipleEntities(IEntity[] entities)
+        public static void DrawMultipleEntities(Entity[] entities)
         {
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
@@ -97,7 +96,7 @@ namespace Entitas.Unity.Editor
             }
         }
 
-        public static void DrawComponents(IEntity entity)
+        public static void DrawComponents(Entity entity)
         {
             var unfoldedComponents = GetUnfoldedComponents(entity);
             var componentMemberSearch = GetComponentMemberSearch(entity);
@@ -141,7 +140,7 @@ namespace Entitas.Unity.Editor
             EditorLayout.EndVerticalBox();
         }
 
-        public static void DrawComponent(bool[] unfoldedComponents, string[] componentMemberSearch, IEntity entity, int index, IComponent component)
+        public static void DrawComponent(bool[] unfoldedComponents, string[] componentMemberSearch, Entity entity, int index, IComponent component)
         {
             var componentType = component.GetType();
             var componentName = componentType.Name.RemoveSuffix("Component");
@@ -339,7 +338,7 @@ namespace Entitas.Unity.Editor
             return false;
         }
 
-        static int DrawAddComponentMenu(IEntity entity)
+        static int DrawAddComponentMenu(Entity entity)
         {
             var componentInfos = GetComponentInfos(entity)
                 .Where(info => !entity.HasComponent(info.Index))
@@ -379,10 +378,8 @@ namespace Entitas.Unity.Editor
 
         public static void GenerateIDefaultInstanceCreator(string typeName)
         {
-            var preferences = new Preferences("Entitas.properties", $"{Environment.UserName}.userproperties");
-            var config = preferences.CreateAndConfigure<VisualDebuggingConfig>();
-            var folder = config.defaultInstanceCreatorFolderPath;
-            var filePath = folder + Path.DirectorySeparatorChar + "Default" + typeName.TypeName() + "InstanceCreator.cs";
+            var folder = "Assets/Editor/DefaultInstanceCreator";
+            var filePath = Path.Combine(folder, "Default" + typeName.TypeName() + "InstanceCreator.cs");
             var template = DefaultInstanceCreatorTemplateFormat
                 .Replace("${Type}", typeName)
                 .Replace("${ShortType}", typeName.TypeName());
@@ -391,10 +388,8 @@ namespace Entitas.Unity.Editor
 
         public static void GenerateITypeDrawer(string typeName)
         {
-            var preferences = new Preferences("Entitas.properties", $"{Environment.UserName}.userproperties");
-            var config = preferences.CreateAndConfigure<VisualDebuggingConfig>();
-            var folder = config.typeDrawerFolderPath;
-            var filePath = folder + Path.DirectorySeparatorChar + typeName.TypeName() + "TypeDrawer.cs";
+            var folder = "Assets/Editor/TypeDrawer";
+            var filePath = Path.Combine(folder, typeName.TypeName() + "TypeDrawer.cs");
             var template = TypeDrawerTemplateFormat
                 .Replace("${Type}", typeName)
                 .Replace("${ShortType}", typeName.TypeName());
@@ -414,33 +409,37 @@ namespace Entitas.Unity.Editor
 
         const string DefaultInstanceCreatorTemplateFormat =
             @"using System;
-using Entitas.VisualDebugging.Unity.Editor;
+using Entitas.Unity.Editor;
 
-public class Default${ShortType}InstanceCreator : IDefaultInstanceCreator {
-
-    public bool HandlesType(Type type) {
+public class Default${ShortType}InstanceCreator : IDefaultInstanceCreator
+{
+    public bool HandlesType(Type type)
+    {
         return type == typeof(${Type});
     }
 
-    public object CreateDefault(Type type) {
+    public object CreateDefault(Type type)
+    {
         // TODO return an instance of type ${Type}
         throw new NotImplementedException();
     }
 }
+
 ";
 
         const string TypeDrawerTemplateFormat =
             @"using System;
-using Entitas;
-using Entitas.VisualDebugging.Unity.Editor;
+using Entitas.Unity.Editor;
 
-public class ${ShortType}TypeDrawer : ITypeDrawer {
-
-    public bool HandlesType(Type type) {
+public class ${ShortType}TypeDrawer : ITypeDrawer
+{
+    public bool HandlesType(Type type)
+    {
         return type == typeof(${Type});
     }
 
-    public object DrawAndGetNewValue(Type memberType, string memberName, object value, object target) {
+    public object DrawAndGetNewValue(Type memberType, string memberName, object value, object target)
+    {
         // TODO draw the type ${Type}
         throw new NotImplementedException();
     }
