@@ -1,209 +1,286 @@
-<p align="center">
-    <img src="images/Entitas-Header.png" alt="Entitas">
-</p>
-<p align="center">
-    <a href="https://discord.gg/uHrVx5Z"><img src="https://img.shields.io/discord/599321316377624601.svg?logo=discord&logoColor=FFFFFF&label=Discord&labelColor=6A7EC2&color=7389D8" alt="Entitas on Discord"></a>
-    <a href="https://github.com/sschmid/Entitas/releases"><img src="https://img.shields.io/github/release/sschmid/Entitas.svg" alt="Latest release"></a>
-    <a href="https://twitter.com/intent/follow?original_referer=https%3A%2F%2Fgithub.com%2Fsschmid%2FEntitas&screen_name=entitas_csharp&tw_p=followbutton"><img src="https://img.shields.io/twitter/follow/entitas_csharp" alt="Twitter Follow Me"></a>
-    <a href="https://twitter.com/intent/follow?original_referer=https%3A%2F%2Fgithub.com%2Fsschmid%2FEntitas&screen_name=s_schmid&tw_p=followbutton"><img src="https://img.shields.io/twitter/follow/s_schmid" alt="Twitter Follow Me"></a>
-</p>
-<p align="center">
-    <b>Entitas is free, but powered by</b>
-    <a href="https://www.paypal.com/donate/?hosted_button_id=BTMLSDQULZ852"><b>your donations</b></a>
-</p>
-<p align="center">
-    <a href="https://www.paypal.com/donate/?hosted_button_id=BTMLSDQULZ852"><img src="https://img.shields.io/static/v1.svg?logo=paypal&label=PayPal&labelColor=3F70B6&&message=Donate&color=gray" alt="Donate"></a>
-</p>
+# Entitas 2.0
 
-# Entitas - The Entity Component System Framework for C# and Unity
+Entitas is an ECS framework for C# and Unity. This branch is primarily aimed at Unity projects and uses a Roslyn incremental generator instead of the old external code generation workflow.
 
-Entitas is the most popular open-source Entity Component System Framework (ECS)
-and is specifically made for C# and Unity. Several design decisions have been
-made to work optimal in a garbage collected environment and to go easy on the
-garbage collector. Entitas comes with an optional code generator which radically
-reduces the amount of code you have to write and
-[makes your code read like well written prose.](https://cleancoders.com)
+## Repo layout
 
-# Why Entitas
+- `src/Entitas`: core ECS runtime
+- `gen/Entitas.CodeGeneration`: Roslyn incremental generator
+- `src/Entitas.CodeGeneration.Attributes`: attributes consumed by the incremental generator
+- `src/Entitas.Unity` and `src/Entitas.Unity.Editor`: optional Unity integration and visual debugging
 
-- [#1 open-source ECS on GitHub](https://github.com/sschmid/Entitas)
-- 100% open-source under the [MIT License](LICENSE.md)
-- great and helpful community on [Discord](https://discord.gg/uHrVx5Z)
-- easy to learn and easy to use
-- works great in pure C# standalone projects without Unity
-- comes with great Unity integration called Visual Debugging
-- battle-tested at companies like [Popcore](https://popcore.com) (Rollic / Zynga / Take Two), [Gram Games](https://gram.gs), [Wooga](https://www.wooga.com), [Plarium](https://plarium.com), [Storm Chaser](https://www.stormchaser-games.com) and many more
+## Unity quick start
 
-# Video Tutorials and Unity Unite Talks
+If you are using Entitas for a Unity game, this is the main workflow to follow.
 
-| Video                                                                                                                                                                                   | Title                                                     | Resources                                                                           |
-|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------|-------------------------------------------------------------------------------------|
-| <a href="https://www.youtube.com/watch?v=DZpvUnj2dGI"><img src="https://img.youtube.com/vi/DZpvUnj2dGI/0.jpg" width="200" alt="Video: Entitas - Shmup - Part 2"></a>                    | Entitas ECS Unity Tutorial - Git & Unit Tests             |                                                                                     |
-| <a href="https://www.youtube.com/watch?v=L-18XRTarOM"><img src="https://img.youtube.com/vi/L-18XRTarOM/0.jpg" width="200" alt="Video: Entitas - Shmup - Part 1"></a>                    | Entitas ECS Unity Tutorial - Setup & Basics               |                                                                                     |
-| <a href="https://www.youtube.com/watch?v=Phx7IJ3XUzg"><img src="https://img.youtube.com/vi/Phx7IJ3XUzg/0.jpg" width="200" alt="Video: Watch the Entitas Talk at Unite Europe 2016"></a> | Unite Europe 2016: ECS architecture with Unity by example | [SlideShare: Unite Europe 2016](http://www.slideshare.net/sschmid/uniteeurope-2016) |
-| <a href="https://www.youtube.com/watch?v=Re5kGtxTW6E"><img src="https://img.youtube.com/vi/Re5kGtxTW6E/0.jpg" width="200" alt="Video: Watch the Entitas Talk at Unite Europe 2015"></a> | Unite Europe 2015: Entity system architecture with Unity  | [SlideShare: Unite Europe 2015](http://www.slideshare.net/sschmid/uniteeurope-2015) |
+### Requirements
 
-# First glimpse
+- Unity runtime/editor integration in this repo is validated against Unity `2021.3.0f1`
+- Incremental source generator support is intended for Unity 6 style Roslyn analyzer integration
+- If you are not using `Assembly-CSharp`, update the assembly-name filter in `gen/Entitas.CodeGeneration/EntitasGenerator.cs`
 
-The optional [code generator](https://github.com/sschmid/Entitas/wiki/Code-Generator)
-lets you write code that is super fast, safe and literally screams its intent.
+### 1. Add Entitas runtime code to your Unity project
 
-```csharp
-var entity = context.CreateEntity();
-entity.AddPosition(Vector3.zero);
-entity.AddVelocity(Vector3.forward);
-entity.AddAsset("Player");
-```
+At minimum you need:
+
+- `src/Entitas`
+- `src/Entitas.Unity`
+- `src/Entitas.Unity.Editor` if you want visual debugging and editor integration
+- `src/Entitas.CodeGeneration.Attributes`
+- the built analyzer from `gen/Entitas.CodeGeneration`
+
+If you are consuming Entitas from source outside Unity, use the project references shown below. Inside Unity, the same split still applies conceptually: runtime code is referenced normally, while `Entitas.CodeGeneration` must be loaded as a Roslyn analyzer rather than as a gameplay assembly.
+
+### 2. Make the incremental generator available to Unity
+
+The generator in `gen/Entitas.CodeGeneration` is a compiler analyzer, not a runtime dependency.
+
+In practice that means:
+
+- compile `Entitas.CodeGeneration` into a DLL
+- compile `Entitas.CodeGeneration.Attributes` into a DLL or include its source in your project
+- add the generator DLL to Unity as a Roslyn analyzer package/plugin
+- do not reference the generator DLL from gameplay code directly
+
+Your gameplay code should only reference the attribute types from `Entitas.CodeGeneration.Attributes`.
+
+### 3. Put generated-code inputs in the Unity gameplay assembly
+
+By default the generator only runs for `Assembly-CSharp`. That means your context markers and component declarations should live in `Assembly-CSharp`, or you need to extend the filter in `EntitasGenerator.cs` for your own asmdef names.
+
+### 4. Declare your contexts
+
+Create one attribute per context by deriving from `Entitas.CodeGeneration.Attributes.ContextAttribute`:
 
 ```csharp
-using static GameMatcher;
+using Entitas.CodeGeneration.Attributes;
 
-public sealed class MoveSystem : IExecuteSystem
+namespace MyGame;
+
+public sealed class MainAttribute : ContextAttribute
 {
-    readonly IGroup<GameEntity> _group;
-
-    public MoveSystem(GameContext context)
-    {
-        _group = context.GetGroup(AllOf(Position, Velocity));
-    }
-
-    public void Execute()
-    {
-        foreach (var e in _group.GetEntities())
-            e.ReplacePosition(e.position.value + e.velocity.value);
-    }
+    public MainAttribute() : base("Main") { }
 }
 ```
 
-# Overview
+### 5. Declare components with generator attributes
 
-Entitas is fast, light and gets rid of unnecessary complexity. There are less
-than a handful classes you have to know to rocket start your game or application:
+```csharp
+using Entitas;
+using Entitas.CodeGeneration.Attributes;
+using MyGame;
 
-- Context
-- Entity
-- Component
-- Group
+namespace MyFeature;
 
+[Main]
+[Unique]
+public sealed class LoadingComponent : IComponent { }
+
+[Main]
+public sealed class UserComponent : IComponent
+{
+    [PrimaryEntityIndex]
+    public string Name;
+
+    [EntityIndex]
+    public int Age;
+}
 ```
-Entitas ECS
 
-+-----------------+
-|     Context     |
-|-----------------|
-|    e       e    |      +-----------+
-|       e      e--|----> |  Entity   |
-|  e        e     |      |-----------|
-|     e  e     e  |      | Component |
-| e          e    |      |           |      +-----------+
-|    e     e      |      | Component-|----> | Component |
-|  e    e    e    |      |           |      |-----------|
-|    e    e     e |      | Component |      |   Data    |
-+-----------------+      +-----------+      +-----------+
-  |
-  |
-  |     +-------------+  Groups:
-  |     |      e      |  Subsets of entities in the context
-  |     |   e     e   |  for blazing fast querying
-  +---> |        +------------+
-        |     e  |    |       |
-        |  e     | e  |  e    |
-        +--------|----+    e  |
-                 |     e      |
-                 |  e     e   |
-                 +------------+
- ```
+### 6. Let Unity compile
 
-[Read more...](https://github.com/sschmid/Entitas/wiki/Home)
+The incremental generator runs as part of compilation. There is no separate code generation step.
 
-# Code Generator
+The component declarations above generate APIs such as:
 
-The Code Generator generates classes and methods for you, so you can focus on
-getting the job done. It radically reduces the amount of code you have to write
-and improves readability by a huge magnitude. It makes your code less error-prone
-while ensuring best performance.
+- `MainContext`
+- `MainEntity`
+- `Contexts`
+- `MainComponentsLookup`
+- `entity.AddMyFeatureUser(...)`
+- `entity.ReplaceMyFeatureUser(...)`
+- `context.SetMyFeatureUser(...)`
+- `context.SetMyFeatureLoading(true)`
+- `context.IsMyFeatureLoading()`
+- `MainEventSystems`
+- `MainCleanupSystems`
 
-[Read more...](https://github.com/sschmid/Entitas/wiki/Code-Generator)
+### 7. Use the generated API
 
-# Unity integration
+```csharp
+var contexts = new Contexts();
+var main = contexts.main;
 
-The optional Unity module "Visual Debugging" integrates Entitas nicely into Unity and provides powerful
-editor extensions to inspect and debug contexts, groups, entities, components and systems.
+var entity = main.CreateEntity();
+entity.AddMyFeatureUser("Alice", 42);
 
-[Read more...](https://github.com/sschmid/Entitas/wiki/Unity-integration)
+main.SetMyFeatureLoading(true);
 
-<p align="center">
-    <img src="images/Entitas.Unity-MenuItems.png" alt="Entitas.Unity MenuItems" height="200"><br />
-    <img src="images/Entitas.Unity.VisualDebugging-Entity.png" alt="Entitas.Unity.VisualDebugging Entity" width="400">
-    <img src="images/Entitas.Unity.VisualDebugging-DebugSystems.png" alt="Entitas.Unity.VisualDebugging Systems" width="400">
-</p>
+if (main.IsMyFeatureLoading())
+{
+    var user = main.GetMyFeatureUser();
+}
+```
 
-# Entitas deep dive
+## Source project setup
 
-[Read the wiki](https://github.com/sschmid/Entitas/wiki) or checkout the [example projects](https://github.com/sschmid/Entitas/wiki/Example-projects) to
-see Entitas in action. These example projects illustrate how systems, groups, collectors and entities all play together seamlessly.
+If you are consuming Entitas from source in a standard .NET project, wire your project like this:
 
+```xml
+<ItemGroup>
+  <ProjectReference Include="../../src/Entitas/Entitas.csproj" />
+  <ProjectReference Include="../../src/Entitas.CodeGeneration.Attributes/Entitas.CodeGeneration.Attributes.csproj" />
+  <ProjectReference Include="../../gen/Entitas.CodeGeneration/Entitas.CodeGeneration.csproj"
+                    OutputItemType="Analyzer"
+                    ReferenceOutputAssembly="false" />
+</ItemGroup>
+```
 
-### **[» Download and setup](#download-and-setup-entitas)**
-### **[» Video Tutorials and Unity Unite Talks](#video-tutorials-and-unity-unite-talks)**
-### **[» Wiki and example projects](https://github.com/sschmid/Entitas/wiki)**
-### **[» Ask a question](https://github.com/sschmid/Entitas/issues/new)**
+This is the same reference pattern used by `tests/Entitas.CodeGeneration.Tests/Entitas.CodeGeneration.Tests.csproj`.
 
----
+## Incremental generator
 
-# Download and setup Entitas
+The incremental generator is the main change in this branch.
 
-### GitHub releases (recommended)
+- It runs inside the compiler as a Roslyn incremental analyzer.
+- It removes the old manual or external code generation step.
+- It generates contexts, entities, component helpers, entity indices, event systems, cleanup systems, and Unity visual debugging support.
+- It relies on `Entitas.CodeGeneration.Attributes`, not `Entitas.Generators.Attributes`.
 
-[Show releases](https://github.com/sschmid/Entitas/releases)
+### Current limitations
 
-### Unity package manager
+The generator currently only runs for assemblies named:
 
-> Coming soon
+- `Assembly-CSharp`
+- `Entitas.CodeGeneration.Tests`
+- `Entitas.CodeGeneration-Tests`
 
-### NuGet
+If your Unity project uses custom asmdefs, update the `shouldRun` check in `gen/Entitas.CodeGeneration/EntitasGenerator.cs`.
 
-Entitas and all dependencies are available as [NuGet packages](https://www.nuget.org/packages?q=Entitas).
-More detailed explanation coming soon.
+Unity-side generator usage is also tied to Unity's Roslyn analyzer/source-generator support, so treat Unity 6 as the intended path for the incremental generator itself.
 
-### Unity Asset Store (deprecated)
+## Entitas 1 to 2 migration notes
 
-[Entitas on the Unity Asset Store](http://u3d.as/NuJ) is deprecated and will not
-be updated anymore. The last version available on the Asset Store is 1.12.3 and
-is free to download. Please see discussion [Entitas turns 7 - and is FREE now ](https://github.com/sschmid/Entitas/discussions/1009)
+These are the high-level API changes compared to the old Entitas 1 generator workflow.
 
-# Thanks to
+### 1. Generator attribute namespace changed
 
-Big shout out to [@mzaks][github-mzaks], [@cloudjubei][github-cloudjubei] and [@devboy][github-devboy]
-for endless hours of discussion and helping making Entitas awesome!
+Before:
 
-[github-mzaks]: https://github.com/mzaks "@mzaks"
-[github-cloudjubei]: https://github.com/cloudjubei "@cloudjubei"
-[github-devboy]: https://github.com/devboy "@devboy"
+```csharp
+using Entitas.Generators.Attributes;
+```
 
-# Maintainers
+Now:
 
-- [@sschmid][github-sschmid] | [@s_schmid][twitter-sschmid] | [@entitas_csharp][twitter-entitas_csharp]
+```csharp
+using Entitas.CodeGeneration.Attributes;
+```
 
-[github-sschmid]: https://github.com/sschmid "@sschmid"
-[twitter-sschmid]: https://twitter.com/s_schmid "s_schmid on Twitter"
-[twitter-entitas_csharp]: https://twitter.com/entitas_csharp "entitas_csharp on Twitter"
+### 2. Context declaration changed
 
-# Different language?
+Entitas 1 used context attributes that referenced a generated context type directly.
 
-Entitas is available in
-- [C#](https://github.com/sschmid/Entitas)
-- [C++](https://github.com/JuDelCo/Entitas-Cpp)
-- [Clojure](https://github.com/mhaemmerle/entitas-clj)
-- [Crystal](https://github.com/spoved/entitas.cr)
-- [Erlang](https://github.com/mhaemmerle/entitas_erl)
-- [F#](https://github.com/darkoverlordofdata/entitas-fsharp)
-- [Go](https://github.com/wooga/go-entitas)
-- [Haskell](https://github.com/mhaemmerle/entitas-haskell)
-- [Java](https://github.com/Rubentxu/entitas-java)
-- [Kotlin](https://github.com/darkoverlordofdata/entitas-kotlin)
-- [Objective-C](https://github.com/wooga/entitas)
-- [Python](https://github.com/Aenyhm/entitas-python)
-- [Scala](https://github.com/darkoverlordofdata/entitas-scala)
-- [Swift](https://github.com/mzaks/Entitas-Swift)
-- [TypeScript](https://github.com/darkoverlordofdata/entitas-ts)
+Before:
+
+```csharp
+[Context(typeof(MainContext))]
+```
+
+Entitas 2 uses small marker attributes derived from `ContextAttribute`, then applies those markers to components.
+
+Now:
+
+```csharp
+public sealed class MainAttribute : ContextAttribute
+{
+    public MainAttribute() : base("Main") { }
+}
+
+[Main]
+public sealed class UserComponent : IComponent { }
+```
+
+### 3. Context initialization attributes are gone
+
+Entitas 1 used `ContextInitializationAttribute` and partial initialization methods.
+
+Before:
+
+```csharp
+[ContextInitialization(typeof(MainContext))]
+public static partial void InitializeMain();
+```
+
+That explicit initialization step is no longer the primary workflow. The generated `Contexts` type now acts as the root entry point, and post-constructor setup is generated automatically where needed.
+
+### 4. Generated type names are flatter
+
+Older generated APIs leaned on nested namespaces and types such as:
+
+- `MyApp.Main.Entity`
+- `MyApp.Main.ComponentIndex`
+
+The incremental generator now produces flatter names such as:
+
+- `MainEntity`
+- `MainContext`
+- `MainComponentsLookup`
+- `Contexts`
+
+### 5. Generated helper names are more explicit
+
+Generated API names now include the feature or namespace prefix to avoid collisions.
+
+Before:
+
+- `AddUser`
+- `SetUser`
+- `HasUser`
+
+Now:
+
+- `AddMyFeatureUser`
+- `SetMyFeatureUser`
+- `HasMyFeatureUser`
+
+### 6. Unique flag helpers changed shape
+
+For unique flag components, the generator now produces boolean-style setters and checks.
+
+Before:
+
+- `SetLoading()`
+- `UnsetLoading()`
+- `HasLoading()`
+
+Now:
+
+- `SetMyFeatureLoading(true)`
+- `SetMyFeatureLoading(false)`
+- `IsMyFeatureLoading()`
+
+### 7. Event, cleanup, and entity-index entry points changed
+
+Older generated APIs were usually attached directly to a context instance.
+
+Before:
+
+- `context.AddAllEntityIndexes()`
+- `context.CreateEventSystems()`
+- `context.CreateCleanupSystems()`
+
+Now the generated root object is `Contexts`, and generated systems take that root object:
+
+- `new Contexts()`
+- `new MainEventSystems(contexts)`
+- `new MainCleanupSystems(contexts)`
+
+Entity indices are also initialized through the generated `Contexts` flow, and generated keys are exposed on `Contexts`, for example:
+
+- `Contexts.MyFeatureUserName`
+- `Contexts.MyFeatureUserAge`
+
+## License
+
+Entitas is available under the [MIT License](LICENSE.md).
