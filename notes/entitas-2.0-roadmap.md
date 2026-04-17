@@ -82,15 +82,14 @@ The current fork already moved meaningfully toward the intended 2.0 direction.
 - The solution and Rider loading story was fixed so the repo builds cleanly by default.
 - `README.md` has been rewritten to be Unity-first and incremental-generator-first.
 - `AGENTS.md` now reflects the current project structure and validation flow.
+- `gen/Entitas.Generators` has been removed from the repo and solution.
+- `src/Entitas.Generators.Attributes` has been removed from the repo and solution.
+- `src/Entitas.Unity.Editor` now uses `Entitas.CodeGeneration.Attributes`.
 
 ### Still visibly unfinished
 
-- `gen/Entitas.Generators` still exists.
-- `src/Entitas.Generators.Attributes` still exists.
 - `samples/Unity` still targets the old generator attribute namespace and old setup model.
 - `EntitasUpgradeGuide.md` still reflects old generator eras and not the current 2.0 path.
-- `src/Entitas.Unity.Editor` still has legacy references to older attribute assemblies.
-- `gen/Entitas.CodeGeneration/EntitasGenerator.cs` still hardcodes supported assembly names.
 - There is no finalized release checklist or 2.0 definition of done.
 
 ## Definition Of A Real Entitas 2.0 Release
@@ -124,8 +123,7 @@ The largest structural gap is that the repo still straddles two code generation 
 Problems:
 
 - new path: `Entitas.CodeGeneration`
-- old path: `Entitas.Generators`
-- old attributes still appear in samples and some Unity/editor-facing code
+- old-path assumptions still appear in samples and migration docs
 - users can still get contradictory signals about which workflow is canonical
 
 Target state:
@@ -332,15 +330,9 @@ Goal: stop shipping two conflicting mental models.
 
 ### Work items
 
-1. Decide whether `gen/Entitas.Generators` remains supported, deprecated, or removed.
-2. Decide whether `src/Entitas.Generators.Attributes` remains supported, deprecated, or removed.
-3. If keeping legacy support:
-   - isolate it clearly
-   - document it as legacy
-   - make README and samples avoid it
-4. If removing legacy support:
-   - delete dead references
-   - replace or remove obsolete tests and docs
+1. Remove or migrate remaining sample references to `Entitas.Generators.Attributes`.
+2. Remove or replace obsolete docs that still describe the old generator path as active.
+3. Confirm package/analyzer distribution no longer depends on the removed legacy projects.
 
 ### Definition of done
 

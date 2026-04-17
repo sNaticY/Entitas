@@ -135,7 +135,7 @@ Still remaining:
 ### Step 3: Make context parsing more semantic
 
 Status:
-- not started
+- completed
 
 Current file:
 - `gen/Entitas.CodeGeneration/Contexts/ContextGenerationHelper.cs`
@@ -148,6 +148,11 @@ Target:
 - parse context marker attributes semantically
 - avoid relying only on class-name stripping
 - make context discovery robust for namespaced and custom setups
+
+Completed in this session:
+- generator now resolves context names from the `ContextAttribute` base-constructor argument instead of relying only on the marker class name
+- added focused coverage for aliased context marker names
+- added dedicated namespaced-context coverage for generated context surfaces and accessors
 
 ### Step 4: Define the official assembly behavior
 
@@ -209,7 +214,7 @@ Still remaining:
 ### Step 5: Add focused tests before removing the old generator
 
 Status:
-- partially completed
+- completed
 
 Primary test target:
 - `tests/Entitas.CodeGeneration.Tests`
@@ -238,11 +243,10 @@ Completed in this session:
 - updated the existing code-generation integration fixture to validate the new namespace behavior end to end
 
 Still remaining:
-- add more explicit multi-assembly coverage
-- add dedicated namespaced-context coverage if semantic context parsing changes
+- none for the current replacement scope inside the solution
 
 Note:
-- multiple generated contexts are now covered inside one compilation/bootstrap flow; true cross-assembly coverage still needs dedicated tests once Step 3 and downstream usage settle
+- multiple generated contexts are now covered inside one compilation/bootstrap flow, and per-compilation multi-assembly behavior is covered explicitly through focused generator tests
 
 Additional behavior clarified in this session:
 - for namespaced components, direct context/entity APIs are now emitted inside the component namespace and use short names:
@@ -257,24 +261,29 @@ Additional behavior clarified in this session:
 ### Step 6: Migrate downstream repo usage
 
 Status:
-- not started
+- partially completed
 
 After the new generator is operationally complete:
 - migrate `samples/Unity`
 - migrate remaining Unity/editor references
 - remove old generator references from sample and editor code
 
-Only then:
-- remove `gen/Entitas.Generators`
-- remove `src/Entitas.Generators.Attributes`
+Completed in this session:
+- migrated `src/Entitas.Unity.Editor` from `Entitas.Generators.Attributes` to `Entitas.CodeGeneration.Attributes`
+- removed legacy generator test projects from the solution
+- removed `gen/Entitas.Generators`
+- removed `src/Entitas.Generators.Attributes`
+
+Still remaining:
+- migrate `samples/Unity`
+- replace remaining sample-only uses of old generator attributes and initialization flow
 
 ## Suggested Execution Order For Next Session
 
-1. Add more explicit multi-assembly coverage around runtime `Contexts` bootstrap and current generator options.
-2. Refine semantic context parsing if needed to make those tests pass cleanly.
-3. Verify and migrate the new runtime `Entitas.Contexts` bootstrap model in downstream Unity/sample usage.
-4. Remove old generator references from sample/editor usage only after that migration is verified.
-5. Report remaining blockers before deleting old code.
+1. Verify and migrate the new runtime `Entitas.Contexts` bootstrap model in downstream Unity/sample usage.
+2. Replace remaining sample-only uses of `Entitas.Generators.Attributes` and `ContextInitialization`.
+3. Update upgrade/docs material to describe the old generator removal and the 2.0 migration path.
+4. Report remaining blockers for package/analyzer distribution and Unity validation.
 
 ## Suggested New Session Prompt
 
@@ -286,16 +295,15 @@ Read these first:
 - `notes/incremental-generator-replacement-plan.md`
 
 Goal for this session:
-- improve `gen/Entitas.CodeGeneration` so it can replace `gen/Entitas.Generators`
+- continue the post-replacement cleanup now that `gen/Entitas.Generators` has been removed
 
 Immediate priorities:
-1. add or update tests in `tests/Entitas.CodeGeneration.Tests` for current multi-assembly behavior
-2. refine `gen/Entitas.CodeGeneration/Contexts/ContextGenerationHelper.cs` only if those tests expose semantic parsing gaps
-3. verify downstream Unity/sample usage of runtime `Entitas.Contexts` bootstrap and remove remaining old-generator references there
+1. verify downstream Unity/sample usage of runtime `Entitas.Contexts` bootstrap
+2. replace remaining sample-only references to `Entitas.Generators.Attributes`
+3. update migration/docs material to reflect the legacy generator removal
 
 Important constraints:
 - keep `Entitas.CodeGeneration.Attributes` as the primary path
 - do not reintroduce old property-style APIs
-- do not remove the old generator yet
 - prefer the smallest correct changes
 ```

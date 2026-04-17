@@ -14,26 +14,22 @@
   `dotnet test Entitas.sln -c Release --no-build -p:UnityEditor=unity/Unity-2021.3.0f1/UnityEditor.dll -p:UnityEngine=unity/Unity-2021.3.0f1/UnityEngine.dll`
 - Focused checks that avoid Unity projects:
   `dotnet test tests/Entitas.Tests/Entitas.Tests.csproj`
-  `dotnet test tests/Entitas.Generators.Tests/Entitas.Generators.Tests.csproj`
   `dotnet test tests/Entitas.CodeGeneration.Tests/Entitas.CodeGeneration.Tests.csproj`
 - Unity-facing changes should at least run:
   `dotnet test tests/Entitas.Unity.Tests/Entitas.Unity.Tests.csproj`
 - Single-test pattern:
-  `dotnet test tests/Entitas.Generators.Tests/Entitas.Generators.Tests.csproj --filter "FullyQualifiedName~ComponentGeneratorTests.Component"`
+  `dotnet test tests/Entitas.CodeGeneration.Tests/Entitas.CodeGeneration.Tests.csproj --filter "FullyQualifiedName~GeneratorAssemblyBehaviorTests.GeneratesContextsForCustomAssemblyByDefault"`
 
 ## Repo Shape
 - `src/Entitas` is the core ECS runtime.
 - `gen/Entitas.CodeGeneration` is the new Roslyn incremental generator for Unity-first workflows.
 - `src/Entitas.CodeGeneration.Attributes` holds attributes consumed by the incremental generator.
-- `gen/Entitas.Generators` and `src/Entitas.Generators.Attributes` still exist for the older generator path and related tests.
 - `src/Entitas.Unity` and `src/Entitas.Unity.Editor` are optional Unity integration layers compiled against raw `UnityEngine.dll` / `UnityEditor.dll` references.
 - `tests/*` mirrors the runtime, generator, and Unity split. `benchmarks/Entitas.Benchmarks` is the BenchmarkDotNet perf harness.
 - `samples/Unity` is a manual Unity sample project; CI does not validate it.
 
 ## Generator And Test Gotchas
-- Snapshot approvals for generator tests live in `tests/Entitas.Generators.Tests/snapshots/*.verified.cs`; generator output changes usually require updating those checked-in files.
 - `tests/Entitas.CodeGeneration.Tests` references `gen/Entitas.CodeGeneration` as an analyzer (`OutputItemType="Analyzer"`, `ReferenceOutputAssembly="false"`) and references `src/Entitas.CodeGeneration.Attributes`; use it to verify end-to-end generated code, not just snapshots.
-- Generator tests also assert the checked-in generator sources keep `global::` namespace qualification (`AssertUsesGlobalNamespaces` in `tests/Entitas.Generators.Tests/TestHelper.cs`).
 - The incremental generator now runs for attached compilations by default. Optional assembly filtering is analyzer-config driven through `entitas_generator.assembly_names`.
 - The incremental generator now supports analyzer-config feature toggles for contexts, matchers, entity/context extensions, component lookups, events, cleanup, entity indices, and visual debugging. Prefer adding tests in `tests/Entitas.CodeGeneration.Tests` when changing that surface.
 - `src/Entitas/Context/Contexts.cs` is now the runtime root context container. Do not reintroduce a generated root `Contexts.g.cs` container unless the design changes explicitly.
