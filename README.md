@@ -1,6 +1,6 @@
 # Entitas 2.0
 
-Entitas is an ECS framework for C# and Unity. This branch is primarily aimed at Unity projects and uses a Roslyn incremental generator instead of the old external code generation workflow.
+Entitas is an ECS framework for C# and Unity. This branch is primarily aimed at Unity projects and uses a Roslyn incremental generator as the canonical code generation path.
 
 ## Repo layout
 
@@ -8,6 +8,8 @@ Entitas is an ECS framework for C# and Unity. This branch is primarily aimed at 
 - `gen/Entitas.CodeGeneration`: Roslyn incremental generator
 - `src/Entitas.CodeGeneration.Attributes`: attributes consumed by the incremental generator
 - `src/Entitas.Unity` and `src/Entitas.Unity.Editor`: optional Unity integration and visual debugging
+
+The legacy `Entitas.Generators` and `Entitas.Generators.Attributes` projects have been removed from the repo. `Entitas.CodeGeneration` plus `Entitas.CodeGeneration.Attributes` is now the only in-repo generation path.
 
 ## Unity quick start
 
@@ -171,10 +173,10 @@ This is the same reference pattern used by `tests/Entitas.CodeGeneration.Tests/E
 
 ## Incremental generator
 
-The incremental generator is the main change in this branch.
+The incremental generator is the main generation path in this branch.
 
 - It runs inside the compiler as a Roslyn incremental analyzer.
-- It removes the old manual or external code generation step.
+- It replaces the removed legacy generator path in this repo.
 - It generates contexts, entities, component helpers, entity indices, event systems, cleanup systems, and Unity visual debugging support.
 - It relies on `Entitas.CodeGeneration.Attributes`, not `Entitas.Generators.Attributes`.
 

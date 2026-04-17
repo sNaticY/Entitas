@@ -24,6 +24,7 @@
 - `src/Entitas` is the core ECS runtime.
 - `gen/Entitas.CodeGeneration` is the new Roslyn incremental generator for Unity-first workflows.
 - `src/Entitas.CodeGeneration.Attributes` holds attributes consumed by the incremental generator.
+- The legacy generator projects have been removed; treat `Entitas.CodeGeneration` as the only in-repo generator path.
 - `src/Entitas.Unity` and `src/Entitas.Unity.Editor` are optional Unity integration layers compiled against raw `UnityEngine.dll` / `UnityEditor.dll` references.
 - `tests/*` mirrors the runtime, generator, and Unity split. `benchmarks/Entitas.Benchmarks` is the BenchmarkDotNet perf harness.
 - `samples/Unity` is a manual Unity sample project; CI does not validate it.
