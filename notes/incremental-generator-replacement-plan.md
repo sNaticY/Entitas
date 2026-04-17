@@ -64,6 +64,9 @@ Goal:
 
 ### Step 1: Remove hardcoded assembly filtering
 
+Status:
+- completed
+
 Current file:
 - `gen/Entitas.CodeGeneration/EntitasGenerator.cs`
 
@@ -74,7 +77,15 @@ Target:
 - generator should run for any attached compilation by default
 - optional assembly filtering can exist, but must be configuration-driven rather than mandatory and hardcoded
 
+Completed in this session:
+- generator now runs for any attached compilation by default
+- optional assembly filtering is now config-driven through `entitas_generator.assembly_names`
+- generation now skips empty compilations so unrelated Unity assemblies do not get invalid `Contexts.g.cs`
+
 ### Step 2: Add analyzer-config based generator options
+
+Status:
+- partially completed
 
 Use the old generator as reference:
 - `gen/Entitas.Generators/EntitasAnalyzerConfigOptions.cs`
@@ -96,7 +107,20 @@ Minimum toggles to add:
 This should replace hardcoded switches like:
 - `VisualDebuggingGenerationEnabled = true`
 
+Completed in this session:
+- added analyzer-config support for assembly filtering via `entitas_generator.assembly_names`
+- added analyzer-config support for visual debugging via:
+  - `entitas_generator.visual_debugging`
+  - `entitas_generator.visual_debugging.assembly_names`
+- analyzer config is now resolved from compilation syntax-tree options instead of only global options, which is required for Unity `.editorconfig` usage
+
+Still remaining:
+- add the broader feature toggles listed above for contexts, matcher/entity generation, lookup generation, extensions, events, cleanup, entity indices, and visual debugging scope beyond the current switches
+
 ### Step 3: Make context parsing more semantic
+
+Status:
+- not started
 
 Current file:
 - `gen/Entitas.CodeGeneration/Contexts/ContextGenerationHelper.cs`
@@ -112,6 +136,9 @@ Target:
 
 ### Step 4: Define the official assembly behavior
 
+Status:
+- clarified, not implemented
+
 We need an explicit rule for:
 - default Unity `Assembly-CSharp`
 - one custom asmdef
@@ -121,7 +148,18 @@ We need an explicit rule for:
 Target:
 - the generator should work when attached to a custom assembly without requiring source changes
 
+Current clarified behavior:
+- custom asmdefs now work by default without requiring `Assembly-CSharp`
+- generation is compilation-scoped, so each assembly currently generates its own `Contexts` based only on the contexts discovered in that compilation
+- two different assemblies defining two different contexts will not automatically get one merged cross-assembly `Contexts`
+
+Remaining design decision:
+- define whether `Contexts` should stay per-assembly, or whether we want an explicit aggregate-assembly model for multi-asmdef projects
+
 ### Step 5: Add focused tests before removing the old generator
+
+Status:
+- started
 
 Primary test target:
 - `tests/Entitas.CodeGeneration.Tests`
@@ -138,7 +176,20 @@ Add or expand coverage for:
 
 Do not remove the old generator until these pass.
 
+Completed in this session:
+- added tests covering custom assembly names
+- added tests covering explicit assembly filtering
+- added tests confirming empty compilations generate nothing
+
+Still remaining:
+- add coverage for multiple contexts across assemblies
+- add coverage for namespaced contexts/components
+- add coverage for unique flag components, events, cleanup systems, entity indices, and visual debugging toggles
+
 ### Step 6: Migrate downstream repo usage
+
+Status:
+- not started
 
 After the new generator is operationally complete:
 - migrate `samples/Unity`
@@ -151,10 +202,10 @@ Only then:
 
 ## Suggested Execution Order For Next Session
 
-1. Implement analyzer-config support in `gen/Entitas.CodeGeneration`.
-2. Remove hardcoded assembly-name filtering.
-3. Add tests for configurable/multi-assembly behavior.
-4. Refine semantic context parsing if needed to make those tests pass cleanly.
+1. Expand analyzer-config support beyond assembly and visual-debugging settings.
+2. Add more tests for configurable and multi-assembly behavior.
+3. Refine semantic context parsing if needed to make those tests pass cleanly.
+4. Define the official cross-assembly `Contexts` behavior.
 5. Report remaining blockers before touching samples or deleting old code.
 
 ## Suggested New Session Prompt
