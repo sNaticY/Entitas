@@ -21,14 +21,14 @@ ${systemsList}
         @"using System.Collections.Generic;
 using Entitas;
 
-public sealed class Destroy${ComponentName}${SystemType} : ICleanupSystem
+public sealed class Destroy${CleanupSystemComponentName}${SystemType} : ICleanupSystem
 {
     readonly IGroup<${EntityType}> _group;
     readonly List<${EntityType}> _buffer = new List<${EntityType}>();
 
-    public Destroy${ComponentName}${SystemType}(global::Entitas.Contexts contexts)
+    public Destroy${CleanupSystemComponentName}${SystemType}(global::Entitas.Contexts contexts)
     {
-        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${ComponentName}());
+        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${MatcherComponentName}());
     }
 
     public void Cleanup()
@@ -46,11 +46,13 @@ public sealed class Destroy${ComponentName}${SystemType} : ICleanupSystem
         in ComponentData componentData,
         out string fileName)
     {
-        var componentName = componentData.GetComponentName();
-        fileName = "Destroy" + componentName + contextData.SystemTypeName;
+        var cleanupSystemComponentName = componentData.GetComponentName();
+        var matcherComponentName = componentData.GetComponentName();
+        fileName = "Destroy" + cleanupSystemComponentName + contextData.SystemTypeName;
 
         return DestroyEntityCleanupSystemTemplate
-            .Replace("${ComponentName}", componentName)
+            .Replace("${CleanupSystemComponentName}", cleanupSystemComponentName)
+            .Replace("${MatcherComponentName}", matcherComponentName)
             .Replace("${ContextName}", contextData.ContextName)
             .Replace("${ContextType}", contextData.ContextTypeName)
             .Replace("${SystemType}", contextData.SystemTypeName)
@@ -62,14 +64,14 @@ public sealed class Destroy${ComponentName}${SystemType} : ICleanupSystem
         @"using System.Collections.Generic;
 using Entitas;
 
-public sealed class Remove${ComponentName}${SystemType} : ICleanupSystem
+public sealed class Remove${CleanupSystemComponentName}${SystemType} : ICleanupSystem
 {
     readonly IGroup<${EntityType}> _group;
     readonly List<${EntityType}> _buffer = new List<${EntityType}>();
 
-    public Remove${ComponentName}${SystemType}(global::Entitas.Contexts contexts)
+    public Remove${CleanupSystemComponentName}${SystemType}(global::Entitas.Contexts contexts)
     {
-        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${ComponentName}());
+        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${MatcherComponentName}());
     }
 
     public void Cleanup()
@@ -87,15 +89,18 @@ public sealed class Remove${ComponentName}${SystemType} : ICleanupSystem
         in ComponentData componentData,
         out string fileName)
     {
-        var componentName = componentData.GetComponentName();
-        fileName = "Remove" + componentName + contextData.SystemTypeName;
+        var cleanupSystemComponentName = componentData.GetComponentName();
+        var actionComponentName = componentData.GetScopedComponentName();
+        var matcherComponentName = componentData.GetComponentName();
+        fileName = "Remove" + cleanupSystemComponentName + contextData.SystemTypeName;
 
         var removeComponentSource = componentData.Members.Length == 0
-            ? $"Set{componentName}(false)"
-            : $"Remove{componentName}()";
+            ? $"Set{actionComponentName}(false)"
+            : $"Remove{actionComponentName}()";
 
         return RemoveComponentCleanupSystemTemplate
-            .Replace("${ComponentName}", componentName)
+            .Replace("${CleanupSystemComponentName}", cleanupSystemComponentName)
+            .Replace("${MatcherComponentName}", matcherComponentName)
             .Replace("${ContextName}", contextData.ContextName)
             .Replace("${ContextType}", contextData.ContextTypeName)
             .Replace("${SystemType}", contextData.SystemTypeName)

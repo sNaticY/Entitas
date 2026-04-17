@@ -21,11 +21,11 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void PassesEntityWhenRemovedOnSameEntity()
         {
-            _entity.SetMyFeatureLoading(true);
+            _entity.SetLoading(true);
             _system.Execute();
             _listener.Entity.Should().BeNull();
 
-            _entity.SetMyFeatureLoading(false);
+            _entity.SetLoading(false);
             _system.Execute();
 
             _listener.Entity.Should().BeSameAs(_entity);

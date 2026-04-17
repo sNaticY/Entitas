@@ -29,7 +29,7 @@ public class ContextsBootstrapTests
     {
         var contexts = TestContexts.Create();
         var config = contexts.GetConfig();
-        var entity = config.SetMyFeatureSettings("render", 3);
+        var entity = config.SetSettings("render", 3);
 
         config.GetEntityWithMyFeatureSettingsKey("render").Should().BeSameAs(entity);
         config.GetEntitiesWithMyFeatureSettingsVersion(3).Should().Contain(entity);

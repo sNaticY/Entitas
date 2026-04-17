@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Entitas.CodeGeneration.Extensions;
@@ -31,4 +32,21 @@ public static class StringExtensions
 
         return str;
     }
+
+    public static string WrapInNamespace(this string content, string? namespaceName)
+    {
+        if (string.IsNullOrWhiteSpace(namespaceName))
+            return content;
+
+        var indentedContent = string.Join(
+            "\n",
+            content.Split('\n').Select(static line => line.Length == 0 ? line : $"    {line}"));
+
+        return $"namespace {namespaceName}\n{{\n{indentedContent}\n}}\n";
+    }
+
+    public static string NamespacedHintName(this string hintName, string? namespaceName) =>
+        string.IsNullOrWhiteSpace(namespaceName)
+            ? hintName
+            : $"{namespaceName}.{hintName}";
 }

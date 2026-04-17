@@ -18,11 +18,11 @@ namespace Entitas.Generators.IntegrationTests
         {
             var entity = _context.CreateEntity();
 
-            entity.IsMyFeatureLoading().Should().BeFalse();
-            entity.SetMyFeatureLoading(true);
-            entity.IsMyFeatureLoading().Should().BeTrue();
-            entity.SetMyFeatureLoading(false);
-            entity.IsMyFeatureLoading().Should().BeFalse();
+            entity.IsLoading().Should().BeFalse();
+            entity.SetLoading(true);
+            entity.IsLoading().Should().BeTrue();
+            entity.SetLoading(false);
+            entity.IsLoading().Should().BeFalse();
         }
 
         [Fact]
@@ -31,8 +31,8 @@ namespace Entitas.Generators.IntegrationTests
             var entity1 = _context.CreateEntity();
             var entity2 = _context.CreateEntity();
 
-            entity1.SetMyFeatureLoading(true);
-            entity2.SetMyFeatureLoading(true);
+            entity1.SetLoading(true);
+            entity2.SetLoading(true);
 
             entity1.GetComponent(MainComponentsLookup.MyFeatureLoading)
                 .Should().BeSameAs(entity2.GetComponent(MainComponentsLookup.MyFeatureLoading));
@@ -42,15 +42,15 @@ namespace Entitas.Generators.IntegrationTests
         public void AddsGetsAndReplacesComponent()
         {
             var entity = _context.CreateEntity();
-            entity.AddMyFeatureUser("Test", 42);
+            entity.AddUser("Test", 42);
 
-            entity.HasMyFeatureUser().Should().BeTrue();
-            entity.GetMyFeatureUser().Name.Should().Be("Test");
-            entity.GetMyFeatureUser().Age.Should().Be(42);
+            entity.HasUser().Should().BeTrue();
+            entity.GetUser().Name.Should().Be("Test");
+            entity.GetUser().Age.Should().Be(42);
 
-            entity.ReplaceMyFeatureUser("Replaced", 24);
-            entity.GetMyFeatureUser().Name.Should().Be("Replaced");
-            entity.GetMyFeatureUser().Age.Should().Be(24);
+            entity.ReplaceUser("Replaced", 24);
+            entity.GetUser().Name.Should().Be("Replaced");
+            entity.GetUser().Age.Should().Be(24);
         }
 
         [Fact]
@@ -60,9 +60,9 @@ namespace Entitas.Generators.IntegrationTests
             var entity = _context.CreateEntity();
             entity.GetComponentPool(MainComponentsLookup.MyFeatureUser).Push(component);
 
-            entity.AddMyFeatureUser("Test", 42);
+            entity.AddUser("Test", 42);
 
-            entity.GetMyFeatureUser().Should().BeSameAs(component);
+            entity.GetUser().Should().BeSameAs(component);
         }
 
         [Fact]
@@ -72,20 +72,20 @@ namespace Entitas.Generators.IntegrationTests
             var entity = _context.CreateEntity();
             entity.GetComponentPool(MainComponentsLookup.MyFeatureUser).Push(component);
 
-            entity.ReplaceMyFeatureUser("Test", 42);
+            entity.ReplaceUser("Test", 42);
 
-            entity.GetMyFeatureUser().Should().BeSameAs(component);
+            entity.GetUser().Should().BeSameAs(component);
         }
 
         [Fact]
         public void RemovesComponent()
         {
             var entity = _context.CreateEntity();
-            entity.AddMyFeatureUser("Test", 42);
+            entity.AddUser("Test", 42);
 
-            entity.RemoveMyFeatureUser();
+            entity.RemoveUser();
 
-            entity.HasMyFeatureUser().Should().BeFalse();
+            entity.HasUser().Should().BeFalse();
         }
     }
 }

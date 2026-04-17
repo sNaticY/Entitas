@@ -22,11 +22,11 @@ namespace Entitas.Generators.IntegrationTests
         public void PassesEntityWhenRemoved()
         {
             var entity = _context.CreateEntity();
-            entity.SetMyFeatureLoading(true);
+            entity.SetLoading(true);
             _system.Execute();
             _listener.Entity.Should().BeNull();
 
-            entity.SetMyFeatureLoading(false);
+            entity.SetLoading(false);
             _system.Execute();
 
             _listener.Entity.Should().BeSameAs(entity);

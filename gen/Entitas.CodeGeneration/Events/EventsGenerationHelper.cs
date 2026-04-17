@@ -31,8 +31,11 @@ public static class EventsGenerationHelper
                 var listenerComponentTypeName = listenerComponentName.AddComponentSuffix();
     
                 var eventComponentData = new ComponentData(
+                    @namespace: componentData.Namespace,
                     shortTypeName: listenerComponentTypeName,
-                    fullTypeName: listenerComponentTypeName, // same as short (not in a namespace)
+                    fullTypeName: componentData.Namespace is null
+                        ? listenerComponentTypeName
+                        : componentData.Namespace + "." + listenerComponentTypeName,
                     contextNames: ImmutableArray.Create(contextName),
                     members: ImmutableArray.Create(
                         new MemberData($"System.Collections.Generic.List<I{listenerComponentName}>", "value")
@@ -54,26 +57,30 @@ public static class EventsGenerationHelper
             var eventListener = componentData.EventListener(contextData.ContextName, eventData);
             var eventListenerComponent = eventListener.AddComponentSuffix();
 
-            GenerateEventListenerComponent(spc, eventListener, eventListenerComponent);
-            GenerateEventEntityApi(spc, contextData, eventListener, eventListenerComponent);
+            GenerateEventListenerComponent(spc, componentData.Namespace, eventListener, eventListenerComponent);
+            GenerateEventEntityApi(spc, contextData, componentData.Namespace, eventListener, eventListenerComponent);
             GenerateEventListenerInterface(spc, componentData, eventData, contextData, eventListener);
             GenerateEventSystem(spc, componentData, eventData, contextData, eventListener);
         }
     }
 
     static void GenerateEventListenerComponent(SourceProductionContext spc,
+        string? componentNamespace,
         string eventListener,
         string eventListenerComponent)
     {
         var eventListenerComponentSource = EventsTemplates.EventListenerComponentTemplate
             .Replace("${EventListenerComponent}", eventListenerComponent)
             .Replace("${EventListener}", eventListener);
-            
-        spc.AddSource($"{eventListenerComponent}.g.cs", SourceText.From(eventListenerComponentSource, Encoding.UTF8));
+
+        var fileName = eventListenerComponent.NamespacedHintName(componentNamespace);
+        var source = eventListenerComponentSource.WrapInNamespace(componentNamespace);
+        spc.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
     }
 
     static void GenerateEventEntityApi(SourceProductionContext spc,
         in ContextData contextData,
+        string? componentNamespace,
         string eventListener,
         string eventListenerComponent)
     {
@@ -87,8 +94,9 @@ public static class EventsGenerationHelper
             .Replace("${getEventListener}", getEventListener)
             .Replace("${hasEventListener}", hasEventListener);
 
-        spc.AddSource($"{contextData.ContextName + eventListenerComponent}Event.g.cs", 
-            SourceText.From(eventEntitySource, Encoding.UTF8));
+        var fileName = (contextData.ContextName + eventListenerComponent + "Event").NamespacedHintName(componentNamespace);
+        var source = eventEntitySource.WrapInNamespace(componentNamespace);
+        spc.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
     }
     
     static void GenerateEventListenerInterface(SourceProductionContext spc,
@@ -115,7 +123,9 @@ public static class EventsGenerationHelper
             .Replace("${ContextName}", contextName)
             .Replace("${methodParameters}", methodParameters);
 
-        spc.AddSource($"I{eventListener}.g.cs", SourceText.From(eventEntitySource, Encoding.UTF8));
+        var fileName = ($"I{eventListener}").NamespacedHintName(componentData.Namespace);
+        var source = eventEntitySource.WrapInNamespace(componentData.Namespace);
+        spc.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
     }
 
     static void GenerateEventSystem(SourceProductionContext spc,
@@ -161,8 +171,10 @@ public static class EventsGenerationHelper
             .Replace("${MatcherType}", contextData.MatcherTypeName)
             .Replace("${ComponentName}", componentData.GetComponentName())
             .Replace("${EventComponentName}", componentData.EventComponentName(eventData));
-            
-        spc.AddSource(eventName+"EventSystem.g.cs", SourceText.From(source, Encoding.UTF8));
+
+        var fileName = (eventName + "EventSystem").NamespacedHintName(componentData.Namespace);
+        var wrappedSource = source.WrapInNamespace(componentData.Namespace);
+        spc.AddSource(fileName + ".g.cs", SourceText.From(wrappedSource, Encoding.UTF8));
     }
     
     static string GetFilter(in ComponentData componentData, 
@@ -244,8 +256,12 @@ public static class EventsGenerationHelper
 
     static string GenerateAddSystem(string contextName, (ComponentData component, EventData eventData) data)
     {
+        var eventTypeName = string.IsNullOrWhiteSpace(data.component.Namespace)
+            ? data.component.EventName(contextName, data.eventData)
+            : data.component.Namespace + "." + data.component.EventName(contextName, data.eventData);
+
         return EventsTemplates.EventSystemAddTemplate
             .Replace("${priority}", data.eventData.Priority.ToString())
-            .Replace("${Event}", data.component.EventName(contextName, data.eventData));
+            .Replace("${Event}", eventTypeName);
     }
 }

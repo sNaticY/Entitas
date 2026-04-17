@@ -23,7 +23,7 @@ namespace Entitas.Generators.IntegrationTests
         public void GetsEntity()
         {
             var user = _context.CreateEntity();
-            user.AddMyFeatureUser("Test", 42);
+            user.AddUser("Test", 42);
 
             var entity = _context.GetEntityWithMyFeatureUserName("Test");
             entity.Should().BeSameAs(user);
@@ -33,9 +33,9 @@ namespace Entitas.Generators.IntegrationTests
         public void GetsEntities()
         {
             var user1 = _context.CreateEntity();
-            user1.AddMyFeatureUser("Test1", 42);
+            user1.AddUser("Test1", 42);
             var user2 = _context.CreateEntity();
-            user2.AddMyFeatureUser("Test2", 42);
+            user2.AddUser("Test2", 42);
 
             var entities = _context.GetEntitiesWithMyFeatureUserAge(42);
             entities.Should().HaveCount(2);

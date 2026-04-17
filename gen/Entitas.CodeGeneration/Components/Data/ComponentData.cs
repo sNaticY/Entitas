@@ -9,6 +9,7 @@ namespace Entitas.CodeGeneration.Components.Data;
 
 public readonly struct ComponentData : IEquatable<ComponentData>
 {
+    public string? Namespace { get; }
     public string ShortComponentName { get; } // ex: Position3
     public string FullComponentName { get; } // ex: MyNamespacePosition3
 
@@ -30,6 +31,10 @@ public readonly struct ComponentData : IEquatable<ComponentData>
     
     public ComponentData(INamedTypeSymbol type)
     {
+        Namespace = type.ContainingNamespace is { IsGlobalNamespace: false } containingNamespace
+            ? containingNamespace.ToDisplayString()
+            : null;
+
         ShortTypeName = type.Name;
         FullTypeName = type.ToCompilableString();
 
@@ -56,6 +61,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
     }
     
     public ComponentData(
+        string? @namespace,
         string shortTypeName,
         string fullTypeName,
         ImmutableArray<string> contextNames = default,
@@ -67,6 +73,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
         CleanupMode cleanupMode = CleanupMode.DestroyEntity,
         bool isGenerated = true)
     {
+        Namespace = @namespace;
         ShortTypeName = shortTypeName;
         FullTypeName = fullTypeName;
         
@@ -87,9 +94,13 @@ public readonly struct ComponentData : IEquatable<ComponentData>
 
     public string GetComponentName() => GetComponentName(ComponentGenerationHelper.IgnoreNamespaces);
     public string GetComponentNameLowerFirst() => GetComponentName().ToLowerFirst();
+    public string GetScopedComponentName() => ShortComponentName;
+    public string GetScopedComponentNameLowerFirst() => GetScopedComponentName().ToLowerFirst();
     
-    public string GetComponentName(bool ignoreNamespaces) 
-        => ignoreNamespaces ? ShortComponentName : FullComponentName;
+    public string GetComponentName(bool ignoreNamespaces)
+        => ignoreNamespaces || (IsGenerated && Namespace is not null)
+            ? ShortComponentName
+            : FullComponentName;
     
     public string GetComponentIndex(ContextData contextData)
         => $"{contextData.ContextName}{ComponentGenerationHelper.ComponentsLookupName}.{GetComponentName()}";
@@ -98,6 +109,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
     {
         return string.Equals(FullTypeName, other.FullTypeName, StringComparison.Ordinal) &&
                string.Equals(ShortTypeName, other.ShortTypeName, StringComparison.Ordinal) &&
+               string.Equals(Namespace, other.Namespace, StringComparison.Ordinal) &&
                ContextNames.SequenceEqual(other.ContextNames) &&
                Events.SequenceEqual(other.Events) &&
                string.Equals(FlagPrefix, other.FlagPrefix, StringComparison.Ordinal) &&
@@ -118,6 +130,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
             int hash = 17;
             hash = hash * 31 + (ShortTypeName?.GetHashCode() ?? 0);
             hash = hash * 31 + (FullTypeName?.GetHashCode() ?? 0);
+            hash = hash * 31 + (Namespace?.GetHashCode() ?? 0);
             hash = hash * 31 + ContextNames.GetSequenceHashCode();
             hash = hash * 31 + Events.GetSequenceHashCode();
             hash = hash * 31 + (FlagPrefix?.GetHashCode() ?? 0);

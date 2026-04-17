@@ -4,6 +4,7 @@ using Entitas.CodeGeneration.Components.Data;
 using Entitas.CodeGeneration.Components.Extensions;
 using Entitas.CodeGeneration.Contexts.Data;
 using Entitas.CodeGeneration.Events;
+using Entitas.CodeGeneration.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
@@ -143,19 +144,20 @@ public static class ComponentGenerationHelper
             }
         }
 
-        if (options.ComponentMatcherGenerationEnabled)
+        if (!string.IsNullOrEmpty(source))
         {
-            if (source.Length > 0)
-                source += "\n";
+            var fileName = (contextData.ContextName + componentData.FullComponentName.AddComponentSuffix())
+                .NamespacedHintName(componentData.Namespace);
 
-            source += ComponentTemplates.GetComponentMatcherApiSource(contextData, componentData);
+            spc.AddSource($"{fileName}.g.cs", SourceText.From(source.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
         }
 
-        if (string.IsNullOrEmpty(source))
+        if (!options.ComponentMatcherGenerationEnabled)
             return;
 
-        var fileName = contextData.ContextName + componentData.GetComponentName().AddComponentSuffix();
-        spc.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));
+        var matcherSource = ComponentTemplates.GetComponentMatcherApiSource(contextData, componentData);
+        var matcherFileName = contextData.ContextName + componentData.FullComponentName + "Matcher";
+        spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource, Encoding.UTF8));
     }
     
     // Unique components are accessible directly from Context
@@ -178,6 +180,7 @@ public static class ComponentGenerationHelper
             .Replace("${FullComponentName}", componentData.FullComponentName)
             .Replace("${Type}", componentData.FullTypeName);
         
-        spc.AddSource(componentData.FullComponentName + ".g.cs", SourceText.From(componentSource, Encoding.UTF8));
+        var fileName = componentData.FullComponentName.NamespacedHintName(componentData.Namespace);
+        spc.AddSource(fileName + ".g.cs", SourceText.From(componentSource.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
     }
 }

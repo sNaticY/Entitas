@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Text;
 using Entitas.CodeGeneration.Components.Data;
 using Entitas.CodeGeneration.Contexts.Data;
+using Entitas.CodeGeneration.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -32,9 +33,17 @@ public static class CleanupGenerationHelper
         
         var systemsList = string.Join("\n", componentsData
             .Where(c => c.HasCleanupAttribute)
-            .Select(c => "        Add(new " +
-                         (c.CleanupMode == CleanupMode.DestroyEntity ? "Destroy" : "Remove") +
-                         c.GetComponentName() + contextSystemName + "(contexts));"));
+            .Select(c =>
+            {
+                var systemTypeName =
+                    (c.CleanupMode == CleanupMode.DestroyEntity ? "Destroy" : "Remove") +
+                    c.GetComponentName() + contextSystemName;
+
+                if (!string.IsNullOrWhiteSpace(c.Namespace))
+                    systemTypeName = "global::" + c.Namespace + "." + systemTypeName;
+
+                return "        Add(new " + systemTypeName + "(contexts));";
+            }));
 
         var componentSource = CleanupTemplates.CleanupSystemsTemplate
             .Replace("${ContextName}", contextData.ContextName)
@@ -58,6 +67,7 @@ public static class CleanupGenerationHelper
             _ => throw new ArgumentOutOfRangeException()
         };
         
-        spc.AddSource(filename + ".g.cs", SourceText.From(source, Encoding.UTF8));
+        var fileName = filename.NamespacedHintName(componentData.Namespace);
+        spc.AddSource(fileName + ".g.cs", SourceText.From(source.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
     }
 }

@@ -18,11 +18,11 @@ namespace Entitas.Generators.IntegrationTests
         public void RemovesComponent()
         {
             var system = new RemoveMyFeatureUserMainSystem(_contexts);
-            var entity = _context.SetMyFeatureUser("Test", 42);
+            var entity = _context.SetUser("Test", 42);
 
             system.Cleanup();
 
-            entity.HasMyFeatureUser().Should().BeFalse();
+            entity.HasUser().Should().BeFalse();
             entity.IsEnabled.Should().BeTrue();
         }
 
@@ -31,11 +31,11 @@ namespace Entitas.Generators.IntegrationTests
         {
             var system = new DestroyMyFeatureLoadingMainSystem(_contexts);
             var entity = _context.CreateEntity();
-            entity.SetMyFeatureLoading(true);
+            entity.SetLoading(true);
 
             system.Cleanup();
 
-            entity.IsMyFeatureLoading().Should().BeFalse();
+            entity.IsLoading().Should().BeFalse();
             entity.IsEnabled.Should().BeFalse();
         }
     }

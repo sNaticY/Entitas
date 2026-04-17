@@ -29,7 +29,7 @@ namespace Entitas.Generators.IntegrationTests
         public void PassesEntityWhenAdded()
         {
             var entity = _context.CreateEntity();
-            entity.SetMyFeatureLoading(true);
+            entity.SetLoading(true);
 
             _system.Execute();
 

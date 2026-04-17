@@ -98,10 +98,7 @@ namespace MyGame
     {
         var result = RunWithOption("entitas_generator.component.entity_extension", false);
 
-        var source = GetGeneratedSourceBySuffix(result, "HealthComponent.g.cs");
-
-        source.Should().NotContain("public static class MainMyGameHealthEntityExtensions");
-        source.Should().NotContain("AddMyGameHealth(this MainEntity entity");
+        GetGeneratedFileNames(result).Should().NotContain(fileName => fileName.EndsWith("HealthComponent.g.cs", System.StringComparison.Ordinal));
     }
 
     [Fact]
@@ -109,10 +106,7 @@ namespace MyGame
     {
         var result = RunWithOption("entitas_generator.component.matcher", false);
 
-        var source = GetGeneratedSourceBySuffix(result, "HealthComponent.g.cs");
-
-        source.Should().NotContain("public sealed partial class MainMatcher");
-        source.Should().NotContain("public static Entitas.IMatcher<MainEntity> MyGameHealth()");
+        GetGeneratedFileNames(result).Should().NotContain("MainMyGameHealthMatcher.g.cs");
     }
 
     static Microsoft.CodeAnalysis.GeneratorDriverRunResult RunWithOption(string optionKey, bool value) =>

@@ -21,7 +21,7 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void PassesEntityWhenAddedOnSameEntity()
         {
-            _entity.SetMyFeatureLoading(true);
+            _entity.SetLoading(true);
             _system.Execute();
 
             _listener.Entity.Should().BeSameAs(_entity);
@@ -30,7 +30,7 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void DoesNotPassEntityWhenAddedOnDifferentEntity()
         {
-            _contexts.GetMain().CreateEntity().SetMyFeatureLoading(true);
+            _contexts.GetMain().CreateEntity().SetLoading(true);
             _system.Execute();
 
             _listener.Entity.Should().BeNull();
