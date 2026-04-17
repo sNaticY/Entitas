@@ -95,14 +95,24 @@ public static class ContextGenerationHelper
         // return null;
     }
     
-    public static void GenerateContexts(SourceProductionContext spc, ImmutableArray<ContextData> contextsData)
+    public static void GenerateContexts(
+        SourceProductionContext spc,
+        ImmutableArray<ContextData> contextsData,
+        in EntitasGeneratorOptions options)
     {
         foreach (var contextData in contextsData)
         {
-            GenerateContext(spc, contextData);
-            GenerateContextMatcher(spc, contextData);
-            GenerateContextEntity(spc, contextData);
-            GenerateContextsExtension(spc, contextData);
+            if (options.ContextGenerationEnabled)
+                GenerateContext(spc, contextData);
+
+            if (options.ContextMatcherGenerationEnabled)
+                GenerateContextMatcher(spc, contextData);
+
+            if (options.ContextEntityGenerationEnabled)
+                GenerateContextEntity(spc, contextData);
+
+            if (options.ComponentContextExtensionGenerationEnabled)
+                GenerateContextsExtension(spc, contextData);
         }
     }
     

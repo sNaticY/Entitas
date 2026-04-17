@@ -24,7 +24,9 @@ public static class ComponentGenerationHelper
     // ignoreNamespaces was a config in Jenny.properties
     public static bool IgnoreNamespaces = false;
     
-    public static IncrementalValueProvider<ImmutableArray<ComponentData>> GetComponentsData(IncrementalGeneratorInitializationContext context)
+    public static IncrementalValueProvider<ImmutableArray<ComponentData>> GetComponentsData(
+        IncrementalGeneratorInitializationContext context,
+        IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions)
     {
         var declaredComponentsData = context.SyntaxProvider
             .CreateSyntaxProvider(
@@ -35,27 +37,31 @@ public static class ComponentGenerationHelper
             .Collect();
 
         // Include generated components (ex: events)
-        return MergeWithGeneratedComponents(declaredComponentsData);
+        return declaredComponentsData
+            .Combine(generatorOptions)
+            .Select(static (input, _) => MergeWithGeneratedComponents(input.Left, input.Right));
     }
 
-    static IncrementalValueProvider<ImmutableArray<ComponentData>> MergeWithGeneratedComponents(
-        IncrementalValueProvider<ImmutableArray<ComponentData>> declaredComponentsData)
+    static ImmutableArray<ComponentData> MergeWithGeneratedComponents(
+        ImmutableArray<ComponentData> originalComponents,
+        in EntitasGeneratorOptions options)
     {
-        return declaredComponentsData.Select(static (originalComponents, _) => 
-        {
-            var builder = ImmutableArray.CreateBuilder<ComponentData>(originalComponents.Length);
-            builder.AddRange(originalComponents);
+        var builder = ImmutableArray.CreateBuilder<ComponentData>(originalComponents.Length);
+        builder.AddRange(originalComponents);
 
-            // Add generated components (ex: events)
-            foreach (var component in originalComponents)
-            {
-                if (!component.HasEvents) continue;
-
-                EventsGenerationHelper.CreateEventComponents(component, builder);
-            }
-
+        if (!options.ComponentEventsGenerationEnabled)
             return builder.ToImmutable();
-        });
+
+        // Add generated components (ex: events)
+        foreach (var component in originalComponents)
+        {
+            if (!component.HasEvents)
+                continue;
+
+            EventsGenerationHelper.CreateEventComponents(component, builder);
+        }
+
+        return builder.ToImmutable();
     }
     
     static bool IsComponentCandidateSyntax(SyntaxNode node)
@@ -115,24 +121,38 @@ public static class ComponentGenerationHelper
         return null;
     }
     
-    public static void GenerateEntityComponent(SourceProductionContext spc, 
-        in ComponentData componentData, 
+    public static void GenerateEntityComponent(SourceProductionContext spc,
+        in ComponentData componentData,
+        in EntitasGeneratorOptions options,
         in ContextData contextData)
     {
         var source = string.Empty;
-        if (componentData.IsUnique)
+
+        if (componentData.IsUnique && options.ComponentContextExtensionGenerationEnabled)
             source += CreateComponentContextApiSource(componentData, contextData);
-        
-        if (componentData.Members.Length == 0)
+
+        if (options.ComponentEntityExtensionGenerationEnabled)
         {
-            source += ComponentTemplates.GetFlagComponentEntityApiSource(contextData, componentData);
+            if (componentData.Members.Length == 0)
+            {
+                source += ComponentTemplates.GetFlagComponentEntityApiSource(contextData, componentData);
+            }
+            else
+            {
+                source += ComponentTemplates.GetStandardComponentEntityApiSource(contextData, componentData);
+            }
         }
-        else
+
+        if (options.ComponentMatcherGenerationEnabled)
         {
-            source += ComponentTemplates.GetStandardComponentEntityApiSource(contextData, componentData);
+            if (source.Length > 0)
+                source += "\n";
+
+            source += ComponentTemplates.GetComponentMatcherApiSource(contextData, componentData);
         }
-        
-        source += "\n" + ComponentTemplates.GetComponentMatcherApiSource(contextData, componentData);
+
+        if (string.IsNullOrEmpty(source))
+            return;
 
         var fileName = contextData.ContextName + componentData.GetComponentName().AddComponentSuffix();
         spc.AddSource($"{fileName}.g.cs", SourceText.From(source, Encoding.UTF8));

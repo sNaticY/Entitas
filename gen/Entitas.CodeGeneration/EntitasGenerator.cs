@@ -26,12 +26,12 @@ public class EntitasGenerator : IIncrementalGenerator
             .Select(static (input, _) => EntitasGeneratorOptions.From(input.Right, input.Left).ShouldRun(input.Left.AssemblyName));
 
         var contextsData = ContextGenerationHelper.GetContextsData(context);
-        RegisterContextsGeneration(context, shouldRun, contextsData);
+        RegisterContextsGeneration(context, shouldRun, generatorOptions, contextsData);
 
-        var componentsData = ComponentGenerationHelper.GetComponentsData(context);
+        var componentsData = ComponentGenerationHelper.GetComponentsData(context, generatorOptions);
         var componentsByContextNameLookup = ComponentsLookupGenerationHelper.GetComponentsByContextNameLookup(componentsData);
-        RegisterIndividualComponentsGeneration(context, shouldRun, contextsData, componentsByContextNameLookup);
-        RegisterSharedSourcesGeneration(context, shouldRun, contextsData, componentsData, componentsByContextNameLookup);
+        RegisterIndividualComponentsGeneration(context, shouldRun, generatorOptions, contextsData, componentsByContextNameLookup);
+        RegisterSharedSourcesGeneration(context, shouldRun, generatorOptions, contextsData, componentsData, componentsByContextNameLookup);
 
         RegisterVisualDebuggingGeneration(context, generatorOptions, contextsData);
     }
@@ -39,9 +39,10 @@ public class EntitasGenerator : IIncrementalGenerator
     void RegisterContextsGeneration(
         IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<bool> shouldRun,
+        IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
         in IncrementalValueProvider<ImmutableArray<ContextData>> contextsData)
     {
-        var combinedInput = shouldRun.Combine(contextsData);
+        var combinedInput = shouldRun.Combine(generatorOptions.Combine(contextsData));
 
         // This will be triggered for any context change (ContextAttribute class)
         context.RegisterSourceOutput(combinedInput,
@@ -49,29 +50,31 @@ public class EntitasGenerator : IIncrementalGenerator
     }
 
     static void GenerateContexts(
-        (bool, ImmutableArray<ContextData>) input,
+        (bool, (EntitasGeneratorOptions, ImmutableArray<ContextData>)) input,
         SourceProductionContext spc)
     {
         if (!input.Item1) // check shouldRun
             return;
 
-        var contextsData = input.Item2;
+        var options = input.Item2.Item1;
+        var contextsData = input.Item2.Item2;
         if (contextsData.IsDefaultOrEmpty)
             return;
 
-        ContextGenerationHelper.GenerateContexts(spc, contextsData);
+        ContextGenerationHelper.GenerateContexts(spc, contextsData, options);
     }
 
     void RegisterSharedSourcesGeneration(
         IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<bool> shouldRun,
+        IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
         in IncrementalValueProvider<ImmutableArray<ContextData>> contextsData,
         in IncrementalValueProvider<ImmutableArray<ComponentData>> componentsData,
         in IncrementalValueProvider<ImmutableDictionary<string, ImmutableArray<ComponentData>>> componentsByContextNameLookup)
     {
         var contextsAndComponents = contextsData.Combine(componentsData);
         var contextsAndComponentsWithLookup = contextsAndComponents.Combine(componentsByContextNameLookup);
-        var combinedInput = shouldRun.Combine(contextsAndComponentsWithLookup);
+        var combinedInput = shouldRun.Combine(generatorOptions.Combine(contextsAndComponentsWithLookup));
 
         // Warning: This will be triggered for ANY context or component change
         // Keep it as light as possible
@@ -80,26 +83,35 @@ public class EntitasGenerator : IIncrementalGenerator
     }
 
     static void GenerateSharedSources(
-        (bool, ((ImmutableArray<ContextData>, ImmutableArray<ComponentData>), ImmutableDictionary<string, ImmutableArray<ComponentData>>)) input,
+        (bool, (EntitasGeneratorOptions, ((ImmutableArray<ContextData>, ImmutableArray<ComponentData>), ImmutableDictionary<string, ImmutableArray<ComponentData>>))) input,
         SourceProductionContext spc)
     {
         if (!input.Item1) // check shouldRun
             return;
 
-        var contextsData = input.Item2.Item1.Item1;
+        var options = input.Item2.Item1;
+        var contextsData = input.Item2.Item2.Item1.Item1;
         var contextLookup = contextsData.ToDictionary(ctx => ctx.ContextName);
 
-        var componentsByContextNameLookup = input.Item2.Item2;
-        ComponentsLookupGenerationHelper.GenerateComponentsLookups(spc, componentsByContextNameLookup, contextLookup);
+        var componentsByContextNameLookup = input.Item2.Item2.Item2;
 
-        EntityIndexGenerationHelper.GenerateEntityIndices(spc, componentsByContextNameLookup, contextLookup);
-        CleanupGenerationHelper.GenerateCleanupSystems(spc, componentsByContextNameLookup, contextLookup);
-        EventsGenerationHelper.GenerateEventSystems(spc, componentsByContextNameLookup, contextLookup);
+        if (options.ComponentsLookupGenerationEnabled)
+            ComponentsLookupGenerationHelper.GenerateComponentsLookups(spc, componentsByContextNameLookup, contextLookup);
+
+        if (options.ComponentEntityIndexGenerationEnabled)
+            EntityIndexGenerationHelper.GenerateEntityIndices(spc, componentsByContextNameLookup, contextLookup);
+
+        if (options.CleanupGenerationEnabled)
+            CleanupGenerationHelper.GenerateCleanupSystems(spc, componentsByContextNameLookup, contextLookup);
+
+        if (options.ComponentEventSystemsGenerationEnabled)
+            EventsGenerationHelper.GenerateEventSystems(spc, componentsByContextNameLookup, contextLookup);
     }
 
     void RegisterIndividualComponentsGeneration(
         IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<bool> shouldRun,
+        IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
         in IncrementalValueProvider<ImmutableArray<ContextData>> contextsData,
         in IncrementalValueProvider<ImmutableDictionary<string, ImmutableArray<ComponentData>>> componentsByContextNameLookup)
     {
@@ -117,8 +129,10 @@ public class EntitasGenerator : IIncrementalGenerator
                 });
             });
 
-        var conditionalComponentByContext = componentByContext.Combine(shouldRun)
-            .Select((pair, _) => (ShouldRun: pair.Right, pair.Left));
+        var conditionalComponentByContext = componentByContext
+            .Combine(generatorOptions)
+            .Combine(shouldRun)
+            .Select((pair, _) => (ShouldRun: pair.Right, Options: pair.Left.Right, ComponentByContext: pair.Left.Left));
 
         // This is triggered for:
         // - individual components that have changed, or
@@ -128,23 +142,24 @@ public class EntitasGenerator : IIncrementalGenerator
     }
 
     static void GenerateIndividualEntityComponent(
-        (bool, (ContextData, ComponentData)) input,
+        (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData, ComponentData) ComponentByContext) input,
         SourceProductionContext spc)
     {
-        if (!input.Item1) // check shouldRun
+        if (!input.ShouldRun)
             return;
 
-        var componentData = input.Item2.Item2;
-        var contextData = input.Item2.Item1;
+        var componentData = input.ComponentByContext.Item2;
+        var contextData = input.ComponentByContext.Item1;
 
-        ComponentGenerationHelper.GenerateEntityComponent(spc, componentData, contextData);
+        ComponentGenerationHelper.GenerateEntityComponent(spc, componentData, input.Options, contextData);
 
         if (componentData.IsGenerated)
             return;
 
-        EventsGenerationHelper.GenerateComponentEvents(spc, componentData, contextData);
+        if (input.Options.ComponentEventsGenerationEnabled)
+            EventsGenerationHelper.GenerateComponentEvents(spc, componentData, contextData);
 
-        if (componentData.HasCleanupAttribute)
+        if (input.Options.CleanupGenerationEnabled && componentData.HasCleanupAttribute)
             CleanupGenerationHelper.GenerateComponentCleanupSystem(spc, componentData, contextData);
     }
 
