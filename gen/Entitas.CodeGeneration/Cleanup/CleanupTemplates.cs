@@ -10,7 +10,7 @@ public static class CleanupTemplates
     public const string CleanupSystemsTemplate =
         @"public sealed class ${ContextName}CleanupSystems : Entitas.Systems
 {
-    public ${ContextName}CleanupSystems(Contexts contexts)
+    public ${ContextName}CleanupSystems(global::Entitas.Contexts contexts)
     {
 ${systemsList}
     }
@@ -26,9 +26,9 @@ public sealed class Destroy${ComponentName}${SystemType} : ICleanupSystem
     readonly IGroup<${EntityType}> _group;
     readonly List<${EntityType}> _buffer = new List<${EntityType}>();
 
-    public Destroy${ComponentName}${SystemType}(Contexts contexts)
+    public Destroy${ComponentName}${SystemType}(global::Entitas.Contexts contexts)
     {
-        _group = contexts.${contextName}.GetGroup(${MatcherType}.${ComponentName}());
+        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${ComponentName}());
     }
 
     public void Cleanup()
@@ -51,7 +51,8 @@ public sealed class Destroy${ComponentName}${SystemType} : ICleanupSystem
 
         return DestroyEntityCleanupSystemTemplate
             .Replace("${ComponentName}", componentName)
-            .Replace("${contextName}", contextData.ContextName.ToLowerFirst())
+            .Replace("${ContextName}", contextData.ContextName)
+            .Replace("${ContextType}", contextData.ContextTypeName)
             .Replace("${SystemType}", contextData.SystemTypeName)
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${MatcherType}", contextData.MatcherTypeName);
@@ -66,9 +67,9 @@ public sealed class Remove${ComponentName}${SystemType} : ICleanupSystem
     readonly IGroup<${EntityType}> _group;
     readonly List<${EntityType}> _buffer = new List<${EntityType}>();
 
-    public Remove${ComponentName}${SystemType}(Contexts contexts)
+    public Remove${ComponentName}${SystemType}(global::Entitas.Contexts contexts)
     {
-        _group = contexts.${contextName}.GetGroup(${MatcherType}.${ComponentName}());
+        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${ComponentName}());
     }
 
     public void Cleanup()
@@ -95,7 +96,8 @@ public sealed class Remove${ComponentName}${SystemType} : ICleanupSystem
 
         return RemoveComponentCleanupSystemTemplate
             .Replace("${ComponentName}", componentName)
-            .Replace("${contextName}", contextData.ContextName.ToLowerFirst())
+            .Replace("${ContextName}", contextData.ContextName)
+            .Replace("${ContextType}", contextData.ContextTypeName)
             .Replace("${SystemType}", contextData.SystemTypeName)
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${MatcherType}", contextData.MatcherTypeName)

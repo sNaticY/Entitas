@@ -12,8 +12,8 @@ namespace Entitas.Generators.IntegrationTests
 
         public FlagComponentAddedTests()
         {
-            _contexts = new Contexts();
-            _entity = _contexts.main.CreateEntity();
+            _contexts = TestContexts.Create();
+            _entity = _contexts.GetMain().CreateEntity();
             _listener = new LoadingAddedListener(_entity);
             _system = new MyFeatureLoadingEventSystem(_contexts);
         }
@@ -30,7 +30,7 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void DoesNotPassEntityWhenAddedOnDifferentEntity()
         {
-            _contexts.main.CreateEntity().SetMyFeatureLoading(true);
+            _contexts.GetMain().CreateEntity().SetMyFeatureLoading(true);
             _system.Execute();
 
             _listener.Entity.Should().BeNull();

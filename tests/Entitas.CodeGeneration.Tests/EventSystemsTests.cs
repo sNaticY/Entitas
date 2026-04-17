@@ -8,7 +8,7 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void GeneratesEventSystems()
         {
-            new MainEventSystems(new Contexts()).Should().NotBeNull();
+            new MainEventSystems(TestContexts.Create()).Should().NotBeNull();
         }
     }
 }

@@ -17,7 +17,7 @@ If you are using Entitas for a Unity game, this is the main workflow to follow.
 
 - Unity runtime/editor integration in this repo is validated against Unity `2021.3.0f1`
 - Incremental source generator support is intended for Unity 6 style Roslyn analyzer integration
-- If you are not using `Assembly-CSharp`, update the assembly-name filter in `gen/Entitas.CodeGeneration/EntitasGenerator.cs`
+- The incremental generator now runs for attached compilations by default; use analyzer config only if you want to filter assemblies explicitly
 
 ### 1. Add Entitas runtime code to your Unity project
 
@@ -46,7 +46,14 @@ Your gameplay code should only reference the attribute types from `Entitas.CodeG
 
 ### 3. Put generated-code inputs in the Unity gameplay assembly
 
-By default the generator only runs for `Assembly-CSharp`. That means your context markers and component declarations should live in `Assembly-CSharp`, or you need to extend the filter in `EntitasGenerator.cs` for your own asmdef names.
+Put your context markers and component declarations in the gameplay assemblies where they belong. The generator runs per compilation, so each asmdef only generates code for the contexts and components visible in that asmdef.
+
+If you want to restrict generation to specific assemblies, use analyzer config, for example:
+
+```ini
+[*.cs]
+entitas_generator.assembly_names = Assembly-CSharp, Game.Gameplay
+```
 
 ### 4. Declare your contexts
 
@@ -95,7 +102,7 @@ The component declarations above generate APIs such as:
 
 - `MainContext`
 - `MainEntity`
-- `Contexts`
+- `GetMain()` on `Entitas.Contexts`
 - `MainComponentsLookup`
 - `entity.AddMyFeatureUser(...)`
 - `entity.ReplaceMyFeatureUser(...)`
@@ -108,8 +115,12 @@ The component declarations above generate APIs such as:
 ### 7. Use the generated API
 
 ```csharp
-var contexts = new Contexts();
-var main = contexts.main;
+var contexts = new Contexts()
+    .Register(new MainContext());
+
+contexts.InitializeMainEntityIndices();
+
+var main = contexts.GetMain();
 
 var entity = main.CreateEntity();
 entity.AddMyFeatureUser("Alice", 42);
@@ -120,6 +131,20 @@ if (main.IsMyFeatureLoading())
 {
     var user = main.GetMyFeatureUser();
 }
+```
+
+For multiple contexts, register each one explicitly and run each generated bootstrap extension you need:
+
+```csharp
+var contexts = new Contexts()
+    .Register(new MainContext())
+    .Register(new ConfigContext());
+
+contexts.InitializeMainEntityIndices();
+contexts.InitializeConfigEntityIndices();
+
+var main = contexts.GetMain();
+var config = contexts.GetConfig();
 ```
 
 ## Source project setup
@@ -149,13 +174,8 @@ The incremental generator is the main change in this branch.
 
 ### Current limitations
 
-The generator currently only runs for assemblies named:
-
-- `Assembly-CSharp`
-- `Entitas.CodeGeneration.Tests`
-- `Entitas.CodeGeneration-Tests`
-
-If your Unity project uses custom asmdefs, update the `shouldRun` check in `gen/Entitas.CodeGeneration/EntitasGenerator.cs`.
+- The generator is compilation-scoped. If two different assemblies define two different contexts, each assembly generates its own local types and accessors from the source it can see.
+- Cross-assembly context composition currently relies on runtime `Entitas.Contexts` registration during bootstrap, not on one merged generated root container.
 
 Unity-side generator usage is also tied to Unity's Roslyn analyzer/source-generator support, so treat Unity 6 as the intended path for the incremental generator itself.
 
@@ -212,7 +232,18 @@ Before:
 public static partial void InitializeMain();
 ```
 
-That explicit initialization step is no longer the primary workflow. The generated `Contexts` type now acts as the root entry point, and post-constructor setup is generated automatically where needed.
+Explicit bootstrap is the primary workflow. `Entitas.Contexts` is now a runtime container, and generated helpers attach to it through extension methods.
+
+Now:
+
+```csharp
+var contexts = new Contexts()
+    .Register(new MainContext());
+
+contexts.InitializeMainEntityIndices();
+
+var main = contexts.GetMain();
+```
 
 ### 4. Generated type names are flatter
 
@@ -226,7 +257,7 @@ The incremental generator now produces flatter names such as:
 - `MainEntity`
 - `MainContext`
 - `MainComponentsLookup`
-- `Contexts`
+- `GetMain()` on runtime `Contexts`
 
 ### 5. Generated helper names are more explicit
 
@@ -270,16 +301,18 @@ Before:
 - `context.CreateEventSystems()`
 - `context.CreateCleanupSystems()`
 
-Now the generated root object is `Contexts`, and generated systems take that root object:
+Now `Contexts` is a runtime container that you bootstrap explicitly, and generated systems take that shared container:
 
-- `new Contexts()`
+- `new Contexts().Register(new MainContext())`
+- `contexts.GetMain()`
 - `new MainEventSystems(contexts)`
 - `new MainCleanupSystems(contexts)`
 
-Entity indices are also initialized through the generated `Contexts` flow, and generated keys are exposed on `Contexts`, for example:
+Entity indices are also initialized explicitly and generated keys are exposed per context, for example:
 
-- `Contexts.MyFeatureUserName`
-- `Contexts.MyFeatureUserAge`
+- `contexts.InitializeMainEntityIndices()`
+- `MainEntityIndices.MyFeatureUserName`
+- `MainEntityIndices.MyFeatureUserAge`
 
 ## License
 

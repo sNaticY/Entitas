@@ -137,7 +137,7 @@ Target:
 ### Step 4: Define the official assembly behavior
 
 Status:
-- clarified, not implemented
+- partially implemented
 
 We need an explicit rule for:
 - default Unity `Assembly-CSharp`
@@ -153,8 +153,43 @@ Current clarified behavior:
 - generation is compilation-scoped, so each assembly currently generates its own `Contexts` based only on the contexts discovered in that compilation
 - two different assemblies defining two different contexts will not automatically get one merged cross-assembly `Contexts`
 
-Remaining design decision:
-- define whether `Contexts` should stay per-assembly, or whether we want an explicit aggregate-assembly model for multi-asmdef projects
+Chosen direction:
+- move `Contexts` into the core `Entitas` runtime instead of generating a separate root `Contexts` class per compilation
+- treat `Contexts` as a typed registry/container owned by `Entitas`
+- feature assemblies generate access extensions for the contexts they define, instead of trying to generate one merged cross-assembly `Contexts`
+- users explicitly create and register contexts during bootstrap
+
+Proposed user-facing model:
+- `Entitas` provides the base `Contexts` runtime API
+- each feature assembly can define its own contexts and generate local accessors such as `GetMain(this Contexts contexts)`
+- bootstrap code manually creates `MainContext`, `UiContext`, etc. and registers them into one `Contexts` instance
+- systems in feature assemblies can depend on concrete context types directly, or use the shared `Contexts` plus generated extension methods
+
+Why this direction:
+- it matches Roslyn compilation boundaries better than cross-assembly aggregation
+- it avoids requiring a special aggregate asmdef just to combine contexts
+- it keeps multi-assembly projects explicit and predictable
+- it is close to the old generator's concrete-context usage model while still giving users one shared `Contexts` object
+
+Implementation implications:
+- add `Contexts` to `src/Entitas`
+- define registration and typed retrieval APIs in runtime, e.g. `Register<TContext>()` and `Get<TContext>()`
+- stop generating the root `Contexts` container class in `gen/Entitas.CodeGeneration/Contexts/ContextTemplates.cs`
+- start generating per-context extension accessors against runtime `Entitas.Contexts`
+- keep context construction/registration explicit unless we later add an optional aggregate bootstrap feature
+
+Completed in this session:
+- added runtime `Entitas.Contexts` as the shared typed context container
+- added explicit runtime registration/retrieval APIs and runtime tests
+- stopped generating the root `Contexts.g.cs` container class
+- switched generated context access to per-context extension methods such as `GetMain()`
+- switched generated cleanup/event/entity-index flows to use runtime `Entitas.Contexts`
+- switched generated entity-index initialization to explicit bootstrap extension methods like `InitializeMainEntityIndices()`
+- removed the remaining generated-root `Contexts` assumption from visual debugging by moving it to explicit bootstrap extensions
+
+Still remaining:
+- decide whether to add optional convenience bootstrap helpers on top of explicit registration
+- verify the new runtime `Contexts` model in downstream Unity sample usage
 
 ### Step 5: Add focused tests before removing the old generator
 
@@ -180,11 +215,15 @@ Completed in this session:
 - added tests covering custom assembly names
 - added tests covering explicit assembly filtering
 - added tests confirming empty compilations generate nothing
+- added tests covering explicit bootstrap with multiple registered contexts
+- added tests covering explicit entity-index initialization across multiple generated contexts
 
 Still remaining:
-- add coverage for multiple contexts across assemblies
 - add coverage for namespaced contexts/components
 - add coverage for unique flag components, events, cleanup systems, entity indices, and visual debugging toggles
+
+Note:
+- multiple generated contexts are now covered inside one compilation/bootstrap flow; true cross-assembly coverage still needs dedicated tests once Step 3 and downstream usage settle
 
 ### Step 6: Migrate downstream repo usage
 
@@ -205,7 +244,7 @@ Only then:
 1. Expand analyzer-config support beyond assembly and visual-debugging settings.
 2. Add more tests for configurable and multi-assembly behavior.
 3. Refine semantic context parsing if needed to make those tests pass cleanly.
-4. Define the official cross-assembly `Contexts` behavior.
+4. Verify and migrate the new runtime `Entitas.Contexts` bootstrap model in downstream Unity/sample usage.
 5. Report remaining blockers before touching samples or deleting old code.
 
 ## Suggested New Session Prompt

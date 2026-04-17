@@ -10,8 +10,8 @@ namespace Entitas.Generators.IntegrationTests
 
         public CleanupSystemTests()
         {
-            _contexts = new Contexts();
-            _context = _contexts.main;
+            _contexts = TestContexts.Create();
+            _context = _contexts.GetMain();
         }
 
         [Fact]

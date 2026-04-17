@@ -6,12 +6,12 @@ namespace Entitas.Generators.IntegrationTests
     public class EntityIndexTests
     {
         [Fact]
-        public void InitializesEntityIndexesViaContextsPostConstructor()
+        public void InitializesEntityIndexesViaExplicitBootstrap()
         {
-            var contexts = new Contexts();
+            var contexts = TestContexts.Create();
 
-            contexts.main.GetEntityIndex(Contexts.MyFeatureUserName).Should().NotBeNull();
-            contexts.main.GetEntityIndex(Contexts.MyFeatureUserAge).Should().NotBeNull();
+            contexts.GetMain().GetEntityIndex(MainEntityIndices.MyFeatureUserName).Should().NotBeNull();
+            contexts.GetMain().GetEntityIndex(MainEntityIndices.MyFeatureUserAge).Should().NotBeNull();
         }
     }
 }

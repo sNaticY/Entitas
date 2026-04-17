@@ -12,8 +12,8 @@ namespace Entitas.Generators.IntegrationTests
 
         public FlagComponentRemovedTests()
         {
-            _contexts = new Contexts();
-            _entity = _contexts.main.CreateEntity();
+            _contexts = TestContexts.Create();
+            _entity = _contexts.GetMain().CreateEntity();
             _listener = new LoadingRemovedListener(_entity);
             _system = new MyFeatureLoadingRemovedEventSystem(_contexts);
         }

@@ -2,58 +2,18 @@ namespace Entitas.CodeGeneration.Contexts;
 
 public static class ContextTemplates
 {
-    public const string ContextsTemplate =
-        @"public partial class Contexts
+    public const string ContextsExtensionTemplate =
+        @"namespace Entitas
 {
-    public static Contexts sharedInstance
+public static class ${ContextName}ContextsExtension
+{
+    public static ${ContextType} Get${ContextName}(this global::Entitas.Contexts contexts)
     {
-        get
-        {
-            if (_sharedInstance == null)
-            {
-                _sharedInstance = new Contexts();
-            }
-
-            return _sharedInstance;
-        }
-        set { _sharedInstance = value; }
-    }
-
-    static Contexts _sharedInstance;
-
-${contextPropertyList}
-
-    public global::Entitas.IContext[] allContexts { get { return new global::Entitas.IContext [] { ${contextList} }; } }
-
-    public Contexts()
-    {
-${contextAssignmentList}
-
-        var postConstructors = System.Linq.Enumerable.Where(
-            GetType().GetMethods(),
-            method => System.Attribute.IsDefined(method, typeof(global::Entitas.CodeGeneration.Attributes.PostConstructorAttribute))
-        );
-
-        foreach (var postConstructor in postConstructors)
-        {
-            postConstructor.Invoke(this, null);
-        }
-    }
-
-    public void Reset()
-    {
-        var contexts = allContexts;
-        for (int i = 0; i < contexts.Length; i++)
-        {
-            contexts[i].Reset();
-        }
+        return contexts.Get<${ContextType}>();
     }
 }
+}
 ";
-    
-    public const string ContextPropertyTemplate = @"    public ${ContextType} ${contextName} { get; set; }";
-    public const string ContextListTemplate = @"${contextName}";
-    public const string ContextAssignmentTemplate = @"        ${contextName} = new ${ContextType}();";
     
     public const string ContextTemplate =
         @"public sealed partial class ${ContextType} : global::Entitas.Context<${EntityType}>

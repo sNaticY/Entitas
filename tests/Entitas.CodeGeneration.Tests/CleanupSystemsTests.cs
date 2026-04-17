@@ -8,7 +8,7 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void GeneratesCleanupSystems()
         {
-            new MainCleanupSystems(new Contexts()).Should().NotBeNull();
+            new MainCleanupSystems(TestContexts.Create()).Should().NotBeNull();
         }
     }
 }

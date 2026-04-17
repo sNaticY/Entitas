@@ -3,12 +3,13 @@ namespace Entitas.CodeGeneration.VisualDebugging.ContextObserver;
 public static class ContextObserverTemplates
 {
     public const string ContextsTemplate =
-        @"public partial class Contexts
+        @"namespace Entitas
+{
+public static class ContextsVisualDebuggingExtension
 {
 #if (!ENTITAS_DISABLE_VISUAL_DEBUGGING && UNITY_EDITOR)
 
-    [Entitas.CodeGeneration.Attributes.PostConstructor]
-    public void InitializeContextObservers()
+    public static void InitializeContextObservers(this global::Entitas.Contexts contexts)
     {
         try
         {
@@ -20,18 +21,19 @@ ${contextObservers}
         }
     }
 
-    public void CreateContextObserver(Entitas.IContext context)
+    static void CreateContextObserver(global::Entitas.IContext context)
     {
         if (UnityEngine.Application.isPlaying)
         {
-            Entitas.Unity.ContextObserverExtension.CreateContextObserver(context);
+            global::Entitas.Unity.ContextObserverExtension.CreateContextObserver(context);
         }
     }
 
 #endif
 }
+}
 ";
 
-    public const string ContextObserverTemplate = @"            CreateContextObserver(${contextName});";
+    public const string ContextObserverTemplate = @"            CreateContextObserver(contexts.Get${ContextName}());";
 
 }

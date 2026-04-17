@@ -25,10 +25,10 @@ namespace MyGame
 
         result.GeneratedTrees.Select(tree => Path.GetFileName(tree.FilePath)).Should().Contain(new[]
         {
-            "Contexts.g.cs",
             "MainContext.g.cs",
             "MainMatcher.g.cs",
             "MainEntity.g.cs",
+            "MainContextsExtension.g.cs",
         });
     }
 

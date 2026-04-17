@@ -99,6 +99,8 @@ public static class EntityIndexGenerationHelper
             return;
 
         var source = EntityIndexTemplates.EntityIndexContextsTemplate
+            .Replace("${ContextName}", contextData.ContextName)
+            .Replace("${contextName}", contextData.ContextName.ToLowerFirst())
             .Replace("${indexConstants}", indexConstantsBuilder.ToString().RemoveLast("\n"))
             .Replace("${addIndices}", addIndicesBuilder.ToString().RemoveLast("\n\n"))
             .Replace("${getIndices}", getIndicesBuilder.ToString().RemoveLast("\n\n"));

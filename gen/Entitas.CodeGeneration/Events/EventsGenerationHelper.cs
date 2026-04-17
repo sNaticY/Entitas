@@ -146,8 +146,6 @@ public static class EventsGenerationHelper
             : EventsTemplates.AnyTargetEventSystemTemplate;
 
         var eventName = componentData.EventName(contextData.ContextName, eventData);
-        var contextNameLower = contextData.ContextName.ToLowerFirst();
-        
         var source = template
             .Replace("${GroupEvent}", eventData.EventType.ToString())
             .Replace("${filter}", GetFilter(componentData, contextData.ContextName, eventData))
@@ -155,10 +153,11 @@ public static class EventsGenerationHelper
             .Replace("${methodArgs}", methodArgs)
             .Replace("${Event}", eventName)
             .Replace("${EventType}", eventData.GetEventTypeSuffix())
+            .Replace("${ContextName}", contextData.ContextName)
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${EventListener}", eventListener)
             .Replace("${getEventListener}", getEventListener)
-            .Replace("${contextName}", contextNameLower)
+            .Replace("${ContextType}", contextData.ContextTypeName)
             .Replace("${MatcherType}", contextData.MatcherTypeName)
             .Replace("${ComponentName}", componentData.GetComponentName())
             .Replace("${EventComponentName}", componentData.EventComponentName(eventData));

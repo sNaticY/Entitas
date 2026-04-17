@@ -97,38 +97,13 @@ public static class ContextGenerationHelper
     
     public static void GenerateContexts(SourceProductionContext spc, ImmutableArray<ContextData> contextsData)
     {
-        GenerateContextsSource(spc, contextsData);
-        
         foreach (var contextData in contextsData)
         {
             GenerateContext(spc, contextData);
             GenerateContextMatcher(spc, contextData);
             GenerateContextEntity(spc, contextData);
+            GenerateContextsExtension(spc, contextData);
         }
-    }
-
-    public static void GenerateContextsSource(SourceProductionContext spc, ImmutableArray<ContextData> contextsData)
-    {
-        var contextList = string.Join(", ", contextsData
-            .Select(contextData => ContextTemplates.ContextListTemplate
-                .Replace("${contextName}", contextData.ContextName.ToLowerFirst())));
-
-        var contextPropertyList = string.Join("\n", contextsData
-            .Select(contextData => ContextTemplates.ContextPropertyTemplate
-                .Replace("${contextName}", contextData.ContextName.ToLowerFirst())
-                .Replace("${ContextType}", contextData.ContextTypeName)));
-
-        var contextAssignmentList = string.Join("\n", contextsData
-            .Select(contextData => ContextTemplates.ContextAssignmentTemplate
-                .Replace("${contextName}", contextData.ContextName.ToLowerFirst())
-                .Replace("${ContextType}", contextData.ContextTypeName)));
-
-        var generatedSource = ContextTemplates.ContextsTemplate
-            .Replace("${contextList}", contextList)
-            .Replace("${contextPropertyList}", contextPropertyList)
-            .Replace("${contextAssignmentList}", contextAssignmentList);
-        
-        spc.AddSource("Contexts.g.cs", SourceText.From(generatedSource, Encoding.UTF8));
     }
     
     public static void GenerateContext(SourceProductionContext spc, ContextData data)
@@ -157,5 +132,14 @@ public static class ContextGenerationHelper
             .Replace("${EntityType}", data.EntityTypeName);
         
         spc.AddSource(data.EntityTypeName + ".g.cs", SourceText.From(source, Encoding.UTF8));
+    }
+
+    public static void GenerateContextsExtension(SourceProductionContext spc, ContextData data)
+    {
+        var source = ContextTemplates.ContextsExtensionTemplate
+            .Replace("${ContextName}", data.ContextName)
+            .Replace("${ContextType}", data.ContextTypeName);
+
+        spc.AddSource(data.ContextName + "ContextsExtension.g.cs", SourceText.From(source, Encoding.UTF8));
     }
 }

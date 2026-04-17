@@ -8,27 +8,33 @@ namespace Entitas.CodeGeneration.EntityIndex;
 public static class EntityIndexTemplates
 {
     public const string EntityIndexContextsTemplate =
-        @"public partial class Contexts
+        @"namespace Entitas
+{
+public static class ${ContextName}EntityIndices
 {
 ${indexConstants}
+}
 
-    [Entitas.CodeGeneration.Attributes.PostConstructor]
-    public void InitializeEntityIndices()
+public static class ${ContextName}ContextsEntityIndexExtension
+{
+    public static void Initialize${ContextName}EntityIndices(this global::Entitas.Contexts contexts)
     {
+        var ${contextName} = contexts.Get${ContextName}();
 ${addIndices}
     }
 }
 
-public static class ContextsExtensions
+public static class ${ContextName}EntityIndicesExtension
 {
 ${getIndices}
+}
 }";
 
     public const string IndexConstantTemplate = @"    public const string ${IndexName} = ""${IndexName}"";";
 
     const string AddIndexTemplate =
         @"        ${contextName}.AddEntityIndex(new ${IndexType}<${ContextName}Entity, ${KeyType}>(
-            ${IndexName},
+            ${ContextName}EntityIndices.${IndexName},
             ${contextName}.GetGroup(${ContextName}Matcher.${Matcher}()),
             (e, c) => ((${ComponentType})c).${MemberName}));";
     
@@ -59,7 +65,7 @@ ${getIndices}
 
     const string GetIndexTemplate =
         @"    public static System.Collections.Generic.HashSet<${ContextName}Entity> GetEntitiesWith${IndexName}(this ${ContextName}Context context, ${KeyType} ${MemberName}) {
-        return ((${IndexType}<${ContextName}Entity, ${KeyType}>)context.GetEntityIndex(Contexts.${IndexName})).GetEntities(${MemberName});
+        return ((${IndexType}<${ContextName}Entity, ${KeyType}>)context.GetEntityIndex(${ContextName}EntityIndices.${IndexName})).GetEntities(${MemberName});
     }";
     
     public static string GetIndexSource(
@@ -77,7 +83,7 @@ ${getIndices}
 
     const string GetPrimaryIndexTemplate =
         @"    public static ${ContextName}Entity GetEntityWith${IndexName}(this ${ContextName}Context context, ${KeyType} ${MemberName}) {
-        return ((${IndexType}<${ContextName}Entity, ${KeyType}>)context.GetEntityIndex(Contexts.${IndexName})).GetEntity(${MemberName});
+        return ((${IndexType}<${ContextName}Entity, ${KeyType}>)context.GetEntityIndex(${ContextName}EntityIndices.${IndexName})).GetEntity(${MemberName});
     }";
     
     public static string GetPrimaryIndexSource(

@@ -10,7 +10,7 @@ namespace Entitas.Generators.IntegrationTests
 
         public ListenerEventEntityExtensionTests()
         {
-            _context = new Contexts().main;
+            _context = TestContexts.Create().GetMain();
             _listener = new ListenerEventEntityExtensionListener();
         }
 

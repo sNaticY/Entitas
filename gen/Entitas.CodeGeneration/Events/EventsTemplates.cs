@@ -46,15 +46,17 @@ public sealed class ${EventListenerComponent} : Entitas.IComponent
 ";
     
     public const string AnyTargetEventSystemTemplate =
-            @"public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
+            @"using Entitas;
+
+public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
 {
     readonly Entitas.IGroup<${EntityType}> _listeners;
     readonly System.Collections.Generic.List<${EntityType}> _entityBuffer;
     readonly System.Collections.Generic.List<I${EventListener}> _listenerBuffer;
 
-    public ${Event}EventSystem(Contexts contexts) : base(contexts.${contextName})
+    public ${Event}EventSystem(global::Entitas.Contexts contexts) : base(contexts.Get${ContextName}())
     {
-        _listeners = contexts.${contextName}.GetGroup(${MatcherType}.${EventListener}());
+        _listeners = contexts.Get${ContextName}().GetGroup(${MatcherType}.${EventListener}());
         _entityBuffer = new System.Collections.Generic.List<${EntityType}>();
         _listenerBuffer = new System.Collections.Generic.List<I${EventListener}>();
     }
@@ -91,11 +93,13 @@ public sealed class ${EventListenerComponent} : Entitas.IComponent
 ";
 
     public const string SelfTargetEventSystemTemplate =
-            @"public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
+            @"using Entitas;
+
+public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
 {
     readonly System.Collections.Generic.List<I${EventListener}> _listenerBuffer;
 
-    public ${Event}EventSystem(Contexts contexts) : base(contexts.${contextName})
+    public ${Event}EventSystem(global::Entitas.Contexts contexts) : base(contexts.Get${ContextName}())
     {
         _listenerBuffer = new System.Collections.Generic.List<I${EventListener}>();
     }
@@ -131,7 +135,7 @@ public sealed class ${EventListenerComponent} : Entitas.IComponent
     public const string EventSystemsTemplate =
         @"public sealed class ${ContextName}EventSystems : Entitas.Systems
 {
-    public ${ContextName}EventSystems(Contexts contexts)
+    public ${ContextName}EventSystems(global::Entitas.Contexts contexts)
     {
 ${systemsList}
     }

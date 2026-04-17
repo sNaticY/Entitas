@@ -12,8 +12,8 @@ namespace Entitas.Generators.IntegrationTests
 
         public AnyFlagComponentAddedTests()
         {
-            _contexts = new Contexts();
-            _context = _contexts.main;
+            _contexts = TestContexts.Create();
+            _context = _contexts.GetMain();
             _listener = new AnyLoadingAddedListener(_context);
             _system = new MyFeatureAnyLoadingEventSystem(_contexts);
         }

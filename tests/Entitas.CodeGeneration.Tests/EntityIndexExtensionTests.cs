@@ -9,14 +9,14 @@ namespace Entitas.Generators.IntegrationTests
 
         public EntityIndexExtensionTests()
         {
-            _context = new Contexts().main;
+            _context = TestContexts.Create().GetMain();
         }
 
         [Fact]
         public void AddsAllEntityIndexes()
         {
-            _context.GetEntityIndex(Contexts.MyFeatureUserName).Should().BeAssignableTo<PrimaryEntityIndex<MainEntity, string>>();
-            _context.GetEntityIndex(Contexts.MyFeatureUserAge).Should().BeAssignableTo<EntityIndex<MainEntity, int>>();
+            _context.GetEntityIndex(MainEntityIndices.MyFeatureUserName).Should().BeAssignableTo<PrimaryEntityIndex<MainEntity, string>>();
+            _context.GetEntityIndex(MainEntityIndices.MyFeatureUserAge).Should().BeAssignableTo<EntityIndex<MainEntity, int>>();
         }
 
         [Fact]

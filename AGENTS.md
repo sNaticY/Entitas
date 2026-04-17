@@ -34,8 +34,11 @@
 - Snapshot approvals for generator tests live in `tests/Entitas.Generators.Tests/snapshots/*.verified.cs`; generator output changes usually require updating those checked-in files.
 - `tests/Entitas.CodeGeneration.Tests` references `gen/Entitas.CodeGeneration` as an analyzer (`OutputItemType="Analyzer"`, `ReferenceOutputAssembly="false"`) and references `src/Entitas.CodeGeneration.Attributes`; use it to verify end-to-end generated code, not just snapshots.
 - Generator tests also assert the checked-in generator sources keep `global::` namespace qualification (`AssertUsesGlobalNamespaces` in `tests/Entitas.Generators.Tests/TestHelper.cs`).
-- The incremental generator currently only runs for hardcoded assembly names in `gen/Entitas.CodeGeneration/EntitasGenerator.cs`: `Assembly-CSharp`, `Entitas.CodeGeneration.Tests`, and `Entitas.CodeGeneration-Tests`.
-- For Unity projects with custom asmdefs, update that assembly-name filter or the generator will appear to do nothing.
+- The incremental generator now runs for attached compilations by default. Optional assembly filtering is analyzer-config driven through `entitas_generator.assembly_names`.
+- `src/Entitas/Context/Contexts.cs` is now the runtime root context container. Do not reintroduce a generated root `Contexts.g.cs` container unless the design changes explicitly.
+- Generated context access now uses extension methods like `contexts.GetMain()` rather than generated root properties like `contexts.main`.
+- Generated entity-index setup is explicit bootstrap via methods like `InitializeMainEntityIndices()`, and generated keys live on per-context classes like `MainEntityIndices`, not on `Contexts`.
+- The remaining multi-assembly design is runtime-bootstrap based: users register contexts into `Entitas.Contexts` explicitly.
 - For documentation changes, keep `README.md` Unity-first: prefer explaining Unity usage, incremental generator wiring, and migration from Entitas 1 over historical/community material.
 
 ## Style Constraints
