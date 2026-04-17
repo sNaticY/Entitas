@@ -1,4 +1,0 @@
-namespace MyApp
-{
-    partial class NamespacedContext : Entitas.IContext { }
-}
