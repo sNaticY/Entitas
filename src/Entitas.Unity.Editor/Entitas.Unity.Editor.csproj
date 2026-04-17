@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Entitas/Entitas.csproj" />
-    <ProjectReference Include="../Entitas.Generators.Attributes/Entitas.Generators.Attributes.csproj" />
+    <ProjectReference Include="../Entitas.CodeGeneration.Attributes/Entitas.CodeGeneration.Attributes.csproj" />
     <ProjectReference Include="../Entitas.Unity/Entitas.Unity.csproj" />
   </ItemGroup>
 

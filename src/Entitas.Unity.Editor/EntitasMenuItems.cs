@@ -4,7 +4,7 @@ using System.Linq;
 using DesperateDevs.Extensions;
 using DesperateDevs.Reflection;
 using DesperateDevs.Unity.Editor;
-using Entitas.Generators.Attributes;
+using Entitas.CodeGeneration.Attributes;
 using UnityEditor;
 using UnityEngine;
 
@@ -164,7 +164,7 @@ namespace Entitas.Unity.Editor
         static string[] GetContextNames(Type type) => Attribute
             .GetCustomAttributes(type)
             .OfType<ContextAttribute>()
-            .Select(attr => attr.Type.FullName)
+            .Select(attr => attr.ContextName)
             .ToArray();
 
         static string[] GetContextNamesOrDefault(Type type)
