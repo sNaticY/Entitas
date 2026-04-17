@@ -75,6 +75,55 @@ namespace MyGame.Aliases
     }
 
     [Fact]
+    public void GeneratesWhenAssemblyIsIncludedInMultiAssemblyFilter()
+    {
+        var result = CodeGenerationTestHelper.RunGenerator(
+            ContextSource,
+            "My.Gameplay",
+            new Dictionary<string, string>
+            {
+                ["entitas_generator.assembly_names"] = "Assembly-CSharp; My.Gameplay; My.Configuration"
+            });
+
+        result.GeneratedTrees.Select(tree => Path.GetFileName(tree.FilePath)).Should().Contain(new[]
+        {
+            "MainContext.g.cs",
+            "MainMatcher.g.cs",
+            "MainEntity.g.cs",
+            "MainContextsExtension.g.cs",
+        });
+    }
+
+    [Fact]
+    public void SkipsCompilationsNotIncludedInMultiAssemblyFilter()
+    {
+        var gameplayResult = CodeGenerationTestHelper.RunGenerator(
+            ContextSource,
+            "My.Gameplay",
+            new Dictionary<string, string>
+            {
+                ["entitas_generator.assembly_names"] = "Assembly-CSharp,My.Configuration"
+            });
+
+        var configurationResult = CodeGenerationTestHelper.RunGenerator(
+            ConfigContextSource,
+            "My.Configuration",
+            new Dictionary<string, string>
+            {
+                ["entitas_generator.assembly_names"] = "Assembly-CSharp,My.Configuration"
+            });
+
+        gameplayResult.GeneratedTrees.Should().BeEmpty();
+        configurationResult.GeneratedTrees.Select(tree => Path.GetFileName(tree.FilePath)).Should().Contain(new[]
+        {
+            "ConfigContext.g.cs",
+            "ConfigMatcher.g.cs",
+            "ConfigEntity.g.cs",
+            "ConfigContextsExtension.g.cs",
+        });
+    }
+
+    [Fact]
     public void GeneratesIndependentContextSurfacesPerCompilation()
     {
         var gameplayResult = CodeGenerationTestHelper.RunGenerator(ContextSource, "My.Gameplay");
