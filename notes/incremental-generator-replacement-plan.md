@@ -85,7 +85,7 @@ Completed in this session:
 ### Step 2: Add analyzer-config based generator options
 
 Status:
-- partially completed
+- completed
 
 Use the old generator as reference:
 - `gen/Entitas.Generators/EntitasAnalyzerConfigOptions.cs`
@@ -109,13 +109,28 @@ This should replace hardcoded switches like:
 
 Completed in this session:
 - added analyzer-config support for assembly filtering via `entitas_generator.assembly_names`
+- added analyzer-config support for feature toggles covering:
+  - `entitas_generator.component.cleanup_systems`
+  - `entitas_generator.component.component_index`
+  - `entitas_generator.component.context_extension`
+  - `entitas_generator.component.entity_extension`
+  - `entitas_generator.component.entity_index_extension`
+  - `entitas_generator.component.events`
+  - `entitas_generator.component.event_systems_extension`
+  - `entitas_generator.component.matcher`
+  - `entitas_generator.context.component_index`
+  - `entitas_generator.context.context`
+  - `entitas_generator.context.entity`
+  - `entitas_generator.context.matcher`
 - added analyzer-config support for visual debugging via:
   - `entitas_generator.visual_debugging`
   - `entitas_generator.visual_debugging.assembly_names`
 - analyzer config is now resolved from compilation syntax-tree options instead of only global options, which is required for Unity `.editorconfig` usage
+- added focused toggle coverage in `tests/Entitas.CodeGeneration.Tests` for the new option surface
+- added focused visual debugging toggle coverage
 
 Still remaining:
-- add the broader feature toggles listed above for contexts, matcher/entity generation, lookup generation, extensions, events, cleanup, entity indices, and visual debugging scope beyond the current switches
+- none for the current option surface; remaining follow-up is broader multi-assembly coverage rather than additional toggle plumbing
 
 ### Step 3: Make context parsing more semantic
 
@@ -194,7 +209,7 @@ Still remaining:
 ### Step 5: Add focused tests before removing the old generator
 
 Status:
-- started
+- partially completed
 
 Primary test target:
 - `tests/Entitas.CodeGeneration.Tests`
@@ -217,13 +232,27 @@ Completed in this session:
 - added tests confirming empty compilations generate nothing
 - added tests covering explicit bootstrap with multiple registered contexts
 - added tests covering explicit entity-index initialization across multiple generated contexts
+- added focused tests for analyzer-config feature toggles
+- added focused tests for visual debugging toggles
+- added explicit namespaced API-shape tests for namespaced components
+- updated the existing code-generation integration fixture to validate the new namespace behavior end to end
 
 Still remaining:
-- add coverage for namespaced contexts/components
-- add coverage for unique flag components, events, cleanup systems, entity indices, and visual debugging toggles
+- add more explicit multi-assembly coverage
+- add dedicated namespaced-context coverage if semantic context parsing changes
 
 Note:
 - multiple generated contexts are now covered inside one compilation/bootstrap flow; true cross-assembly coverage still needs dedicated tests once Step 3 and downstream usage settle
+
+Additional behavior clarified in this session:
+- for namespaced components, direct context/entity APIs are now emitted inside the component namespace and use short names:
+  - `SetUser`, `AddUser`, `GetUser`, `SetLoading`
+- shared global artifacts remain namespace-safe and flattened to avoid collisions:
+  - `MainMatcher.MyFeatureUser()`
+  - `MainComponentsLookup.MyFeatureUser`
+  - entity-index constants and accessors
+  - event/listener type names
+  - cleanup system class names
 
 ### Step 6: Migrate downstream repo usage
 
@@ -241,11 +270,11 @@ Only then:
 
 ## Suggested Execution Order For Next Session
 
-1. Expand analyzer-config support beyond assembly and visual-debugging settings.
-2. Add more tests for configurable and multi-assembly behavior.
-3. Refine semantic context parsing if needed to make those tests pass cleanly.
-4. Verify and migrate the new runtime `Entitas.Contexts` bootstrap model in downstream Unity/sample usage.
-5. Report remaining blockers before touching samples or deleting old code.
+1. Add more explicit multi-assembly coverage around runtime `Contexts` bootstrap and current generator options.
+2. Refine semantic context parsing if needed to make those tests pass cleanly.
+3. Verify and migrate the new runtime `Entitas.Contexts` bootstrap model in downstream Unity/sample usage.
+4. Remove old generator references from sample/editor usage only after that migration is verified.
+5. Report remaining blockers before deleting old code.
 
 ## Suggested New Session Prompt
 
@@ -260,9 +289,9 @@ Goal for this session:
 - improve `gen/Entitas.CodeGeneration` so it can replace `gen/Entitas.Generators`
 
 Immediate priorities:
-1. remove hardcoded assembly-name filtering from `gen/Entitas.CodeGeneration/EntitasGenerator.cs`
-2. add analyzer-config based feature toggles similar to `gen/Entitas.Generators/EntitasAnalyzerConfigOptions.cs`
-3. add or update tests in `tests/Entitas.CodeGeneration.Tests` for custom assembly / multiple assembly behavior
+1. add or update tests in `tests/Entitas.CodeGeneration.Tests` for current multi-assembly behavior
+2. refine `gen/Entitas.CodeGeneration/Contexts/ContextGenerationHelper.cs` only if those tests expose semantic parsing gaps
+3. verify downstream Unity/sample usage of runtime `Entitas.Contexts` bootstrap and remove remaining old-generator references there
 
 Important constraints:
 - keep `Entitas.CodeGeneration.Attributes` as the primary path

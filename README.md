@@ -104,13 +104,19 @@ The component declarations above generate APIs such as:
 - `MainEntity`
 - `GetMain()` on `Entitas.Contexts`
 - `MainComponentsLookup`
-- `entity.AddMyFeatureUser(...)`
-- `entity.ReplaceMyFeatureUser(...)`
-- `context.SetMyFeatureUser(...)`
-- `context.SetMyFeatureLoading(true)`
-- `context.IsMyFeatureLoading()`
+- `entity.AddUser(...)`
+- `entity.ReplaceUser(...)`
+- `context.SetUser(...)`
+- `context.SetLoading(true)`
+- `context.IsLoading()`
+- `MainMatcher.MyFeatureUser()`
 - `MainEventSystems`
 - `MainCleanupSystems`
+
+For namespaced components, Entitas now splits the generated API shape deliberately:
+
+- direct context and entity APIs are emitted in the component namespace and use short names such as `AddUser`, `SetUser`, and `SetLoading`
+- shared global artifacts remain namespace-safe and flattened, such as `MainComponentsLookup.MyFeatureUser`, `MainMatcher.MyFeatureUser()`, entity-index constants, and generated event/listener system type names
 
 ### 7. Use the generated API
 
@@ -123,13 +129,13 @@ contexts.InitializeMainEntityIndices();
 var main = contexts.GetMain();
 
 var entity = main.CreateEntity();
-entity.AddMyFeatureUser("Alice", 42);
+entity.AddUser("Alice", 42);
 
-main.SetMyFeatureLoading(true);
+main.SetLoading(true);
 
-if (main.IsMyFeatureLoading())
+if (main.IsLoading())
 {
-    var user = main.GetMyFeatureUser();
+    var user = main.GetUser();
 }
 ```
 

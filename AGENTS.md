@@ -35,10 +35,14 @@
 - `tests/Entitas.CodeGeneration.Tests` references `gen/Entitas.CodeGeneration` as an analyzer (`OutputItemType="Analyzer"`, `ReferenceOutputAssembly="false"`) and references `src/Entitas.CodeGeneration.Attributes`; use it to verify end-to-end generated code, not just snapshots.
 - Generator tests also assert the checked-in generator sources keep `global::` namespace qualification (`AssertUsesGlobalNamespaces` in `tests/Entitas.Generators.Tests/TestHelper.cs`).
 - The incremental generator now runs for attached compilations by default. Optional assembly filtering is analyzer-config driven through `entitas_generator.assembly_names`.
+- The incremental generator now supports analyzer-config feature toggles for contexts, matchers, entity/context extensions, component lookups, events, cleanup, entity indices, and visual debugging. Prefer adding tests in `tests/Entitas.CodeGeneration.Tests` when changing that surface.
 - `src/Entitas/Context/Contexts.cs` is now the runtime root context container. Do not reintroduce a generated root `Contexts.g.cs` container unless the design changes explicitly.
 - Generated context access now uses extension methods like `contexts.GetMain()` rather than generated root properties like `contexts.main`.
 - Generated entity-index setup is explicit bootstrap via methods like `InitializeMainEntityIndices()`, and generated keys live on per-context classes like `MainEntityIndices`, not on `Contexts`.
 - The remaining multi-assembly design is runtime-bootstrap based: users register contexts into `Entitas.Contexts` explicitly.
+- Namespaced component behavior is intentionally split:
+  - direct entity/context APIs are emitted in the component namespace and use short names like `AddUser`, `SetUser`, `SetLoading`
+  - shared global artifacts stay namespace-safe and flattened, such as `MainMatcher.MyFeatureUser()`, `MainComponentsLookup.MyFeatureUser`, entity-index constants, event/listener type names, and cleanup system class names
 - For documentation changes, keep `README.md` Unity-first: prefer explaining Unity usage, incremental generator wiring, and migration from Entitas 1 over historical/community material.
 
 ## Style Constraints
