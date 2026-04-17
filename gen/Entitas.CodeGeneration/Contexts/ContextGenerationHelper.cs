@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Linq;
 using System.Text;
 using Entitas.CodeGeneration.Components;
 using Entitas.CodeGeneration.Contexts.Data;
@@ -57,42 +58,32 @@ public static class ContextGenerationHelper
     
     static ContextData? TryGetContextData(GeneratorSyntaxContext context)
     {
-        var classSyntax = (ClassDeclarationSyntax) context.Node;
-        
-        // It's way faster to parse the class name
-        // than to search for the name constant in base constructor.
-        // (Just need to enforce naming conventions)
-        var contextName = classSyntax.Identifier.Text
-            .Replace(AttributeName, string.Empty);
+        var classSyntax = (ClassDeclarationSyntax)context.Node;
 
-        return new ContextData(contextName);
-        
-        // if (ModelExtensions.GetDeclaredSymbol(context.SemanticModel, classSyntax) is not INamedTypeSymbol classTypeSymbol)
-        //     return null;
-        //
-        // if (classTypeSymbol.IsAbstract)
-        //     return null;
-        //
-        // // Contexts are found by looking for classes that inherit ContextAttribute
-        // // ex: public sealed class InputAttribute : Entitas.CodeGeneration.Attributes.ContextAttribute
-        // var baseTypeStr = classTypeSymbol.BaseType?.ToDisplayString();
-        // if (baseTypeStr == ContextAttributeTypeName)
-        // {
-        //     // We'll find the name in the base constructor
-        //     // ex: public InputAttribute() : base("Input")
-        //     var ctor = classTypeSymbol.InstanceConstructors.FirstOrDefault();
-        //     var ctorSyntax = ctor?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as ConstructorDeclarationSyntax;
-        //     var baseArg = ctorSyntax?.Initializer?.ArgumentList.Arguments.FirstOrDefault()?.Expression;
-        //
-        //     var value = context.SemanticModel.GetConstantValue(baseArg!);
-        //     if (value.HasValue)
-        //     {
-        //         var contextName = value.Value as string;
-        //         return new ContextData(contextName!);
-        //     }
-        // }
-        //
-        // return null;
+        if (ModelExtensions.GetDeclaredSymbol(context.SemanticModel, classSyntax) is not INamedTypeSymbol classTypeSymbol)
+            return null;
+
+        if (classTypeSymbol.IsAbstract || classTypeSymbol.BaseType?.ToDisplayString() != ContextAttributeTypeName)
+            return null;
+
+        var ctor = classTypeSymbol.InstanceConstructors.FirstOrDefault(constructor =>
+            constructor.DeclaringSyntaxReferences
+                .Select(reference => reference.GetSyntax())
+                .OfType<ConstructorDeclarationSyntax>()
+                .Any(syntax => syntax.Initializer?.Kind() == Microsoft.CodeAnalysis.CSharp.SyntaxKind.BaseConstructorInitializer));
+
+        var ctorSyntax = ctor?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as ConstructorDeclarationSyntax;
+        var baseArg = ctorSyntax?.Initializer?.ArgumentList.Arguments.FirstOrDefault()?.Expression;
+
+        if (baseArg is not null)
+        {
+            var value = context.SemanticModel.GetConstantValue(baseArg);
+            if (value.HasValue && value.Value is string contextName)
+                return new ContextData(contextName);
+        }
+
+        var fallbackContextName = classSyntax.Identifier.Text.Replace(AttributeName, string.Empty);
+        return new ContextData(fallbackContextName);
     }
     
     public static void GenerateContexts(

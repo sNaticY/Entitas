@@ -28,6 +28,16 @@ namespace MyGame.Configuration
 }
 ";
 
+    const string AliasedContextSource = @"
+namespace MyGame.Aliases
+{
+    public sealed class GameplayContextMarkerAttribute : Entitas.CodeGeneration.Attributes.ContextAttribute
+    {
+        public GameplayContextMarkerAttribute() : base(""Main"") { }
+    }
+}
+";
+
     [Fact]
     public void GeneratesContextsForCustomAssemblyByDefault()
     {
@@ -100,6 +110,28 @@ namespace MyGame.Configuration
             "MainMatcher.g.cs",
             "MainEntity.g.cs",
             "MainContextsExtension.g.cs",
+        });
+    }
+
+    [Fact]
+    public void UsesConfiguredContextNameInsteadOfAttributeClassName()
+    {
+        var result = CodeGenerationTestHelper.RunGenerator(AliasedContextSource, "My.Gameplay");
+
+        var files = result.GeneratedTrees.Select(tree => Path.GetFileName(tree.FilePath)).ToArray();
+        files.Should().Contain(new[]
+        {
+            "MainContext.g.cs",
+            "MainMatcher.g.cs",
+            "MainEntity.g.cs",
+            "MainContextsExtension.g.cs",
+        });
+        files.Should().NotContain(new[]
+        {
+            "GameplayContextMarkerContext.g.cs",
+            "GameplayContextMarkerMatcher.g.cs",
+            "GameplayContextMarkerEntity.g.cs",
+            "GameplayContextMarkerContextsExtension.g.cs",
         });
     }
 }
