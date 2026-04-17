@@ -18,6 +18,16 @@ namespace MyGame
 }
 ";
 
+    const string ConfigContextSource = @"
+namespace MyGame.Configuration
+{
+    public sealed class ConfigAttribute : Entitas.CodeGeneration.Attributes.ContextAttribute
+    {
+        public ConfigAttribute() : base(""Config"") { }
+    }
+}
+";
+
     [Fact]
     public void GeneratesContextsForCustomAssemblyByDefault()
     {
@@ -52,5 +62,44 @@ namespace MyGame
             });
 
         result.GeneratedTrees.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void GeneratesIndependentContextSurfacesPerCompilation()
+    {
+        var gameplayResult = CodeGenerationTestHelper.RunGenerator(ContextSource, "My.Gameplay");
+        var configurationResult = CodeGenerationTestHelper.RunGenerator(ConfigContextSource, "My.Configuration");
+
+        var gameplayFiles = gameplayResult.GeneratedTrees.Select(tree => Path.GetFileName(tree.FilePath)).ToArray();
+        gameplayFiles.Should().Contain(new[]
+        {
+            "MainContext.g.cs",
+            "MainMatcher.g.cs",
+            "MainEntity.g.cs",
+            "MainContextsExtension.g.cs",
+        });
+        gameplayFiles.Should().NotContain(new[]
+        {
+            "ConfigContext.g.cs",
+            "ConfigMatcher.g.cs",
+            "ConfigEntity.g.cs",
+            "ConfigContextsExtension.g.cs",
+        });
+
+        var configurationFiles = configurationResult.GeneratedTrees.Select(tree => Path.GetFileName(tree.FilePath)).ToArray();
+        configurationFiles.Should().Contain(new[]
+        {
+            "ConfigContext.g.cs",
+            "ConfigMatcher.g.cs",
+            "ConfigEntity.g.cs",
+            "ConfigContextsExtension.g.cs",
+        });
+        configurationFiles.Should().NotContain(new[]
+        {
+            "MainContext.g.cs",
+            "MainMatcher.g.cs",
+            "MainEntity.g.cs",
+            "MainContextsExtension.g.cs",
+        });
     }
 }
