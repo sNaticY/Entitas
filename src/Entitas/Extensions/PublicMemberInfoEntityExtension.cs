@@ -1,5 +1,3 @@
-using DesperateDevs.Reflection;
-
 namespace Entitas
 {
     public static class PublicMemberInfoEntityExtension
@@ -17,7 +15,7 @@ namespace Entitas
                 var index = componentIndexes[i];
                 var component = entity.GetComponent(index);
                 var clonedComponent = target.CreateComponent(index, component.GetType());
-                component.CopyPublicMemberValues(clonedComponent);
+                PublicMemberCopier.Copy(component, clonedComponent);
 
                 if (replaceExisting)
                     target.ReplaceComponent(index, clonedComponent);

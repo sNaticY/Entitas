@@ -93,5 +93,29 @@ namespace Entitas.Tests
             _entity.CopyTo(_target);
             _target.GetComponentA().Should().BeSameAs(component);
         }
+
+        [Fact]
+        public void CopiesWritableProperties()
+        {
+            var component = new PropertyComponent
+            {
+                Name = "Max",
+                Age = 42,
+            };
+
+            _entity.AddComponent(CID.ComponentB, component);
+            _entity.CopyTo(_target);
+
+            var clonedComponent = (PropertyComponent)_target.GetComponent(CID.ComponentB);
+            clonedComponent.Should().NotBeSameAs(component);
+            clonedComponent.Name.Should().Be(component.Name);
+            clonedComponent.Age.Should().Be(component.Age);
+        }
+
+        sealed class PropertyComponent : IComponent
+        {
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
     }
 }
