@@ -270,6 +270,13 @@ Success criteria:
 - there is a written decision on whether editor removal is part of 2.0 or post-2.0
 - runtime cleanup is no longer blocked on editor cleanup
 
+Decision (2026-04-18):
+- `Entitas.Unity.Editor` DesperateDevs removal is explicitly deferred to post-2.0 follow-up work.
+- Entitas 2.0 scope for this cleanup is the runtime, generator output, and docs/package metadata path.
+- `Entitas.Unity.Editor` remains the intentional dependency boundary for `DesperateDevs` in the current 2.0 effort.
+- `samples/Unity` still carries legacy `DesperateDevs`, `TCPeasy`, and `Sherlog` binaries and should not be treated as the canonical dependency story for the 2.0 path.
+- Phase 7 stays available as a later track once editor-specific validation and Unity smoke testing are prioritized.
+
 ### Phase 7: Remove DesperateDevs From Unity Editor Tooling
 
 Goal:
