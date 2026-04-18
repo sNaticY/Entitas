@@ -19,6 +19,11 @@ namespace Entitas.Unity.Editor
         public static Dictionary<string, string[]> ContextToComponentMemberSearch =>
             _contextToComponentMemberSearch ??= new Dictionary<string, string[]>();
 
+        static Dictionary<string, GUIStyle[]> _contextToColoredBoxStyles;
+
+        public static Dictionary<string, GUIStyle[]> ContextToColoredBoxStyles =>
+            _contextToColoredBoxStyles ??= new Dictionary<string, GUIStyle[]>();
+
         public struct ComponentInfo
         {
             public int Index;
@@ -124,6 +129,39 @@ namespace Entitas.Unity.Editor
                     return drawer;
 
             return null;
+        }
+
+        static GUIStyle GetColoredBoxStyle(Entity entity, int index)
+        {
+            if (!ContextToColoredBoxStyles.TryGetValue(entity.ContextInfo.Name, out var styles))
+            {
+                styles = new GUIStyle[entity.TotalComponents];
+                for (var i = 0; i < styles.Length; i++)
+                {
+                    var hue = (float)i / (float)entity.TotalComponents;
+                    var componentColor = Color.HSVToRGB(hue, 0.7f, 1f);
+                    componentColor.a = 0.15f;
+                    var style = new GUIStyle(GUI.skin.box);
+                    style.normal.background = CreateTexture(2, 2, componentColor);
+                    styles[i] = style;
+                }
+
+                ContextToColoredBoxStyles.Add(entity.ContextInfo.Name, styles);
+            }
+
+            return styles[index];
+        }
+
+        static Texture2D CreateTexture(int width, int height, Color color)
+        {
+            var pixels = new Color[width * height];
+            for (var i = 0; i < pixels.Length; ++i)
+                pixels[i] = color;
+
+            var result = new Texture2D(width, height);
+            result.SetPixels(pixels);
+            result.Apply();
+            return result;
         }
 
         static ITypeDrawer GetTypeDrawer(Type type)

@@ -146,7 +146,8 @@ namespace Entitas.Unity.Editor
             var componentName = componentType.Name.RemoveSuffix("Component");
             if (EditorLayout.MatchesSearchString(componentName.ToLower(), ComponentNameSearchString.ToLower()))
             {
-                EditorGUILayout.BeginVertical();
+                var boxStyle = GetColoredBoxStyle(entity, index);
+                EditorGUILayout.BeginVertical(boxStyle);
                 {
                     if (!Attribute.IsDefined(componentType, typeof(DontDrawComponentAttribute)))
                     {
