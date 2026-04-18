@@ -271,11 +271,10 @@ Success criteria:
 - runtime cleanup is no longer blocked on editor cleanup
 
 Decision (2026-04-18):
-- `Entitas.Unity.Editor` DesperateDevs removal is explicitly deferred to post-2.0 follow-up work.
-- Entitas 2.0 scope for this cleanup is the runtime, generator output, and docs/package metadata path.
-- `Entitas.Unity.Editor` remains the intentional dependency boundary for `DesperateDevs` in the current 2.0 effort.
-- `samples/Unity` still carries legacy `DesperateDevs`, `TCPeasy`, and `Sherlog` binaries and should not be treated as the canonical dependency story for the 2.0 path.
-- Phase 7 stays available as a later track once editor-specific validation and Unity smoke testing are prioritized.
+- `Entitas.Unity.Editor` removal was initially deferred to protect the 2.0 runtime path.
+- A follow-up Unity import failure showed that the shipped sample `Entitas.Unity.Editor.dll` still hard-referenced `DesperateDevs.*`, so Phase 7 became a practical compatibility fix rather than optional cleanup.
+- The editor project now uses local compatibility helpers instead of direct `DesperateDevs` package references, and the sample `Entitas.Unity.Editor.dll` should be refreshed from the cleaned build output.
+- `samples/Unity` may still carry legacy `TCPeasy` and `Sherlog` binaries, but they are separate from the `Entitas.Unity.Editor` assembly-load blocker that triggered this phase.
 
 ### Phase 7: Remove DesperateDevs From Unity Editor Tooling
 
@@ -304,6 +303,12 @@ Validation:
 Success criteria:
 - `Entitas.Unity.Editor` no longer directly references `DesperateDevs`
 - core editor workflows still function acceptably
+
+Status (2026-04-18):
+- completed in source by replacing editor-side `DesperateDevs` helpers with local compatibility implementations
+- validated with `dotnet build src/Entitas.Unity.Editor/Entitas.Unity.Editor.csproj -c Release`
+- validated with `dotnet test tests/Entitas.Unity.Tests/Entitas.Unity.Tests.csproj -c Release`
+- validated by checking that the rebuilt `Entitas.Unity.Editor.dll` no longer references `DesperateDevs.Unity.Editor`, `DesperateDevs.Reflection`, or `DesperateDevs.Extensions`
 
 ## TCPeasy And Sherlog Workstream
 

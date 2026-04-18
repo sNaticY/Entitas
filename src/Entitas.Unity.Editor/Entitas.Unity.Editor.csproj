@@ -6,11 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DesperateDevs.Reflection" Version="1.*" />
-    <PackageReference Include="DesperateDevs.Unity.Editor" Version="2.*" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="../Entitas/Entitas.csproj" />
     <ProjectReference Include="../Entitas.CodeGeneration.Attributes/Entitas.CodeGeneration.Attributes.csproj" />
     <ProjectReference Include="../Entitas.Unity/Entitas.Unity.csproj" />

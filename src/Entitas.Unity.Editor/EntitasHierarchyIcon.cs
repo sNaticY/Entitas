@@ -7,6 +7,9 @@ namespace Entitas.Unity.Editor
     [InitializeOnLoad]
     public static class EntitasHierarchyIcon
     {
+        static Texture2D GetIcon(Texture2D preferred, string fallbackIconName) =>
+            preferred ?? (EditorGUIUtility.IconContent(fallbackIconName).image as Texture2D);
+
         static Texture2D ContextHierarchyIcon
         {
             get
@@ -14,7 +17,7 @@ namespace Entitas.Unity.Editor
                 if (_contextHierarchyIcon == null)
                     _contextHierarchyIcon = EditorLayout.LoadTexture("l:EntitasContextHierarchyIcon");
 
-                return _contextHierarchyIcon;
+                return GetIcon(_contextHierarchyIcon, "SceneAsset Icon");
             }
         }
 
@@ -25,7 +28,7 @@ namespace Entitas.Unity.Editor
                 if (_contextErrorHierarchyIcon == null)
                     _contextErrorHierarchyIcon = EditorLayout.LoadTexture("l:EntitasContextErrorHierarchyIcon");
 
-                return _contextErrorHierarchyIcon;
+                return GetIcon(_contextErrorHierarchyIcon, "console.warnicon.sml");
             }
         }
 
@@ -36,7 +39,7 @@ namespace Entitas.Unity.Editor
                 if (_entityHierarchyIcon == null)
                     _entityHierarchyIcon = EditorLayout.LoadTexture("l:EntitasEntityHierarchyIcon");
 
-                return _entityHierarchyIcon;
+                return GetIcon(_entityHierarchyIcon, "GameObject Icon");
             }
         }
 
@@ -47,7 +50,7 @@ namespace Entitas.Unity.Editor
                 if (_entityErrorHierarchyIcon == null)
                     _entityErrorHierarchyIcon = EditorLayout.LoadTexture("l:EntitasEntityErrorHierarchyIcon");
 
-                return _entityErrorHierarchyIcon;
+                return GetIcon(_entityErrorHierarchyIcon, "console.warnicon.sml");
             }
         }
 
@@ -58,7 +61,7 @@ namespace Entitas.Unity.Editor
                 if (_entityLinkHierarchyIcon == null)
                     _entityLinkHierarchyIcon = EditorLayout.LoadTexture("l:EntitasEntityLinkHierarchyIcon");
 
-                return _entityLinkHierarchyIcon;
+                return GetIcon(_entityLinkHierarchyIcon, "Prefab Icon");
             }
         }
 
@@ -69,7 +72,7 @@ namespace Entitas.Unity.Editor
                 if (_entityLinkWarnHierarchyIcon == null)
                     _entityLinkWarnHierarchyIcon = EditorLayout.LoadTexture("l:EntitasEntityLinkWarnHierarchyIcon");
 
-                return _entityLinkWarnHierarchyIcon;
+                return GetIcon(_entityLinkWarnHierarchyIcon, "console.warnicon.sml");
             }
         }
 
@@ -80,7 +83,7 @@ namespace Entitas.Unity.Editor
                 if (_systemsHierarchyIcon == null)
                     _systemsHierarchyIcon = EditorLayout.LoadTexture("l:EntitasSystemsHierarchyIcon");
 
-                return _systemsHierarchyIcon;
+                return GetIcon(_systemsHierarchyIcon, "cs Script Icon");
             }
         }
 
@@ -91,7 +94,7 @@ namespace Entitas.Unity.Editor
                 if (_systemsWarnHierarchyIcon == null)
                     _systemsWarnHierarchyIcon = EditorLayout.LoadTexture("l:EntitasSystemsWarnHierarchyIcon");
 
-                return _systemsWarnHierarchyIcon;
+                return GetIcon(_systemsWarnHierarchyIcon, "console.warnicon.sml");
             }
         }
 
