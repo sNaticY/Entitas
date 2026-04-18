@@ -8,7 +8,7 @@
     <Company>Entitas</Company>
     <Description>$(AssemblyName)</Description>
     <Copyright>Simon Schmid</Copyright>
-    <PackageTags>Entitas, ECS, Entity, Component, System, DesperateDevs, Desperate, Devs</PackageTags>
+    <PackageTags>Entitas, ECS, Entity, Component, System</PackageTags>
     <RepositoryUrl>https://github.com/sschmid/Entitas</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>

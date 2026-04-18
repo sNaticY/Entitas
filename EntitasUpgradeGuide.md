@@ -50,7 +50,9 @@ Removed methods marked obsolete in 0.42.0 from April 2017
 
 First, edit the file `Generated/Feature.cs` and comment or delete the lines with compiler errors.
 
-Then, run auto-import to use the new DesperateDevs.CodeGeneration.Plugins and generate.
+Then, run auto-import to use the new code generation plugins and generate.
+
+This step applies to the legacy Jenny/DesperateDevs generator workflow from Entitas 0.x. It is not part of the Entitas 2.0 incremental generator path.
 
 Entitas.properties can be named differently now. By default it will be called
 Preferences.properties. Additionally, you can delete User.properties or rename it
