@@ -88,6 +88,16 @@ namespace MyGame
         source.Should().NotContain("${");
     }
 
+    [Fact]
+    public void GeneratesFeatureWithoutDesperateDevsReferences()
+    {
+        var result = CodeGenerationTestHelper.RunGenerator(ContextSource, "Assembly-CSharp");
+
+        var source = GetGeneratedSource(result, "Feature.g.cs");
+        source.Should().NotContain("DesperateDevs");
+        source.Should().Contain("ToSpacedCamelCase(GetShortTypeName(GetType()))");
+    }
+
     static string[] GetGeneratedFileNames(Microsoft.CodeAnalysis.GeneratorDriverRunResult result) =>
         result.GeneratedTrees
             .Select(tree => Path.GetFileName(tree.FilePath))

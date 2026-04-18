@@ -13,10 +13,43 @@ public class Feature : Entitas.Unity.DebugSystems
 
     public Feature() : base(true)
     {
-        var typeName = DesperateDevs.Extensions.TypeExtension.ToCompilableString(GetType());
-        var shortType = DesperateDevs.Extensions.TypeExtension.ShortTypeName(typeName);
-        var readableType = DesperateDevs.Extensions.StringExtension.ToSpacedCamelCase(shortType);
+        var readableType = ToSpacedCamelCase(GetShortTypeName(GetType()));
         Initialize(readableType);
+    }
+
+    static string GetShortTypeName(System.Type type)
+    {
+        var typeName = type.Name;
+        var genericIndex = typeName.IndexOf('`');
+        return genericIndex >= 0
+            ? typeName.Substring(0, genericIndex)
+            : typeName;
+    }
+
+    static string ToSpacedCamelCase(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return value;
+
+        var builder = new System.Text.StringBuilder(value.Length * 2);
+        builder.Append(value[0]);
+
+        for (int i = 1; i < value.Length; i++)
+        {
+            var current = value[i];
+            var previous = value[i - 1];
+            var next = i + 1 < value.Length ? value[i + 1] : '\0';
+
+            if (char.IsUpper(current) &&
+                (char.IsLower(previous) || char.IsDigit(previous) || (char.IsUpper(previous) && char.IsLower(next))))
+            {
+                builder.Append(' ');
+            }
+
+            builder.Append(current);
+        }
+
+        return builder.ToString();
     }
 }
 
