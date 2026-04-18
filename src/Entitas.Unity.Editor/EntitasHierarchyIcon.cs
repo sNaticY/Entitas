@@ -114,7 +114,7 @@ namespace Entitas.Unity.Editor
 
         static void OnHierarchyWindowItemOnGUI(int instanceID, Rect selectionRect)
         {
-            var gameObject = EditorUtility.InstanceIDToObject(instanceID) as GameObject;
+            var gameObject = EditorUtility.EntityIdToObject(instanceID) as GameObject;
             if (gameObject == null)
                 return;
 

@@ -14,7 +14,7 @@ namespace Entitas.CodeGeneration.VisualDebugging.ContextObserver
         {
             var contextObservers = string.Join("\n", contexts
                 .Select(context => ContextObserverTemplates.ContextObserverTemplate
-                    .Replace("${contextName}", context.ContextName.ToLowerFirst())));
+                    .Replace("${ContextName}", context.ContextName)));
 
             var source = ContextObserverTemplates.ContextsTemplate
                 .Replace("${contextObservers}", contextObservers);

@@ -6,12 +6,12 @@
 
 ## Verify Changes
 - CI order is `dotnet build -c Release` -> `dotnet test -c Release --no-build` -> `dotnet publish -c Release --no-build` -> `dotnet pack -c Release --no-build`.
-- Full solution build/test now resolves Unity DLLs from `unity/Unity-2021.3.0f1` by default, so these work without extra MSBuild properties:
+- Full solution build/test now resolves Unity DLLs from `unity/Unity-6000.3.4f1` by default, so these work without extra MSBuild properties:
   `dotnet build Entitas.sln -c Release`
   `dotnet test Entitas.sln -c Release --no-build`
 - Passing explicit Unity DLL paths is still valid when needed:
-  `dotnet build Entitas.sln -c Release -p:UnityEditor=unity/Unity-2021.3.0f1/UnityEditor.dll -p:UnityEngine=unity/Unity-2021.3.0f1/UnityEngine.dll`
-  `dotnet test Entitas.sln -c Release --no-build -p:UnityEditor=unity/Unity-2021.3.0f1/UnityEditor.dll -p:UnityEngine=unity/Unity-2021.3.0f1/UnityEngine.dll`
+  `dotnet build Entitas.sln -c Release -p:UnityEditor=unity/Unity-6000.3.4f1/UnityEditor.dll -p:UnityEngine=unity/Unity-6000.3.4f1/UnityEngine.dll`
+  `dotnet test Entitas.sln -c Release --no-build -p:UnityEditor=unity/Unity-6000.3.4f1/UnityEditor.dll -p:UnityEngine=unity/Unity-6000.3.4f1/UnityEngine.dll`
 - Focused checks that avoid Unity projects:
   `dotnet test tests/Entitas.Tests/Entitas.Tests.csproj`
   `dotnet test tests/Entitas.CodeGeneration.Tests/Entitas.CodeGeneration.Tests.csproj`
@@ -44,4 +44,4 @@
 
 ## Style Constraints
 - Respect `.editorconfig`: LF endings, 4 spaces by default, 2 spaces in `*.csproj`, tabs in `*.sln` and `*.DotSettings`.
-- Target frameworks come from `Directory.Build.props`: libraries use `netstandard2.1`, tests and benchmarks use `net6.0`, and the generator uses `netstandard2.0`.
+- Target frameworks come from `Directory.Build.props`: libraries use `netstandard2.1`, tests and benchmarks use `net8.0`, and the generator uses `netstandard2.0`.

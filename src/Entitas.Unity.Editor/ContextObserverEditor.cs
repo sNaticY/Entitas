@@ -37,7 +37,7 @@ namespace Entitas.Unity.Editor
                         var entity = (Entity)contextObserver.Context.GetType().GetMethod("CreateEntity")!
                             .Invoke(contextObserver.Context, null);
 
-                        var entityBehaviour = FindObjectsOfType<EntityBehaviour>()
+                        var entityBehaviour = Object.FindObjectsByType<EntityBehaviour>(FindObjectsSortMode.None)
                             .Single(eb => eb.Entity == entity);
 
                         Selection.activeGameObject = entityBehaviour.gameObject;

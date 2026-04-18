@@ -1,9 +1,9 @@
 <Project>
 
   <PropertyGroup>
-    <DefaultNetTargetFramework>net6.0</DefaultNetTargetFramework>
+    <DefaultNetTargetFramework>net8.0</DefaultNetTargetFramework>
     <DefaultTargetFramework>netstandard2.1</DefaultTargetFramework>
-    <DefaultTestTargetFramework>net6.0</DefaultTestTargetFramework>
+    <DefaultTestTargetFramework>net8.0</DefaultTestTargetFramework>
     <DefaultGeneratorFramework>netstandard2.0</DefaultGeneratorFramework>
     <Deterministic>true</Deterministic>
     <LangVersion>default</LangVersion>
@@ -26,7 +26,7 @@
 
   <Import Project="Unity3D.props" />
   <PropertyGroup Label="Unity3D">
-    <UnityVersion>2021.3.0f1</UnityVersion>
+    <UnityVersion>6000.3.4f1</UnityVersion>
     <VendoredUnityPath>$(MSBuildThisFileDirectory)unity/Unity-$(UnityVersion)</VendoredUnityPath>
     <UnityEditorDefault Condition="Exists('$(VendoredUnityPath)/UnityEditor.dll')">$(VendoredUnityPath)/UnityEditor.dll</UnityEditorDefault>
     <UnityEngineDefault Condition="Exists('$(VendoredUnityPath)/UnityEngine.dll')">$(VendoredUnityPath)/UnityEngine.dll</UnityEngineDefault>
@@ -42,8 +42,8 @@
   </PropertyGroup>
 
   <PropertyGroup Label="Unity3D Resolved Paths">
-    <UnityEditorResolved>$([System.IO.Path]::GetFullPath('$(UnityEditor)', '$(MSBuildStartupDirectory)'))</UnityEditorResolved>
-    <UnityEngineResolved>$([System.IO.Path]::GetFullPath('$(UnityEngine)', '$(MSBuildStartupDirectory)'))</UnityEngineResolved>
+    <UnityEditorResolved>$([MSBuild]::NormalizePath('$(MSBuildStartupDirectory)', '$(UnityEditor)'))</UnityEditorResolved>
+    <UnityEngineResolved>$([MSBuild]::NormalizePath('$(MSBuildStartupDirectory)', '$(UnityEngine)'))</UnityEngineResolved>
   </PropertyGroup>
 
 </Project>

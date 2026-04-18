@@ -36,7 +36,7 @@ namespace Entitas.Unity.Editor
         }
 
         static bool IsVisualDebuggingEnabled => !ScriptingDefineSymbols.BuildTargetGroups.All(buildTarget =>
-            PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTarget).Contains(EntitasDisableVisualDebugging));
+            GetScriptingDefineSymbols(buildTarget).Contains(EntitasDisableVisualDebugging));
 
         [MenuItem("Tools/Entitas/Enable Deep Profiling", false, 3)]
         public static void EnableDeepProfiling()
@@ -55,7 +55,7 @@ namespace Entitas.Unity.Editor
         }
 
         static bool IsDeepProfilingEnabled => !ScriptingDefineSymbols.BuildTargetGroups
-            .All(buildTarget => PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTarget).Contains(EntitasDisableDeepProfiling));
+            .All(buildTarget => GetScriptingDefineSymbols(buildTarget).Contains(EntitasDisableDeepProfiling));
 
         [MenuItem("Tools/Entitas/AERC - Safe", false, 4)]
         public static void SetSafeAerc()
@@ -86,9 +86,12 @@ namespace Entitas.Unity.Editor
         }
 
         static int GetAercMode => ScriptingDefineSymbols.BuildTargetGroups
-            .All(buildTarget => PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTarget).Contains(EntitasFastAndUnsafe))
+            .All(buildTarget => GetScriptingDefineSymbols(buildTarget).Contains(EntitasFastAndUnsafe))
             ? 1
             : 0;
+
+        static string GetScriptingDefineSymbols(BuildTargetGroup buildTargetGroup) =>
+            PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup));
 
         [MenuItem("Tools/Entitas/Generate/DefaultInstanceCreator", false, 6)]
         public static void GenerateDefaultInstanceCreator() => EntityDrawer.GenerateIDefaultInstanceCreator("MyType");

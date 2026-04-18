@@ -17,7 +17,7 @@ If you are using Entitas for a Unity game, this is the main workflow to follow.
 
 ### Requirements
 
-- Unity runtime/editor integration in this repo is validated against Unity `2021.3.0f1`
+- Unity runtime/editor integration in this repo is validated against Unity `6000.3.4f1`
 - Incremental source generator support is intended for Unity 6 style Roslyn analyzer integration
 - The incremental generator now runs for attached compilations by default; use analyzer config only if you want to filter assemblies explicitly
 

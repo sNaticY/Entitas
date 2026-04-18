@@ -78,8 +78,24 @@ namespace MyGame
         });
     }
 
+    [Fact]
+    public void GeneratesContextObserversWithoutTemplatePlaceholders()
+    {
+        var result = CodeGenerationTestHelper.RunGenerator(ContextSource, "Assembly-CSharp");
+
+        var source = GetGeneratedSource(result, "ContextObservers.g.cs");
+        source.Should().Contain("CreateContextObserver(contexts.GetMain());");
+        source.Should().NotContain("${");
+    }
+
     static string[] GetGeneratedFileNames(Microsoft.CodeAnalysis.GeneratorDriverRunResult result) =>
         result.GeneratedTrees
             .Select(tree => Path.GetFileName(tree.FilePath))
             .ToArray();
+
+    static string GetGeneratedSource(Microsoft.CodeAnalysis.GeneratorDriverRunResult result, string fileName) =>
+        result.GeneratedTrees
+            .Single(tree => Path.GetFileName(tree.FilePath) == fileName)
+            .GetText()
+            .ToString();
 }

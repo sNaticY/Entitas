@@ -14,8 +14,8 @@ jobs:
       - name: "Build"
         run: |
           dotnet build -c Release \
-            -p:UnityEditor=/home/runner/work/Entitas/Entitas/unity/Unity-2021.3.0f1/UnityEditor.dll \
-            -p:UnityEngine=/home/runner/work/Entitas/Entitas/unity/Unity-2021.3.0f1/UnityEngine.dll
+            -p:UnityEditor=/home/runner/work/Entitas/Entitas/unity/Unity-6000.3.4f1/UnityEditor.dll \
+            -p:UnityEngine=/home/runner/work/Entitas/Entitas/unity/Unity-6000.3.4f1/UnityEngine.dll
 
       - name: "Test"
         run: dotnet test -c Release --no-build --collect:"XPlat Code Coverage"

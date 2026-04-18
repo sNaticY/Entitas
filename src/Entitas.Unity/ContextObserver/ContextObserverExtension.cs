@@ -16,7 +16,7 @@ namespace Entitas.Unity
 
         public static ContextObserverBehaviour FindContextObserver(this IContext context)
         {
-            foreach (var observer in Object.FindObjectsOfType<ContextObserverBehaviour>())
+            foreach (var observer in Object.FindObjectsByType<ContextObserverBehaviour>(FindObjectsSortMode.None))
                 if (observer.Context == context)
                     return observer;
 
