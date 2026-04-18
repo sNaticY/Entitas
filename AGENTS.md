@@ -3,6 +3,8 @@
 ## Source Of Truth
 - Trust `.github/workflows/build.yml` over `CONTRIBUTING.md`. `CONTRIBUTING.md` still references missing `./Scripts/bee` commands and obsolete `master`/`develop` branch flow.
 - Treat `notes/entitas-2.0-roadmap.md` as the persistent project memory for the 2.0 release vision, release blockers, and roadmap. Read it before making roadmap-level decisions.
+- Legacy generators (`Entitas.Generators`, `Entitas.Generators.Attributes`) have been fully replaced by `gen/Entitas.CodeGeneration` and `src/Entitas.CodeGeneration.Attributes`.
+- DesperateDevs external dependencies have been removed; required helper code is now vendored in `src/Entitas.Unity.Editor/Compatibility/`.
 
 ## Verify Changes
 - CI order is `dotnet build -c Release` -> `dotnet test -c Release --no-build` -> `dotnet publish -c Release --no-build` -> `dotnet pack -c Release --no-build`.
@@ -24,7 +26,8 @@
 - `src/Entitas` is the core ECS runtime.
 - `gen/Entitas.CodeGeneration` is the new Roslyn incremental generator for Unity-first workflows.
 - `src/Entitas.CodeGeneration.Attributes` holds attributes consumed by the incremental generator.
-- The legacy generator projects have been removed; treat `Entitas.CodeGeneration` as the only in-repo generator path.
+- The legacy generator projects (`Entitas.Generators`, `Entitas.Generators.Attributes`) have been removed; treat `Entitas.CodeGeneration` as the only in-repo generator path.
+- External DesperateDevs dependencies have been removed. Required helper code is now vendored in `src/Entitas.Unity.Editor/Compatibility/`.
 - `src/Entitas.Unity` and `src/Entitas.Unity.Editor` are optional Unity integration layers compiled against raw `UnityEngine.dll` / `UnityEditor.dll` references.
 - `tests/*` mirrors the runtime, generator, and Unity split. `benchmarks/Entitas.Benchmarks` is the BenchmarkDotNet perf harness.
 - `samples/Unity` is a manual Unity sample project; CI does not validate it.
