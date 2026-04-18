@@ -1,8 +1,8 @@
 using System;
 using Entitas;
-using Entitas.Generators.Attributes;
+using Entitas.CodeGeneration.Attributes;
 
-[Context(typeof(GameContext))]
+[Game]
 public sealed class MyDateTimeComponent : IComponent
 {
     public DateTime Value;

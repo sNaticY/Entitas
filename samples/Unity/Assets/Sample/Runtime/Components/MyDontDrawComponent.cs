@@ -1,8 +1,8 @@
 using Entitas;
-using Entitas.Generators.Attributes;
+using Entitas.CodeGeneration.Attributes;
 using Entitas.Unity;
 
-[Context(typeof(GameContext)), DontDrawComponent]
+[Game, DontDrawComponent]
 public sealed class MyDontDrawComponent : IComponent
 {
     public MySimpleObject Value;

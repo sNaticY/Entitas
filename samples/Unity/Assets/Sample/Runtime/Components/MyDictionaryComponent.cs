@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Entitas;
-using Entitas.Generators.Attributes;
+using Entitas.CodeGeneration.Attributes;
 
-[Context(typeof(GameContext))]
+[Game]
 public sealed class MyDictionaryComponent : IComponent
 {
     public Dictionary<string, string> Value;

@@ -8,8 +8,7 @@ class ContextTests
     [Test]
     public void EnsuresSameDeterministicOrderWhenGettingEntitiesAfterDestroyAllEntities()
     {
-        ContextInitialization.InitializeAllContexts();
-        var gameContext = new Context<Entity>(1, () => new Game.Entity());
+        var gameContext = SampleContexts.Create().GetGame();
 
         const int numEntities = 10;
 

@@ -1,12 +1,12 @@
-﻿using Entitas.Unity;
+using Entitas;
+using Entitas.Unity;
 using UnityEngine;
 
 public class EntityLinkController : MonoBehaviour
 {
     void Start()
     {
-        ContextInitialization.InitializeAllContexts();
-        var gameContext = new GameContext();
+        var gameContext = SampleContexts.Create().GetGame();
         gameContext.CreateContextObserver();
         var entity = gameContext.CreateEntity();
 

@@ -1,4 +1,5 @@
-﻿using Entitas.Unity;
+using Entitas;
+using Entitas.Unity;
 using UnityEngine;
 
 public class EntityStressTestController : MonoBehaviour
@@ -10,8 +11,7 @@ public class EntityStressTestController : MonoBehaviour
 
     void Start()
     {
-        ContextInitialization.InitializeAllContexts();
-        _gameContext = new GameContext();
+        _gameContext = SampleContexts.Create().GetGame();
         _gameContext.CreateContextObserver();
 
         // for (var i = 0; i < count; i++)

@@ -9,8 +9,7 @@ public class SystemsController : MonoBehaviour
 
     void Start()
     {
-        ContextInitialization.InitializeAllContexts();
-        _gameContext = new GameContext();
+        _gameContext = SampleContexts.Create().GetGame();
         _gameContext.CreateContextObserver();
 
         _systems = CreateNestedSystems();
@@ -25,15 +24,15 @@ public class SystemsController : MonoBehaviour
 
     Systems CreateNestedSystems()
     {
-        var systems1 = new Feature("Nested 1");
-        var systems2 = new Feature("Nested 2");
-        var systems3 = new Feature("Nested 3");
+        var systems1 = new Systems();
+        var systems2 = new Systems();
+        var systems3 = new Systems();
 
         systems1.Add(systems2);
         systems2.Add(systems3);
         systems1.Add(CreateSomeSystems());
 
-        return new Feature("Nested Systems")
+        return new Systems()
             .Add(systems1);
     }
 
@@ -44,7 +43,7 @@ public class SystemsController : MonoBehaviour
 
     void Update()
     {
-        _gameContext.GetGroup(GameMyStringMatcher.MyString).GetSingleEntity()
+        _gameContext.GetGroup(GameMatcher.MyString()).GetSingleEntity()
             .ReplaceMyString(Random.value.ToString());
 
         _systems.Execute();
@@ -53,7 +52,7 @@ public class SystemsController : MonoBehaviour
 
     Systems CreateAllSystemCombinations()
     {
-        return new Feature("All System Combinations")
+        return new Systems()
             .Add(new SomeInitializeSystem())
             .Add(new SomeExecuteSystem())
             .Add(new SomeReactiveSystem(_gameContext))
@@ -64,8 +63,8 @@ public class SystemsController : MonoBehaviour
     Systems CreateSubSystems()
     {
         var allSystems = CreateAllSystemCombinations();
-        var subSystems = new Feature("Sub Systems").Add(allSystems);
-        return new Feature("Systems with SubSystems")
+        var subSystems = new Systems().Add(allSystems);
+        return new Systems()
             .Add(allSystems)
             .Add(allSystems)
             .Add(subSystems)
@@ -75,7 +74,7 @@ public class SystemsController : MonoBehaviour
     Systems CreateSameInstance()
     {
         var system = new RandomDurationSystem();
-        return new Feature("Same System Instances")
+        return new Systems()
             .Add(system)
             .Add(system)
             .Add(system);
@@ -83,18 +82,18 @@ public class SystemsController : MonoBehaviour
 
     Systems CreateEmptySystems()
     {
-        var systems1 = new Feature("Empty 1");
-        var systems2 = new Feature("Empty 2");
-        var systems3 = new Feature("Empty 3");
+        var systems1 = new Systems();
+        var systems2 = new Systems();
+        var systems3 = new Systems();
 
         systems1.Add(systems2);
         systems2.Add(systems3);
 
-        return new Feature("Empty Systems")
+        return new Systems()
             .Add(systems1);
     }
 
-    sealed class SomeSystems : Feature
+    sealed class SomeSystems : Systems
     {
         public SomeSystems(GameContext gameContext)
         {

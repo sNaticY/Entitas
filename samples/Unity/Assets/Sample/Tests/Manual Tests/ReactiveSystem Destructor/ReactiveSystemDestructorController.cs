@@ -1,3 +1,4 @@
+using Entitas;
 using Entitas.Unity;
 using UnityEngine;
 using UnityEditor;
@@ -5,16 +6,15 @@ using UnityEditor;
 public class ReactiveSystemDestructorController : MonoBehaviour
 {
     GameContext _gameContext;
-    Game.Entity _initialEntity;
+    GameEntity _initialEntity;
 
     void Start()
     {
-        ContextInitialization.InitializeAllContexts();
-        _gameContext = new GameContext();
+        _gameContext = SampleContexts.Create().GetGame();
         _gameContext.CreateContextObserver();
         new TestReactiveSystem(_gameContext);
         _initialEntity = _gameContext.CreateEntity();
-        _initialEntity.AddTest();
+        _initialEntity.SetTest(true);
         _initialEntity.Destroy();
     }
 

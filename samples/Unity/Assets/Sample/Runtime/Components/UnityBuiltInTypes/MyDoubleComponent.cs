@@ -1,7 +1,7 @@
 using Entitas;
-using Entitas.Generators.Attributes;
+using Entitas.CodeGeneration.Attributes;
 
-[Context(typeof(GameContext))]
+[Game]
 public sealed class MyDoubleComponent : IComponent
 {
     public double Value;

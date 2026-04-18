@@ -8,16 +8,15 @@ public class GroupAllocController : MonoBehaviour
     public GroupAlloc Mode;
     public int Count;
 
-    readonly List<Game.Entity> _buffer = new List<Game.Entity>();
+    readonly List<GameEntity> _buffer = new List<GameEntity>();
     GameContext _gameContext;
-    IGroup<Game.Entity> _group;
+    IGroup<GameEntity> _group;
 
     void Start()
     {
-        ContextInitialization.InitializeAllContexts();
-        _gameContext = new GameContext();
+        _gameContext = SampleContexts.Create().GetGame();
         _gameContext.CreateContextObserver();
-        _group = _gameContext.GetGroup(GameMyIntMatcher.MyInt);
+        _group = _gameContext.GetGroup(GameMatcher.MyInt());
     }
 
     void Update()

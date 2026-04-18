@@ -6,16 +6,15 @@ using UnityEditor;
 public class CollectorDestructorController : MonoBehaviour
 {
     GameContext _gameContext;
-    Game.Entity _initialEntity;
+    GameEntity _initialEntity;
 
     void Start()
     {
-        ContextInitialization.InitializeAllContexts();
-        _gameContext = new GameContext();
+        _gameContext = SampleContexts.Create().GetGame();
         _gameContext.CreateContextObserver();
-        _gameContext.GetGroup(GameTestMatcher.Test).CreateCollector();
+        _gameContext.GetGroup(GameMatcher.Test()).CreateCollector();
         _initialEntity = _gameContext.CreateEntity();
-        _initialEntity.AddTest();
+        _initialEntity.SetTest(true);
         _initialEntity.Destroy();
         // TODO
         // context.ClearGroups();

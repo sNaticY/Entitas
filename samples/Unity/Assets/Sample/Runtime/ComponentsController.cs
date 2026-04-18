@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Entitas;
 using Entitas.Unity;
 using UnityEngine;
-using static GameMyGameObjectMatcher;
-using static GameMyVector3Matcher;
 
 public class ComponentsController : MonoBehaviour
 {
     void Start()
     {
-        ContextInitialization.InitializeAllContexts();
-        var gameContext = new GameContext();
+        var gameContext = SampleContexts.Create().GetGame();
         gameContext.CreateContextObserver();
 
         CreateTestGroups(gameContext);
@@ -21,10 +19,10 @@ public class ComponentsController : MonoBehaviour
 
     void CreateTestGroups(GameContext context)
     {
-        context.GetGroup(MyVector3);
-        context.GetGroup(MyGameObject);
-        context.GetGroup(Game.Matcher.AllOf(MyGameObject, MyVector3));
-        context.GetGroup(Game.Matcher.AllOf(MyGameObject, MyVector3));
+        context.GetGroup(GameMatcher.MyVector3());
+        context.GetGroup(GameMatcher.MyGameObject());
+        context.GetGroup(GameMatcher.AllOf(GameMatcher.MyGameObject(), GameMatcher.MyVector3()));
+        context.GetGroup(GameMatcher.AllOf(GameMatcher.MyGameObject(), GameMatcher.MyVector3()));
     }
 
     void CreateTestEntities(GameContext context)
@@ -87,7 +85,7 @@ public class ComponentsController : MonoBehaviour
                 { "3", "Three" }
             });
             entity.AddMyDontDraw(new MySimpleObject());
-            entity.AddMyFlag();
+            entity.SetMyFlag(true);
             entity.AddMyHashSet(new HashSet<string> { "1", "2", "3" });
             var jaggedArray = new string[2][];
             jaggedArray[0] = new[] { "Entity", "Component", "System" };

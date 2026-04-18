@@ -14,8 +14,7 @@ public class EntityLinkTests
     [SetUp]
     public void BeforeEach()
     {
-        ContextInitialization.InitializeAllContexts();
-        _context = new GameContext();
+        _context = SampleContexts.Create().GetGame();
         _context.CreateContextObserver();
         _entity = _context.CreateEntity();
         _gameObject = new GameObject("TestGameObject");

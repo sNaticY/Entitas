@@ -1,5 +1,5 @@
 ﻿using Entitas;
-using Entitas.Generators.Attributes;
+using Entitas.CodeGeneration.Attributes;
 
-[Context(typeof(GameContext)), Context(typeof(InputContext))]
+[Game, Input]
 public sealed class TestComponent : IComponent { }
