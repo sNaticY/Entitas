@@ -115,17 +115,25 @@ public class EntitasGenerator : IIncrementalGenerator
         in IncrementalValueProvider<ImmutableArray<ContextData>> contextsData,
         in IncrementalValueProvider<ImmutableDictionary<string, ImmutableArray<ComponentData>>> componentsByContextNameLookup)
     {
-        // Extract all (ContextData, ComponentData) pairs
+        // Extract all component-owned sources. Context-root assemblies keep the full
+        // single-assembly surface; feature assemblies emit only handle-based plain APIs.
         var componentByContext = contextsData
             .Combine(componentsByContextNameLookup)
             .SelectMany((pair, _) =>
             {
                 var (contexts, componentLookup) = pair;
-                return contexts.SelectMany((contextData, _) =>
+                var contextLookup = contexts.ToDictionary(contextData => contextData.ContextName);
+
+                return componentLookup.SelectMany(contextComponentsPair =>
                 {
-                    return !componentLookup.TryGetValue(contextData.ContextName, out var matchingComponents)
-                        ? Enumerable.Empty<(ContextData, ComponentData)>()
-                        : matchingComponents.Select(component => (contextData, component));
+                    var contextName = contextComponentsPair.Key;
+                    var contextRootIsLocal = contextLookup.TryGetValue(contextName, out var contextData);
+                    if (!contextRootIsLocal)
+                        contextData = new ContextData(contextName);
+
+                    return contextComponentsPair.Value
+                        .Where(component => contextRootIsLocal || ShouldGenerateFeatureOwnedPlainApis(component))
+                        .Select(component => (contextData, component, contextRootIsLocal));
                 });
             });
 
@@ -141,15 +149,24 @@ public class EntitasGenerator : IIncrementalGenerator
             static (spc, source) => GenerateComponentOwnedSources(source, spc));
     }
 
+    static bool ShouldGenerateFeatureOwnedPlainApis(in ComponentData componentData) =>
+        componentData.HasExplicitContexts && !componentData.IsGenerated;
+
     static void GenerateComponentOwnedSources(
-        (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData, ComponentData) ComponentByContext) input,
+        (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData ContextData, ComponentData ComponentData, bool ContextRootIsLocal) ComponentByContext) input,
         SourceProductionContext spc)
     {
         if (!input.ShouldRun)
             return;
 
-        var componentData = input.ComponentByContext.Item2;
-        var contextData = input.ComponentByContext.Item1;
+        var componentData = input.ComponentByContext.ComponentData;
+        var contextData = input.ComponentByContext.ContextData;
+
+        if (!input.ComponentByContext.ContextRootIsLocal)
+        {
+            ComponentGenerationHelper.GeneratePlainComponentApis(spc, componentData, input.Options, contextData);
+            return;
+        }
 
         GenerateSlotDependentComponentSources(spc, componentData, input.Options, contextData);
 

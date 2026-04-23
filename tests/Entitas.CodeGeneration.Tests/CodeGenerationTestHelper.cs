@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using Entitas.CodeGeneration;
 using Microsoft.CodeAnalysis;
@@ -15,31 +16,78 @@ static class CodeGenerationTestHelper
     public static GeneratorDriverRunResult RunGenerator(
         string source,
         string assemblyName,
-        Dictionary<string, string>? options = null)
+        Dictionary<string, string>? options = null,
+        IEnumerable<MetadataReference>? additionalReferences = null)
+    {
+        var compilation = CreateCompilation(source, assemblyName, additionalReferences);
+
+        var driver = CreateDriver(options);
+        driver = driver.RunGenerators(compilation);
+        return driver.GetRunResult();
+    }
+
+    public static (GeneratorDriverRunResult Result, Compilation Compilation, ImmutableArray<Diagnostic> Diagnostics)
+        RunGeneratorAndUpdateCompilation(
+            string source,
+            string assemblyName,
+            Dictionary<string, string>? options = null,
+            IEnumerable<MetadataReference>? additionalReferences = null)
+    {
+        var compilation = CreateCompilation(source, assemblyName, additionalReferences);
+
+        var driver = CreateDriver(options);
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var diagnostics);
+        return (driver.GetRunResult(), outputCompilation, diagnostics);
+    }
+
+    public static MetadataReference CreateReferenceFromCompilation(Compilation compilation)
+    {
+        using var stream = new MemoryStream();
+        var emitResult = compilation.Emit(stream);
+        if (!emitResult.Success)
+        {
+            var errors = string.Join("\n", emitResult.Diagnostics
+                .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
+                .Select(diagnostic => diagnostic.ToString()));
+
+            throw new InvalidOperationException(errors);
+        }
+
+        return MetadataReference.CreateFromImage(stream.ToArray());
+    }
+
+    static CSharpCompilation CreateCompilation(
+        string source,
+        string assemblyName,
+        IEnumerable<MetadataReference>? additionalReferences)
     {
         var references = AppDomain.CurrentDomain.GetAssemblies()
             .Where(assembly => !assembly.IsDynamic && !string.IsNullOrWhiteSpace(assembly.Location))
+            .Where(assembly => assembly.GetName().Name != typeof(CodeGenerationTestHelper).Assembly.GetName().Name)
             .Select(assembly => MetadataReference.CreateFromFile(assembly.Location))
             .Concat(new[]
             {
                 MetadataReference.CreateFromFile(typeof(Context<>).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(Entitas.CodeGeneration.Attributes.ContextAttribute).Assembly.Location),
             })
+            .Concat(additionalReferences ?? Enumerable.Empty<MetadataReference>())
             .Distinct(MetadataReferencePathComparer.Instance);
 
-        var compilation = CSharpCompilation.Create(
+        return CSharpCompilation.Create(
             assemblyName,
             new[] { CSharpSyntaxTree.ParseText(source) },
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
 
+    static GeneratorDriver CreateDriver(Dictionary<string, string>? options)
+    {
         GeneratorDriver driver = CSharpGeneratorDriver.Create(new EntitasGenerator());
 
         if (options is not null)
             driver = driver.WithUpdatedAnalyzerConfigOptions(new TestAnalyzerConfigOptionsProvider(options));
 
-        driver = driver.RunGenerators(compilation);
-        return driver.GetRunResult();
+        return driver;
     }
 
     sealed class MetadataReferencePathComparer : IEqualityComparer<MetadataReference>

@@ -18,7 +18,8 @@ public static class ComponentAttributesHelper
         out string flagPrefix,
         out bool isUnique,
         out bool hasCleanupAttribute,
-        out CleanupMode cleanupMode)
+        out CleanupMode cleanupMode,
+        out bool hasExplicitContexts)
     {
         var contextNamesBuilder = ImmutableArray.CreateBuilder<string>();
         var eventsDataBuilder = ImmutableArray.CreateBuilder<EventData>();
@@ -58,7 +59,9 @@ public static class ComponentAttributesHelper
             }
         }
 
-        if (contextNamesBuilder.Count == 0)
+        hasExplicitContexts = contextNamesBuilder.Count != 0;
+
+        if (!hasExplicitContexts)
             contextNamesBuilder.Add(ContextGenerationHelper.DefaultContextName);
         
         contextNames = contextNamesBuilder.ToImmutable();

@@ -18,6 +18,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
     
     // Attributes
     public ImmutableArray<string> ContextNames { get; }
+    public bool HasExplicitContexts { get; }
     public ImmutableArray<EventData> Events { get; }
     public string FlagPrefix { get; }
     public bool IsUnique { get; }
@@ -47,9 +48,11 @@ public readonly struct ComponentData : IEquatable<ComponentData>
             out var flagPrefix,
             out var isUnique,
             out var hasCleanupAttribute,
-            out var cleanupMode);
+            out var cleanupMode,
+            out var hasExplicitContexts);
         
         ContextNames = contextNames;
+        HasExplicitContexts = hasExplicitContexts;
         Events = events;
         FlagPrefix = flagPrefix;
         IsUnique = isUnique;
@@ -65,6 +68,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
         string shortTypeName,
         string fullTypeName,
         ImmutableArray<string> contextNames = default,
+        bool hasExplicitContexts = false,
         ImmutableArray<MemberData> members = default,
         ImmutableArray<EventData> events = default,
         string flagPrefix = "is",
@@ -81,6 +85,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
         FullComponentName = FullTypeName.RemoveDots().RemoveComponentSuffix();
         
         ContextNames = contextNames;
+        HasExplicitContexts = hasExplicitContexts || !contextNames.IsDefaultOrEmpty;
         Events = events;
         FlagPrefix = flagPrefix;
         IsUnique = isUnique;
@@ -111,6 +116,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
                string.Equals(ShortTypeName, other.ShortTypeName, StringComparison.Ordinal) &&
                string.Equals(Namespace, other.Namespace, StringComparison.Ordinal) &&
                ContextNames.SequenceEqual(other.ContextNames) &&
+               HasExplicitContexts == other.HasExplicitContexts &&
                Events.SequenceEqual(other.Events) &&
                string.Equals(FlagPrefix, other.FlagPrefix, StringComparison.Ordinal) &&
                IsUnique == other.IsUnique &&
@@ -132,6 +138,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
             hash = hash * 31 + (FullTypeName?.GetHashCode() ?? 0);
             hash = hash * 31 + (Namespace?.GetHashCode() ?? 0);
             hash = hash * 31 + ContextNames.GetSequenceHashCode();
+            hash = hash * 31 + HasExplicitContexts.GetHashCode();
             hash = hash * 31 + Events.GetSequenceHashCode();
             hash = hash * 31 + (FlagPrefix?.GetHashCode() ?? 0);
             hash = hash * 31 + IsUnique.GetHashCode();
