@@ -225,26 +225,26 @@ ${memberAssignmentList}
 
     public static bool ${flagCheck}(this ${EntityType} entity)
     {
-        return entity.HasComponent(${Index});
+        return entity.HasComponent(${Handle});
     }
 
     public static void ${flagSet}(this ${EntityType} entity, bool value)
     {
         if (value != entity.${flagCheck}())
         {
-            var index = ${Index};
+            var handle = ${Handle};
             if (value)
             {
-                var componentPool = entity.GetComponentPool(index);
+                var componentPool = entity.GetComponentPool(handle);
                 var component = componentPool.Count > 0
                         ? componentPool.Pop()
                         : ${componentName}Component;
 
-                entity.AddComponent(index, component);
+                entity.AddComponent(handle, component);
             }
             else
             {
-                entity.RemoveComponent(index);
+                entity.RemoveComponent(handle);
             }
         }
     }
@@ -260,7 +260,7 @@ ${memberAssignmentList}
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${ComponentType}", componentData.FullTypeName)
             .Replace("${componentName}", componentData.GetScopedComponentNameLowerFirst())
-            .Replace("${Index}", componentData.GetComponentIndex(contextData))
+            .Replace("${Handle}", GetComponentHandleExpression(contextData, componentData))
             .Replace("${flagCheck}", componentData.GetFlagCheckMethodName())
             .Replace("${flagSet}", componentData.GetFlagSetMethodName());
     }

@@ -100,6 +100,11 @@ namespace MyGame
 
         var source = GetGeneratedSourceBySuffix(result, "UniqueFlagComponent.g.cs");
 
+        source.Should().Contain("public static class MainUniqueFlagComponentHandle");
+        source.Should().Contain("return entity.HasComponent(MainUniqueFlagComponentHandle.Handle);");
+        source.Should().Contain("var handle = MainUniqueFlagComponentHandle.Handle;");
+        source.Should().Contain("entity.AddComponent(handle, component);");
+        source.Should().Contain("entity.RemoveComponent(handle);");
         source.Should().Contain("GetUniqueFlagEntity(this MainContext context) { return context.GetGroup(MainMatcher.MyGameUniqueFlag()).GetSingleEntity(); }");
         source.Should().Contain("context.CreateEntity().SetUniqueFlag(true);");
     }
