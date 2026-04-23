@@ -85,6 +85,8 @@ namespace MyGame
 
         var source = GetGeneratedSource(result, "ContextObservers.g.cs");
         source.Should().Contain("CreateContextObserver(contexts.GetMain());");
+        source.Should().Contain("InitializeAllContextObservers(this global::Entitas.Contexts contexts)");
+        source.Should().Contain("foreach (var context in contexts.AllContexts)");
         source.Should().NotContain("${");
     }
 

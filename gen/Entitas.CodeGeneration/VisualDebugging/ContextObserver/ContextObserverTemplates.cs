@@ -21,6 +21,21 @@ ${contextObservers}
         }
     }
 
+    public static void InitializeAllContextObservers(this global::Entitas.Contexts contexts)
+    {
+        try
+        {
+            foreach (var context in contexts.AllContexts)
+            {
+                CreateContextObserver(context);
+            }
+        }
+        catch(System.Exception e)
+        {
+            UnityEngine.Debug.LogError(e);
+        }
+    }
+
     static void CreateContextObserver(global::Entitas.IContext context)
     {
         if (UnityEngine.Application.isPlaying)
