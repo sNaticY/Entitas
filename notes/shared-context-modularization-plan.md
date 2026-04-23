@@ -8,6 +8,22 @@ The design goal is:
 - move as much generated code as possible into feature assemblies
 - leave only truly context-global residue for runtime composition
 
+## Execution Status
+
+Implemented on 2026-04-24:
+- generator flow now separates context-root, component-owned, and context-shared/global outputs
+- generated plain entity/context APIs use `Entitas.ComponentHandle<TComponent>` instead of direct `${Context}ComponentsLookup.X` slots
+- feature assemblies with explicit context attributes can emit handle-based component APIs without owning the context root
+- per-component event listener artifacts, event systems, cleanup systems, and entity-index registrations can be feature-owned and handle-based
+- `Entitas.ContextSchemaBuilder` composes component handles, cleanup systems, event systems, and entity-index initializers at runtime
+- generated contexts can be constructed from a `ContextSchema`
+- visual debugging has a runtime-composed `InitializeAllContextObservers` bootstrap beside the existing generated context-list bootstrap
+
+Current architectural stance:
+- single-assembly generation remains the default supported workflow
+- shared-context modular generation is now an experimental schema/handle path backed by generator and runtime tests
+- Unity sample validation and polished user-facing setup docs are still required before making the modular path canonical
+
 ## Working Position
 
 We are not trying to make the whole framework runtime-driven.

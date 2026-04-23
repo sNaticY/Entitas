@@ -182,8 +182,10 @@ The incremental generator is the main generation path in this branch.
 
 ### Current limitations
 
+- The single-assembly workflow remains the default and best-documented path.
 - The generator is compilation-scoped. If two different assemblies define two different contexts, each assembly generates its own local types and accessors from the source it can see.
-- Cross-assembly context composition currently relies on runtime `Entitas.Contexts` registration during bootstrap, not on one merged generated root container.
+- Shared-context modular assemblies have an experimental handle/schema path: feature assemblies can generate handle-based component APIs and register their component handles, event systems, cleanup systems, and entity indices into a runtime `ContextSchema`.
+- Cross-assembly context composition relies on explicit runtime bootstrap through `Entitas.Contexts` and `ContextSchema`; there is still no generated root container that merges every feature assembly.
 
 Unity-side generator usage is also tied to Unity's Roslyn analyzer/source-generator support, so treat Unity 6 as the intended path for the incremental generator itself.
 

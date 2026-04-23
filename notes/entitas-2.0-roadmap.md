@@ -31,11 +31,13 @@ Goal: make the 2.0 generator work intentionally for one context in a custom asmd
 
 - `[x]` The incremental generator is now analyzer-config driven instead of relying on only hardcoded assembly assumptions.
 - `[x]` Tests exist for default assembly behavior and custom assembly filtering.
-- `[~]` The runtime/bootstrap design now supports explicit context registration into `Entitas.Contexts`.
-- `[ ]` Define and document the canonical "one context in one custom asmdef" workflow.
+- `[x]` The runtime/bootstrap design now supports explicit context registration into `Entitas.Contexts`.
+- `[~]` Define and document the canonical "one context in one custom asmdef" workflow.
 - `[ ]` Validate the workflow in the Unity sample or a focused clean Unity project setup.
-- `[ ]` Add an explicit sample or fixture that demonstrates one-context multi-assembly usage end-to-end.
-- `[ ]` Document expected behavior for one asmdef, multiple asmdefs, and mixed `Assembly-CSharp` projects.
+- `[~]` Add an explicit sample or fixture that demonstrates one-context multi-assembly usage end-to-end.
+- `[~]` Document expected behavior for one asmdef, multiple asmdefs, and mixed `Assembly-CSharp` projects.
+
+Current note: runtime-composed shared-context support now exists as an experimental handle/schema path. The repo has Roslyn multi-assembly tests for a root context assembly plus a feature assembly, including feature-local component APIs, event/cleanup systems, entity-index registration, and runtime schema metadata. Unity sample validation and user-facing setup docs are still pending before calling this the canonical modular workflow.
 
 ### 3. Package Support
 
