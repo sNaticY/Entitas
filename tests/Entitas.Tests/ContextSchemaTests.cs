@@ -127,6 +127,31 @@ namespace Entitas.Tests
                 .Should().Throw<EntitasException>();
         }
 
+        [Fact]
+        public void InitializesEntityIndicesByName()
+        {
+            var calls = new System.Collections.Generic.List<string>();
+            var contexts = new Contexts();
+            var schema = new ContextSchemaBuilder("Main")
+                .AddEntityIndex("B", _ => calls.Add("B"))
+                .AddEntityIndex("A", _ => calls.Add("A"))
+                .Build();
+
+            schema.InitializeEntityIndices(contexts);
+
+            calls.Should().Equal("A", "B");
+        }
+
+        [Fact]
+        public void ThrowsWhenEntityIndexNameIsRegisteredTwice()
+        {
+            var builder = new ContextSchemaBuilder("Main")
+                .AddEntityIndex("User", _ => { });
+
+            FluentActions.Invoking(() => builder.AddEntityIndex("User", _ => { }))
+                .Should().Throw<EntitasException>();
+        }
+
         sealed class CleanupSpy : ICleanupSystem
         {
             public int Calls { get; private set; }

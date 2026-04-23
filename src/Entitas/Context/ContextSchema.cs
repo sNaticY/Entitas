@@ -9,17 +9,20 @@ namespace Entitas
         readonly IComponentHandle[] _componentHandles;
         readonly ContextSystemRegistration[] _cleanupSystems;
         readonly ContextSystemRegistration[] _eventSystems;
+        readonly ContextEntityIndexRegistration[] _entityIndices;
 
         internal ContextSchema(
             string name,
             IComponentHandle[] componentHandles,
             ContextSystemRegistration[] cleanupSystems,
-            ContextSystemRegistration[] eventSystems)
+            ContextSystemRegistration[] eventSystems,
+            ContextEntityIndexRegistration[] entityIndices)
         {
             Name = name;
             _componentHandles = componentHandles;
             _cleanupSystems = cleanupSystems;
             _eventSystems = eventSystems;
+            _entityIndices = entityIndices;
             ComponentNames = componentHandles.Select(handle => handle.Name).ToArray();
             ComponentTypes = componentHandles.Select(handle => handle.ComponentType).ToArray();
         }
@@ -48,6 +51,12 @@ namespace Entitas
         public Systems CreateEventSystems(Contexts contexts) =>
             CreateSystems(contexts, _eventSystems);
 
+        public void InitializeEntityIndices(Contexts contexts)
+        {
+            for (var i = 0; i < _entityIndices.Length; i++)
+                _entityIndices[i].Initialize(contexts);
+        }
+
         static Systems CreateSystems(Contexts contexts, ContextSystemRegistration[] registrations)
         {
             var systems = new Systems();
@@ -64,6 +73,7 @@ namespace Entitas
         readonly List<IComponentHandle> _componentHandles = new List<IComponentHandle>();
         readonly List<ContextSystemRegistration> _cleanupSystems = new List<ContextSystemRegistration>();
         readonly List<ContextSystemRegistration> _eventSystems = new List<ContextSystemRegistration>();
+        readonly List<ContextEntityIndexRegistration> _entityIndices = new List<ContextEntityIndexRegistration>();
 
         public ContextSchemaBuilder(string name)
         {
@@ -108,6 +118,25 @@ namespace Entitas
         public ContextSchemaBuilder AddEventSystem(string name, int priority, Func<Contexts, ISystem> factory) =>
             AddSystem(_eventSystems, name, priority, factory);
 
+        public ContextSchemaBuilder AddEntityIndex(string name, Action<Contexts> initialize)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Entity index registration name must not be empty.", nameof(name));
+
+            if (initialize == null)
+                throw new ArgumentNullException(nameof(initialize));
+
+            if (_entityIndices.Any(registration => string.Equals(registration.Name, name, StringComparison.Ordinal)))
+            {
+                throw new EntitasException(
+                    $"Context schema '{_name}' already contains entity index registration '{name}'!",
+                    "Each entity index can only be registered once per logical context.");
+            }
+
+            _entityIndices.Add(new ContextEntityIndexRegistration(name, initialize));
+            return this;
+        }
+
         public ContextSchema Build()
         {
             var orderedHandles = _componentHandles
@@ -128,7 +157,11 @@ namespace Entitas
                 .ThenBy(registration => registration.Name, StringComparer.Ordinal)
                 .ToArray();
 
-            return new ContextSchema(_name, orderedHandles, cleanupSystems, eventSystems);
+            var entityIndices = _entityIndices
+                .OrderBy(registration => registration.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            return new ContextSchema(_name, orderedHandles, cleanupSystems, eventSystems, entityIndices);
         }
 
         ContextSchemaBuilder AddSystem(
@@ -167,5 +200,17 @@ namespace Entitas
         public string Name { get; }
         public int Priority { get; }
         public Func<Contexts, ISystem> Factory { get; }
+    }
+
+    readonly struct ContextEntityIndexRegistration
+    {
+        public ContextEntityIndexRegistration(string name, Action<Contexts> initialize)
+        {
+            Name = name;
+            Initialize = initialize;
+        }
+
+        public string Name { get; }
+        public Action<Contexts> Initialize { get; }
     }
 }

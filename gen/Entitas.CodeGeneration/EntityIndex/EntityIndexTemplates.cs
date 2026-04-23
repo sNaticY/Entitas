@@ -1,4 +1,6 @@
 using Entitas.CodeGeneration.Components.Data;
+using Entitas.CodeGeneration.Components;
+using Entitas.CodeGeneration.Components.Extensions;
 using Entitas.CodeGeneration.Contexts.Data;
 using Entitas.CodeGeneration.EntityIndex.Extensions;
 using Entitas.CodeGeneration.Extensions;
@@ -98,6 +100,113 @@ ${getIndices}
             .Replace("${KeyType}", memberData.Type)
             .Replace("${IndexType}", memberData.GetEntityIndexType());
     }  
+
+    const string ComponentEntityIndicesTemplate =
+        @"public static class ${IndexConstantsType}
+{
+${indexConstants}
+}
+
+public static class ${IndexSchemaExtensionsType}
+{
+    public static global::Entitas.ContextSchemaBuilder Add${IndexConstantsType}(this global::Entitas.ContextSchemaBuilder builder)
+    {
+${indexRegistrations}
+        return builder;
+    }
+}
+
+public static class ${IndexExtensionsType}
+{
+${getIndices}
+}
+";
+
+    const string ComponentIndexRegistrationTemplate =
+        @"        builder.AddEntityIndex(${IndexConstantsType}.${IndexName}, contexts =>
+        {
+            var context = global::Entitas.${ContextName}ContextsExtension.Get${ContextName}(contexts);
+            context.AddEntityIndex(new ${IndexType}<${ContextName}Entity, ${KeyType}>(
+                ${IndexConstantsType}.${IndexName},
+                context.GetGroup(global::Entitas.Matcher<${ContextName}Entity>.AllOf(${ComponentHandle})),
+                (e, c) => ((${ComponentType})c).${MemberName}));
+        });";
+
+    public static string GetComponentEntityIndexSource(
+        in ContextData contextData,
+        in ComponentData componentData)
+    {
+        var indexConstantsBuilder = new System.Text.StringBuilder();
+        var indexRegistrationsBuilder = new System.Text.StringBuilder();
+        var getIndicesBuilder = new System.Text.StringBuilder();
+        var entityIndexCount = componentData.GetEntityIndexCount();
+        var hasMultipleIndices = entityIndexCount > 1;
+        var indexConstantsType = contextData.ContextName + componentData.GetScopedComponentName() + "EntityIndices";
+        var componentHandle = ComponentTemplates.GetComponentHandleExpression(contextData, componentData);
+
+        foreach (var memberData in componentData.Members)
+        {
+            if (!memberData.IsEntityIndex)
+                continue;
+
+            var indexName = hasMultipleIndices
+                ? componentData.FullComponentName + memberData.Name.ToUpperFirst()
+                : componentData.FullComponentName;
+
+            indexConstantsBuilder.AppendLine(IndexConstantTemplate.Replace("${IndexName}", indexName));
+            indexRegistrationsBuilder.AppendLine(ComponentIndexRegistrationTemplate
+                .Replace("${IndexConstantsType}", indexConstantsType)
+                .Replace("${IndexName}", indexName)
+                .Replace("${ContextName}", contextData.ContextName)
+                .Replace("${IndexType}", memberData.GetEntityIndexType())
+                .Replace("${KeyType}", memberData.Type)
+                .Replace("${ComponentHandle}", componentHandle)
+                .Replace("${ComponentType}", componentData.FullTypeName)
+                .Replace("${MemberName}", memberData.Name));
+
+            var getIndexSource = memberData.EntityIndexType switch
+            {
+                EntityIndexType.PrimaryEntityIndex => GetComponentPrimaryIndexSource(indexConstantsType, indexName, contextData, memberData),
+                EntityIndexType.EntityIndex => GetComponentIndexSource(indexConstantsType, indexName, contextData, memberData),
+                _ => string.Empty,
+            };
+            getIndicesBuilder.Append(getIndexSource + "\n\n");
+        }
+
+        return ComponentEntityIndicesTemplate
+            .Replace("${IndexConstantsType}", indexConstantsType)
+            .Replace("${IndexSchemaExtensionsType}", indexConstantsType + "SchemaExtensions")
+            .Replace("${IndexExtensionsType}", indexConstantsType + "Extensions")
+            .Replace("${indexConstants}", indexConstantsBuilder.ToString().RemoveLast("\n"))
+            .Replace("${indexRegistrations}", indexRegistrationsBuilder.ToString().RemoveLast("\n"))
+            .Replace("${getIndices}", getIndicesBuilder.ToString().RemoveLast("\n\n"));
+    }
+
+    static string GetComponentIndexSource(
+        string indexConstantsType,
+        string indexName,
+        in ContextData contextData,
+        in MemberData memberData) =>
+        GetIndexTemplate
+            .Replace("${ContextName}EntityIndices", indexConstantsType)
+            .Replace("${ContextName}", contextData.ContextName)
+            .Replace("${IndexName}", indexName)
+            .Replace("${MemberName}", memberData.Name)
+            .Replace("${KeyType}", memberData.Type)
+            .Replace("${IndexType}", memberData.GetEntityIndexType());
+
+    static string GetComponentPrimaryIndexSource(
+        string indexConstantsType,
+        string indexName,
+        in ContextData contextData,
+        in MemberData memberData) =>
+        GetPrimaryIndexTemplate
+            .Replace("${ContextName}EntityIndices", indexConstantsType)
+            .Replace("${ContextName}", contextData.ContextName)
+            .Replace("${IndexName}", indexName)
+            .Replace("${MemberName}", memberData.Name)
+            .Replace("${KeyType}", memberData.Type)
+            .Replace("${IndexType}", memberData.GetEntityIndexType());
 
 //     const string CUSTOM_METHOD_TEMPLATE =
 //         @"    public static ${ReturnType} ${MethodName}(this ${ContextName}Context context, ${methodArgs}) {

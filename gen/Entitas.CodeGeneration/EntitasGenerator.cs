@@ -166,7 +166,12 @@ public class EntitasGenerator : IIncrementalGenerator
         {
             ComponentGenerationHelper.GeneratePlainComponentApis(spc, componentData, input.Options, contextData);
             if (!componentData.IsGenerated)
+            {
                 GeneratePerComponentEventAndCleanupSources(spc, componentData, input.Options, contextData);
+
+                if (input.Options.ComponentEntityIndexGenerationEnabled)
+                    EntityIndexGenerationHelper.GenerateComponentEntityIndexRegistrations(spc, componentData, contextData);
+            }
 
             return;
         }

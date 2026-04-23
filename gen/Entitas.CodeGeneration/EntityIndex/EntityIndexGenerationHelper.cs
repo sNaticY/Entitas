@@ -1,6 +1,7 @@
 using System.Collections.Immutable;
 using System.Text;
 using Entitas.CodeGeneration.Components.Data;
+using Entitas.CodeGeneration.Components.Extensions;
 using Entitas.CodeGeneration.Contexts.Data;
 using Entitas.CodeGeneration.EntityIndex.Extensions;
 using Entitas.CodeGeneration.Extensions;
@@ -106,5 +107,18 @@ public static class EntityIndexGenerationHelper
             .Replace("${getIndices}", getIndicesBuilder.ToString().RemoveLast("\n\n"));
 
         spc.AddSource(contextData.ContextName + "EntityIndices.g.cs", SourceText.From(source, Encoding.UTF8));
+    }
+
+    public static void GenerateComponentEntityIndexRegistrations(SourceProductionContext spc,
+        in ComponentData componentData,
+        in ContextData contextData)
+    {
+        if (componentData.GetEntityIndexCount() == 0)
+            return;
+
+        var source = EntityIndexTemplates.GetComponentEntityIndexSource(contextData, componentData);
+        var fileName = (contextData.ContextName + componentData.GetScopedComponentName() + "EntityIndices")
+            .NamespacedHintName(componentData.Namespace);
+        spc.AddSource(fileName + ".g.cs", SourceText.From(source.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
     }
 }

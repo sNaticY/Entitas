@@ -30,7 +30,10 @@ namespace Game.Feature
     [Main, Unique]
     public sealed class UserComponent : IComponent
     {
+        [PrimaryEntityIndex]
         public string Name;
+
+        [EntityIndex]
         public int Age;
     }
 
@@ -72,6 +75,7 @@ namespace Game.Feature
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainMatcher.g.cs");
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainEventSystems.g.cs");
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainCleanupSystems.g.cs");
+        GetGeneratedFileNames(feature.Result).Should().NotContain("MainEntityIndices.g.cs");
         GetGeneratedFileNames(feature.Result).Should().NotContain(fileName =>
             fileName.EndsWith("Matcher.g.cs", StringComparison.Ordinal));
 
@@ -83,6 +87,16 @@ namespace Game.Feature
         userSource.Should().Contain("global::Entitas.Matcher<MainEntity>.AllOf(MainUserComponentHandle.Handle)");
         userSource.Should().NotContain("MainComponentsLookup");
         userSource.Should().NotContain("MainMatcher");
+
+        var indexSource = GetGeneratedSourceBySuffix(feature.Result, "UserEntityIndices.g.cs");
+        indexSource.Should().Contain("public static class MainUserEntityIndices");
+        indexSource.Should().Contain("AddMainUserEntityIndices(this global::Entitas.ContextSchemaBuilder builder)");
+        indexSource.Should().Contain("builder.AddEntityIndex(MainUserEntityIndices.GameFeatureUserName");
+        indexSource.Should().Contain("global::Entitas.Matcher<MainEntity>.AllOf(MainUserComponentHandle.Handle)");
+        indexSource.Should().Contain("GetEntityWithGameFeatureUserName(this MainContext context, string Name)");
+        indexSource.Should().Contain("GetEntitiesWithGameFeatureUserAge(this MainContext context, int Age)");
+        indexSource.Should().NotContain("MainEntityIndices");
+        indexSource.Should().NotContain("MainMatcher");
 
         var loadingSource = GetGeneratedSourceBySuffix(feature.Result, "LoadingComponent.g.cs");
         loadingSource.Should().Contain("public static class MainLoadingComponentHandle");
