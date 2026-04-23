@@ -7,6 +7,8 @@ namespace Entitas.CodeGeneration.Components;
 
 public static class ComponentTemplates
 {
+    const string ComponentHandleMemberName = "Handle";
+
     public const string GeneratedComponentTemplate =
         @"[Entitas.CodeGeneration.Attributes.DontGenerate]
 public sealed class ${FullComponentName} : Entitas.IComponent
@@ -14,6 +16,44 @@ public sealed class ${FullComponentName} : Entitas.IComponent
     public ${Type} value;
 }
 ";
+
+    const string ComponentHandleTemplate =
+        @"public static class ${ComponentHandleType}
+{
+    public static readonly Entitas.ComponentHandle<${ComponentType}> ${ComponentHandleMember} = new Entitas.ComponentHandle<${ComponentType}>(""${ComponentName}"");
+}
+";
+
+    public static string GetComponentHandleSource(
+        in ContextData contextData,
+        in ComponentData componentData)
+    {
+        return ComponentHandleTemplate
+            .Replace("${ComponentHandleType}", GetComponentHandleTypeName(contextData, componentData))
+            .Replace("${ComponentHandleMember}", ComponentHandleMemberName)
+            .Replace("${ComponentType}", componentData.FullTypeName)
+            .Replace("${ComponentName}", componentData.GetComponentName());
+    }
+
+    public static string GetComponentHandleExpression(
+        in ContextData contextData,
+        in ComponentData componentData) =>
+        GetComponentHandleTypeName(contextData, componentData) + "." + ComponentHandleMemberName;
+
+    public static string GetGlobalComponentHandleExpression(
+        in ContextData contextData,
+        in ComponentData componentData)
+    {
+        var expression = GetComponentHandleExpression(contextData, componentData);
+        return componentData.Namespace is null
+            ? expression
+            : "global::" + componentData.Namespace + "." + expression;
+    }
+
+    static string GetComponentHandleTypeName(
+        in ContextData contextData,
+        in ComponentData componentData) =>
+        contextData.ContextName + componentData.GetScopedComponentName() + "ComponentHandle";
 
     const string StandardComponentContextApiTemplate =
         @"public static class ${ContextExtensionsType}
@@ -130,28 +170,28 @@ public sealed class ${FullComponentName} : Entitas.IComponent
     const string StandardComponentEntityApiTemplate =
         @"public static class ${EntityExtensionsType}
 {
-    public static ${ComponentType} ${getComponent}(this ${EntityType} entity) { return (${ComponentType})entity.GetComponent(${Index}); }
-    public static bool ${hasComponent}(this ${EntityType} entity) { return entity.HasComponent(${Index}); }
+    public static ${ComponentType} ${getComponent}(this ${EntityType} entity) { return (${ComponentType})entity.GetComponent(${Handle}); }
+    public static bool ${hasComponent}(this ${EntityType} entity) { return entity.HasComponent(${Handle}); }
 
     public static void Add${ComponentName}(this ${EntityType} entity, ${newMethodParameters})
     {
-        var index = ${Index};
-        var component = (${ComponentType})entity.CreateComponent(index, typeof(${ComponentType}));
+        var handle = ${Handle};
+        var component = (${ComponentType})entity.CreateComponent(handle, typeof(${ComponentType}));
 ${memberAssignmentList}
-        entity.AddComponent(index, component);
+        entity.AddComponent(handle, component);
     }
 
     public static void Replace${ComponentName}(this ${EntityType} entity, ${newMethodParameters})
     {
-        var index = ${Index};
-        var component = (${ComponentType})entity.CreateComponent(index, typeof(${ComponentType}));
+        var handle = ${Handle};
+        var component = (${ComponentType})entity.CreateComponent(handle, typeof(${ComponentType}));
 ${memberAssignmentList}
-        entity.ReplaceComponent(index, component);
+        entity.ReplaceComponent(handle, component);
     }
 
     public static void Remove${ComponentName}(this ${EntityType} entity)
     {
-        entity.RemoveComponent(${Index});
+        entity.RemoveComponent(${Handle});
     }
 }
 ";
@@ -161,7 +201,7 @@ ${memberAssignmentList}
         in ComponentData componentData)
     {
         var componentName = componentData.GetScopedComponentName();
-        var componentIndex = componentData.GetComponentIndex(contextData);
+        var componentHandle = GetComponentHandleExpression(contextData, componentData);
         var newMethodParameters = componentData.Members.GetMethodParameters(true);
         var memberAssignmentList = componentData.Members.GetMemberAssignmentList();
         var entityExtensionsType = contextData.ContextName + componentData.GetScopedComponentName() + "EntityExtensions";
@@ -171,7 +211,7 @@ ${memberAssignmentList}
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${ComponentType}", componentData.FullTypeName)
             .Replace("${ComponentName}", componentName)
-            .Replace("${Index}", componentIndex)
+            .Replace("${Handle}", componentHandle)
             .Replace("${getComponent}", componentData.GetComponentGetterMethodName())
             .Replace("${hasComponent}", componentData.GetHasComponentMethodName())
             .Replace("${newMethodParameters}", newMethodParameters)

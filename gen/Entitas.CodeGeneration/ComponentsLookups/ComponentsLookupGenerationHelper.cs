@@ -44,7 +44,8 @@ public static class ComponentsLookupGenerationHelper
 
     public static void GenerateComponentsLookups(SourceProductionContext spc,
         ImmutableDictionary<string, ImmutableArray<ComponentData>> componentsByContextNameLookup,
-        Dictionary<string, ContextData> contextLookup)
+        Dictionary<string, ContextData> contextLookup,
+        in EntitasGeneratorOptions options)
     {
         foreach (var contextComponentsPair in componentsByContextNameLookup)
         {
@@ -53,7 +54,7 @@ public static class ComponentsLookupGenerationHelper
                 continue;
 
             var componentArray = contextComponentsPair.Value;
-            GenerateComponentsLookup(spc, contextData, componentArray);
+            GenerateComponentsLookup(spc, contextData, componentArray, options);
         }
 
         // Generate empty lookups (when there are no components in context)
@@ -64,19 +65,22 @@ public static class ComponentsLookupGenerationHelper
                 || componentsByContextNameLookup[contextName].IsDefaultOrEmpty)
             {
                 var emptyComponentsArray = ImmutableArray<ComponentData>.Empty;
-                GenerateComponentsLookup(spc, contextEntry.Value, emptyComponentsArray);
+                GenerateComponentsLookup(spc, contextEntry.Value, emptyComponentsArray, options);
             }
         }
     }
 
     public static void GenerateComponentsLookup(SourceProductionContext spc,
         in ContextData contextData,
-        in ImmutableArray<ComponentData> componentsData)
+        in ImmutableArray<ComponentData> componentsData,
+        in EntitasGeneratorOptions options)
     {
         var componentConstantsList = string.Join("\n", componentsData
             .Select((c, index) => ComponentsLookupTemplates.ComponentConstantTemplate
                 .Replace("${ComponentName}", c.GetComponentName())
                 .Replace("${Index}", index.ToString())));
+
+        var componentHandleAssignments = GetComponentHandleAssignments(contextData, componentsData, options);
 
         var totalComponentsConstant = ComponentsLookupTemplates.TotalComponentsConstantTemplate
             .Replace("${totalComponents}", componentsData.Length.ToString());
@@ -93,10 +97,31 @@ public static class ComponentsLookupGenerationHelper
         var source = ComponentsLookupTemplates.ComponentsLookupTemplate
             .Replace("${Lookup}", lookupClassName)
             .Replace("${componentConstantsList}", componentConstantsList)
+            .Replace("${componentHandleAssignments}", componentHandleAssignments)
             .Replace("${totalComponentsConstant}", totalComponentsConstant)
             .Replace("${componentNamesList}", componentNamesList)
             .Replace("${componentTypesList}", componentTypesList);
 
         spc.AddSource(contextData.ComponentsLookupTypeName + ".g.cs", SourceText.From(source, Encoding.UTF8));
+    }
+
+    static string GetComponentHandleAssignments(
+        in ContextData contextData,
+        in ImmutableArray<ComponentData> componentsData,
+        in EntitasGeneratorOptions options)
+    {
+        var currentContextData = contextData;
+        var currentOptions = options;
+        var assignments = string.Join("\n", componentsData
+            .Where(componentData => ComponentGenerationHelper.ShouldGenerateComponentHandle(componentData, currentOptions))
+            .Select(componentData => ComponentsLookupTemplates.ComponentHandleAssignmentTemplate
+                .Replace("${ComponentHandle}", ComponentTemplates.GetGlobalComponentHandleExpression(currentContextData, componentData))
+                .Replace("${ComponentName}", componentData.GetComponentName())));
+
+        return assignments.Length == 0
+            ? string.Empty
+            : ComponentsLookupTemplates.ComponentHandleAssignmentsTemplate
+                .Replace("${Lookup}", contextData.ComponentsLookupTypeName)
+                .Replace("${componentHandleAssignmentList}", assignments);
     }
 }

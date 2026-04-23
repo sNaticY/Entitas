@@ -96,7 +96,7 @@ public class EntitasGenerator : IIncrementalGenerator
         var componentsByContextNameLookup = input.Item2.Item2.Item2;
 
         if (options.ComponentsLookupGenerationEnabled)
-            ComponentsLookupGenerationHelper.GenerateComponentsLookups(spc, componentsByContextNameLookup, contextLookup);
+            ComponentsLookupGenerationHelper.GenerateComponentsLookups(spc, componentsByContextNameLookup, contextLookup, options);
 
         if (options.ComponentEntityIndexGenerationEnabled)
             EntityIndexGenerationHelper.GenerateEntityIndices(spc, componentsByContextNameLookup, contextLookup);

@@ -129,6 +129,9 @@ public static class ComponentGenerationHelper
     {
         var source = string.Empty;
 
+        if (ShouldGenerateComponentHandle(componentData, options))
+            source += ComponentTemplates.GetComponentHandleSource(contextData, componentData) + "\n";
+
         if (componentData.IsUnique && options.ComponentContextExtensionGenerationEnabled)
             source += CreateComponentContextApiSource(componentData, contextData);
 
@@ -152,6 +155,12 @@ public static class ComponentGenerationHelper
             spc.AddSource($"{fileName}.g.cs", SourceText.From(source.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
         }
     }
+
+    public static bool ShouldGenerateComponentHandle(
+        in ComponentData componentData,
+        in EntitasGeneratorOptions options) =>
+        options.ComponentEntityExtensionGenerationEnabled
+        || (componentData.IsUnique && options.ComponentContextExtensionGenerationEnabled);
 
     public static void GenerateComponentMatcherApi(SourceProductionContext spc,
         in ComponentData componentData,

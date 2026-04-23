@@ -78,16 +78,19 @@ namespace MyGame
     }
 
     [Fact]
-    public void PlainEntityApisCurrentlyUseContextLookupSlotsDirectly()
+    public void PlainEntityApisUseComponentHandles()
     {
         var result = RunGenerator();
 
         var source = GetGeneratedSourceBySuffix(result, "HealthComponent.g.cs");
 
-        source.Should().Contain("GetHealth(this MainEntity entity) { return (MyGame.HealthComponent)entity.GetComponent(MainComponentsLookup.MyGameHealth); }");
-        source.Should().Contain("HasHealth(this MainEntity entity) { return entity.HasComponent(MainComponentsLookup.MyGameHealth); }");
-        source.Should().Contain("var index = MainComponentsLookup.MyGameHealth;");
-        source.Should().Contain("entity.RemoveComponent(MainComponentsLookup.MyGameHealth);");
+        source.Should().Contain("public static class MainHealthComponentHandle");
+        source.Should().Contain("public static readonly Entitas.ComponentHandle<MyGame.HealthComponent> Handle = new Entitas.ComponentHandle<MyGame.HealthComponent>(\"MyGameHealth\");");
+        source.Should().Contain("GetHealth(this MainEntity entity) { return (MyGame.HealthComponent)entity.GetComponent(MainHealthComponentHandle.Handle); }");
+        source.Should().Contain("HasHealth(this MainEntity entity) { return entity.HasComponent(MainHealthComponentHandle.Handle); }");
+        source.Should().Contain("var handle = MainHealthComponentHandle.Handle;");
+        source.Should().Contain("entity.RemoveComponent(MainHealthComponentHandle.Handle);");
+        source.Should().NotContain("entity.GetComponent(MainComponentsLookup.MyGameHealth)");
     }
 
     [Fact]
@@ -111,6 +114,8 @@ namespace MyGame
         GetGeneratedSource(result, "MainMyGameHealthMatcher.g.cs").Should().Contain(
             "matcher.ComponentNames = MainComponentsLookup.componentNames;");
         GetGeneratedSource(result, "MainComponentsLookup.g.cs").Should().Contain("public const int MyGameHealth = ");
+        GetGeneratedSource(result, "MainComponentsLookup.g.cs").Should().Contain(
+            "global::MyGame.MainHealthComponentHandle.Handle.AssignIndex(MyGameHealth);");
         GetGeneratedSource(result, "MainEntityIndices.g.cs").Should().Contain("MyGameHealth");
         GetGeneratedSource(result, "MainCleanupSystems.g.cs").Should().Contain("CleanupMe");
         GetGeneratedSource(result, "MainEventSystems.g.cs").Should().Contain("Reactive");

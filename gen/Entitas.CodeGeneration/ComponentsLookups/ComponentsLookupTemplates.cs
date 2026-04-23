@@ -9,6 +9,8 @@ ${componentConstantsList}
 
 ${totalComponentsConstant}
 
+${componentHandleAssignments}
+
     public static readonly string[] componentNames = 
     {
 ${componentNamesList}
@@ -22,6 +24,12 @@ ${componentTypesList}
 ";
     
     public const string ComponentConstantTemplate = @"    public const int ${ComponentName} = ${Index};";
+    public const string ComponentHandleAssignmentsTemplate = @"    static ${Lookup}()
+    {
+${componentHandleAssignmentList}
+    }
+";
+    public const string ComponentHandleAssignmentTemplate = @"        ${ComponentHandle}.AssignIndex(${ComponentName});";
     public const string TotalComponentsConstantTemplate = @"    public const int TotalComponents = ${totalComponents};";
     public const string ComponentNameTemplate = @"        ""${ComponentName}""";
     public const string ComponentTypeTemplate = @"        typeof(${ComponentType})";
