@@ -93,6 +93,30 @@ namespace Entitas.Tests
         }
 
         [Fact]
+        public void AllOfAcceptsComponentHandles()
+        {
+            var handleA = CreateHandle<ComponentA>("ComponentA", CID.ComponentA);
+            var handleB = CreateHandle<ComponentB>("ComponentB", CID.ComponentB);
+
+            var matcher = Matcher<TestEntity>.AllOf(handleA, handleB);
+
+            AssertIndexesEqual(matcher.Indexes, CID.ComponentA, CID.ComponentB);
+            AssertIndexesEqual(matcher.AllOfIndexes, CID.ComponentA, CID.ComponentB);
+        }
+
+        [Fact]
+        public void AnyOfAcceptsComponentHandles()
+        {
+            var handleA = CreateHandle<ComponentA>("ComponentA", CID.ComponentA);
+            var handleB = CreateHandle<ComponentB>("ComponentB", CID.ComponentB);
+
+            var matcher = Matcher<TestEntity>.AnyOf(handleA, handleB);
+
+            AssertIndexesEqual(matcher.Indexes, CID.ComponentA, CID.ComponentB);
+            AssertIndexesEqual(matcher.AnyOfIndexes, CID.ComponentA, CID.ComponentB);
+        }
+
+        [Fact]
         public void AllOfNoneOfHasAllIndexesWithoutDuplicates()
         {
             var matcher = Matcher<TestEntity>
@@ -556,5 +580,12 @@ namespace Entitas.Tests
 
         static IAllOfMatcher<TestEntity> AllOfAB() => Matcher<TestEntity>.AllOf(CID.ComponentA, CID.ComponentB);
         static IAllOfMatcher<TestEntity> AllOfBA() => Matcher<TestEntity>.AllOf(CID.ComponentB, CID.ComponentA);
+
+        static ComponentHandle<TComponent> CreateHandle<TComponent>(string name, int index) where TComponent : IComponent
+        {
+            var handle = new ComponentHandle<TComponent>(name);
+            handle.AssignIndex(index);
+            return handle;
+        }
     }
 }

@@ -18,6 +18,9 @@ namespace Entitas
             return matcher;
         }
 
+        public static IAllOfMatcher<TEntity> AllOf(params IComponentHandle[] handles) =>
+            AllOf(GetIndexes(handles));
+
         public static IAllOfMatcher<TEntity> AllOf(params IMatcher<TEntity>[] matchers)
         {
             var allOfMatcher = (Matcher<TEntity>)AllOf(MergeIndexes(matchers));
@@ -31,6 +34,9 @@ namespace Entitas
             matcher._anyOfIndexes = DistinctIndexes(indexes);
             return matcher;
         }
+
+        public static IAnyOfMatcher<TEntity> AnyOf(params IComponentHandle[] handles) =>
+            AnyOf(GetIndexes(handles));
 
         public static IAnyOfMatcher<TEntity> AnyOf(params IMatcher<TEntity>[] matchers)
         {
@@ -95,6 +101,15 @@ namespace Entitas
             _indexSetBuffer.Clear();
 
             return uniqueIndexes;
+        }
+
+        static int[] GetIndexes(IComponentHandle[] handles)
+        {
+            var indexes = new int[handles.Length];
+            for (var i = 0; i < handles.Length; i++)
+                indexes[i] = handles[i].Index;
+
+            return indexes;
         }
     }
 }

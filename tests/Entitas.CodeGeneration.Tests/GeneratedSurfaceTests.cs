@@ -94,7 +94,7 @@ namespace MyGame
     }
 
     [Fact]
-    public void UniqueContextApisCurrentlyUseGeneratedMatcherAccessors()
+    public void UniqueContextApisUseComponentHandles()
     {
         var result = RunGenerator();
 
@@ -105,7 +105,8 @@ namespace MyGame
         source.Should().Contain("var handle = MainUniqueFlagComponentHandle.Handle;");
         source.Should().Contain("entity.AddComponent(handle, component);");
         source.Should().Contain("entity.RemoveComponent(handle);");
-        source.Should().Contain("GetUniqueFlagEntity(this MainContext context) { return context.GetGroup(MainMatcher.MyGameUniqueFlag()).GetSingleEntity(); }");
+        source.Should().Contain("GetUniqueFlagEntity(this MainContext context) { return context.GetGroup(global::Entitas.Matcher<MainEntity>.AllOf(MainUniqueFlagComponentHandle.Handle)).GetSingleEntity(); }");
+        source.Should().NotContain("MainMatcher.MyGameUniqueFlag()");
         source.Should().Contain("context.CreateEntity().SetUniqueFlag(true);");
     }
 

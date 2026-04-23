@@ -58,7 +58,8 @@ namespace MyGame
         source.Should().Contain("SetUser(this MainContext context, string newName, int newAge)");
         source.Should().Contain("ReplaceUser(this MainContext context, string newName, int newAge)");
         source.Should().Contain("GetUserEntity(this MainContext context)");
-        source.Should().Contain("MainMatcher.MyGameUser()");
+        source.Should().Contain("global::Entitas.Matcher<MainEntity>.AllOf(MainUserComponentHandle.Handle)");
+        source.Should().NotContain("MainMatcher.MyGameUser()");
         source.Should().NotContain("SetMyGameUser(");
         source.Should().NotContain("ReplaceMyGameUser(");
         source.Should().NotContain("GetMyGameUserEntity(");

@@ -58,7 +58,7 @@ public sealed class ${FullComponentName} : Entitas.IComponent
     const string StandardComponentContextApiTemplate =
         @"public static class ${ContextExtensionsType}
 {
-    public static ${EntityType} ${getComponentEntity}(this ${ContextType} context) { return context.GetGroup(${MatcherType}.${MatcherComponentName}()).GetSingleEntity(); }
+    public static ${EntityType} ${getComponentEntity}(this ${ContextType} context) { return context.GetGroup(global::Entitas.Matcher<${EntityType}>.AllOf(${Handle})).GetSingleEntity(); }
     public static ${ComponentType} ${getComponent}(this ${ContextType} context) { return context.${getComponentEntity}().${getComponent}(); }
     public static bool ${hasComponent}(this ${ContextType} context) { return context.${getComponentEntity}() != null; }
 
@@ -103,12 +103,14 @@ public sealed class ${FullComponentName} : Entitas.IComponent
         var newMethodParameters = componentData.Members.GetMethodParameters(true);
         var newMethodArgs = componentData.Members.GetMethodArgs(true);
         var contextExtensionsType = contextData.ContextName + componentData.GetScopedComponentName() + "ContextExtensions";
+        var componentHandle = GetComponentHandleExpression(contextData, componentData);
 
         return StandardComponentContextApiTemplate
             .Replace("${ContextExtensionsType}", contextExtensionsType)
             .Replace("${ContextType}", contextData.ContextTypeName)
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${ApiComponentName}", apiComponentName)
+            .Replace("${Handle}", componentHandle)
             .Replace("${MatcherComponentName}", matcherComponentName)
             .Replace("${getComponentEntity}", componentData.GetUniqueEntityGetterMethodName())
             .Replace("${getComponent}", componentData.GetComponentGetterMethodName())
@@ -122,7 +124,7 @@ public sealed class ${FullComponentName} : Entitas.IComponent
     const string FlagComponentContextApiTemplate =
         @"public static class ${ContextExtensionsType}
 {
-    public static ${EntityType} ${getComponentEntity}(this ${ContextType} context) { return context.GetGroup(${MatcherType}.${MatcherComponentName}()).GetSingleEntity(); }
+    public static ${EntityType} ${getComponentEntity}(this ${ContextType} context) { return context.GetGroup(global::Entitas.Matcher<${EntityType}>.AllOf(${Handle})).GetSingleEntity(); }
 
     public static bool ${flagCheck}(this ${ContextType} context)
     {
@@ -154,11 +156,13 @@ public sealed class ${FullComponentName} : Entitas.IComponent
     {
         var matcherComponentName = componentData.GetComponentName();
         var contextExtensionsType = contextData.ContextName + componentData.GetScopedComponentName() + "ContextExtensions";
+        var componentHandle = GetComponentHandleExpression(contextData, componentData);
 
         return FlagComponentContextApiTemplate
             .Replace("${ContextExtensionsType}", contextExtensionsType)
             .Replace("${ContextType}", contextData.ContextTypeName)
             .Replace("${EntityType}", contextData.EntityTypeName)
+            .Replace("${Handle}", componentHandle)
             .Replace("${MatcherComponentName}", matcherComponentName)
             .Replace("${getComponentEntity}", componentData.GetUniqueEntityGetterMethodName())
             .Replace("${flagCheck}", componentData.GetFlagCheckMethodName())
