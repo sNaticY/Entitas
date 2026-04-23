@@ -137,6 +137,9 @@ namespace Entitas
             OnComponentAdded?.Invoke(this, index, component);
         }
 
+        public void AddComponent(IComponentHandle handle, IComponent component) =>
+            AddComponent(handle.Index, component);
+
         /// Removes a component at the specified index.
         /// You can only remove a component at an index if it exists.
         /// The preferred way is to use the
@@ -154,6 +157,9 @@ namespace Entitas
             HandleComponent(index, null);
         }
 
+        public void RemoveComponent(IComponentHandle handle) =>
+            RemoveComponent(handle.Index);
+
         /// Replaces an existing component at the specified index
         /// or adds it if it doesn't exist yet.
         /// The preferred way is to use the
@@ -168,6 +174,9 @@ namespace Entitas
             else if (component != null)
                 AddComponent(index, component);
         }
+
+        public void ReplaceComponent(IComponentHandle handle, IComponent component) =>
+            ReplaceComponent(handle.Index, component);
 
         void HandleComponent(int index, IComponent newComponent)
         {
@@ -209,6 +218,9 @@ namespace Entitas
             return _components[index];
         }
 
+        public IComponent GetComponent(IComponentHandle handle) =>
+            GetComponent(handle.Index);
+
         /// Returns all added components.
         public IComponent[] GetComponents()
         {
@@ -247,6 +259,9 @@ namespace Entitas
         /// Determines whether this entity has a component
         /// at the specified index.
         public bool HasComponent(int index) => _components[index] != null;
+
+        public bool HasComponent(IComponentHandle handle) =>
+            HasComponent(handle.Index);
 
         /// Determines whether this entity has components
         /// at all the specified indexes.
@@ -307,6 +322,9 @@ namespace Entitas
             return componentPool;
         }
 
+        public Stack<IComponent> GetComponentPool(IComponentHandle handle) =>
+            GetComponentPool(handle.Index);
+
         /// Returns a new or reusable component from the ComponentPool
         /// for the specified component index.
         public IComponent CreateComponent(int index, Type type)
@@ -317,6 +335,9 @@ namespace Entitas
                 : (IComponent)Activator.CreateInstance(type);
         }
 
+        public IComponent CreateComponent(IComponentHandle handle, Type type) =>
+            CreateComponent(handle.Index, type);
+
         /// Returns a new or reusable component from the ComponentPool
         /// for the specified component index.
         public T CreateComponent<T>(int index) where T : new()
@@ -326,6 +347,9 @@ namespace Entitas
                 ? (T)componentPool.Pop()
                 : new T();
         }
+
+        public T CreateComponent<T>(IComponentHandle handle) where T : new() =>
+            CreateComponent<T>(handle.Index);
 
         /// Returns the number of objects that retain this entity.
         public int RetainCount => _aerc.RetainCount;

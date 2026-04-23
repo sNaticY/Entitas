@@ -38,22 +38,30 @@ namespace Entitas
         void Reuse(int creationIndex);
 
         void AddComponent(int index, IComponent component);
+        void AddComponent(IComponentHandle handle, IComponent component);
         void RemoveComponent(int index);
+        void RemoveComponent(IComponentHandle handle);
         void ReplaceComponent(int index, IComponent component);
+        void ReplaceComponent(IComponentHandle handle, IComponent component);
 
         IComponent GetComponent(int index);
+        IComponent GetComponent(IComponentHandle handle);
         IComponent[] GetComponents();
         int[] GetComponentIndexes();
 
         bool HasComponent(int index);
+        bool HasComponent(IComponentHandle handle);
         bool HasComponents(int[] indexes);
         bool HasAnyComponent(int[] indexes);
 
         void RemoveAllComponents();
 
         Stack<IComponent> GetComponentPool(int index);
+        Stack<IComponent> GetComponentPool(IComponentHandle handle);
         IComponent CreateComponent(int index, Type type);
+        IComponent CreateComponent(IComponentHandle handle, Type type);
         T CreateComponent<T>(int index) where T : new();
+        T CreateComponent<T>(IComponentHandle handle) where T : new();
 
         void Destroy();
         void InternalDestroy();
