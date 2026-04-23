@@ -38,6 +38,23 @@ public static class ${ContextName}ContextsExtension
         ) 
     {
     }
+
+    public ${ContextType}(global::Entitas.ContextSchema schema)
+        : base(
+            schema.TotalComponents,
+            0,
+            schema.CreateContextInfo(""${ContextName}""),
+            (entity) =>
+
+#if (ENTITAS_FAST_AND_UNSAFE)
+                new global::Entitas.UnsafeAERC(),
+#else
+                new global::Entitas.SafeAERC(entity),
+#endif
+            () => new ${EntityType}()
+        ) 
+    {
+    }
 }
 ";
     

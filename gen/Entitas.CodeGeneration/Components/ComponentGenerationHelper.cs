@@ -130,7 +130,10 @@ public static class ComponentGenerationHelper
         var source = string.Empty;
 
         if (ShouldGenerateComponentHandle(componentData, options))
+        {
             source += ComponentTemplates.GetComponentHandleSource(contextData, componentData) + "\n";
+            source += ComponentTemplates.GetComponentSchemaRegistrationSource(contextData, componentData) + "\n";
+        }
 
         if (componentData.IsUnique && options.ComponentContextExtensionGenerationEnabled)
             source += CreateComponentContextApiSource(componentData, contextData);

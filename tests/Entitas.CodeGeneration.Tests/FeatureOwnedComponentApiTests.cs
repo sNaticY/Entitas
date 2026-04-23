@@ -55,6 +55,7 @@ namespace Game.Feature
     {
         var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
         AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
+        GetGeneratedSource(root.Result, "MainContext.g.cs").Should().Contain("public MainContext(global::Entitas.ContextSchema schema)");
         var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
 
         var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
@@ -76,6 +77,7 @@ namespace Game.Feature
 
         var userSource = GetGeneratedSourceBySuffix(feature.Result, "UserComponent.g.cs");
         userSource.Should().Contain("public static class MainUserComponentHandle");
+        userSource.Should().Contain("AddMainUser(this global::Entitas.ContextSchemaBuilder builder)");
         userSource.Should().Contain("AddUser(this MainEntity entity, string newName, int newAge)");
         userSource.Should().Contain("SetUser(this MainContext context, string newName, int newAge)");
         userSource.Should().Contain("global::Entitas.Matcher<MainEntity>.AllOf(MainUserComponentHandle.Handle)");
@@ -84,6 +86,7 @@ namespace Game.Feature
 
         var loadingSource = GetGeneratedSourceBySuffix(feature.Result, "LoadingComponent.g.cs");
         loadingSource.Should().Contain("public static class MainLoadingComponentHandle");
+        loadingSource.Should().Contain("AddMainLoading(this global::Entitas.ContextSchemaBuilder builder)");
         loadingSource.Should().Contain("SetLoading(this MainEntity entity, bool value)");
         loadingSource.Should().NotContain("MainComponentsLookup");
 
@@ -114,6 +117,12 @@ namespace Game.Feature
     static string GetGeneratedSourceBySuffix(GeneratorDriverRunResult result, string fileNameSuffix) =>
         result.GeneratedTrees
             .Single(tree => Path.GetFileName(tree.FilePath).EndsWith(fileNameSuffix, StringComparison.Ordinal))
+            .GetText()
+            .ToString();
+
+    static string GetGeneratedSource(GeneratorDriverRunResult result, string fileName) =>
+        result.GeneratedTrees
+            .Single(tree => Path.GetFileName(tree.FilePath) == fileName)
             .GetText()
             .ToString();
 

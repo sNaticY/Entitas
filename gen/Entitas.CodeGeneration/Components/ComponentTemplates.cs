@@ -24,6 +24,16 @@ public sealed class ${FullComponentName} : Entitas.IComponent
 }
 ";
 
+    const string ComponentSchemaRegistrationTemplate =
+        @"public static class ${SchemaExtensionsType}
+{
+    public static global::Entitas.ContextSchemaBuilder Add${ContextName}${ScopedComponentName}(this global::Entitas.ContextSchemaBuilder builder)
+    {
+        return builder.Add(${ComponentHandle});
+    }
+}
+";
+
     public static string GetComponentHandleSource(
         in ContextData contextData,
         in ComponentData componentData)
@@ -33,6 +43,18 @@ public sealed class ${FullComponentName} : Entitas.IComponent
             .Replace("${ComponentHandleMember}", ComponentHandleMemberName)
             .Replace("${ComponentType}", componentData.FullTypeName)
             .Replace("${ComponentName}", componentData.GetComponentName());
+    }
+
+    public static string GetComponentSchemaRegistrationSource(
+        in ContextData contextData,
+        in ComponentData componentData)
+    {
+        var scopedComponentName = componentData.GetScopedComponentName();
+        return ComponentSchemaRegistrationTemplate
+            .Replace("${SchemaExtensionsType}", contextData.ContextName + scopedComponentName + "ComponentSchemaExtensions")
+            .Replace("${ContextName}", contextData.ContextName)
+            .Replace("${ScopedComponentName}", scopedComponentName)
+            .Replace("${ComponentHandle}", GetComponentHandleExpression(contextData, componentData));
     }
 
     public static string GetComponentHandleExpression(
