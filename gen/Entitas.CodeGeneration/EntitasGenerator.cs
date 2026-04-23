@@ -26,17 +26,17 @@ public class EntitasGenerator : IIncrementalGenerator
             .Select(static (input, _) => EntitasGeneratorOptions.From(input.Right, input.Left).ShouldRun(input.Left.AssemblyName));
 
         var contextsData = ContextGenerationHelper.GetContextsData(context);
-        RegisterContextsGeneration(context, shouldRun, generatorOptions, contextsData);
+        RegisterContextRootGeneration(context, shouldRun, generatorOptions, contextsData);
 
         var componentsData = ComponentGenerationHelper.GetComponentsData(context, generatorOptions);
         var componentsByContextNameLookup = ComponentsLookupGenerationHelper.GetComponentsByContextNameLookup(componentsData);
-        RegisterIndividualComponentsGeneration(context, shouldRun, generatorOptions, contextsData, componentsByContextNameLookup);
-        RegisterSharedSourcesGeneration(context, shouldRun, generatorOptions, contextsData, componentsData, componentsByContextNameLookup);
+        RegisterComponentOwnedSourcesGeneration(context, shouldRun, generatorOptions, contextsData, componentsByContextNameLookup);
+        RegisterContextSharedSourcesGeneration(context, shouldRun, generatorOptions, contextsData, componentsData, componentsByContextNameLookup);
 
         RegisterVisualDebuggingGeneration(context, generatorOptions, contextsData);
     }
 
-    void RegisterContextsGeneration(
+    void RegisterContextRootGeneration(
         IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<bool> shouldRun,
         IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
@@ -46,10 +46,10 @@ public class EntitasGenerator : IIncrementalGenerator
 
         // This will be triggered for any context change (ContextAttribute class)
         context.RegisterSourceOutput(combinedInput,
-            static (spc, source) => GenerateContexts(source, spc));
+            static (spc, source) => GenerateContextRootSources(source, spc));
     }
 
-    static void GenerateContexts(
+    static void GenerateContextRootSources(
         (bool, (EntitasGeneratorOptions, ImmutableArray<ContextData>)) input,
         SourceProductionContext spc)
     {
@@ -64,7 +64,7 @@ public class EntitasGenerator : IIncrementalGenerator
         ContextGenerationHelper.GenerateContexts(spc, contextsData, options);
     }
 
-    void RegisterSharedSourcesGeneration(
+    void RegisterContextSharedSourcesGeneration(
         IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<bool> shouldRun,
         IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
@@ -79,10 +79,10 @@ public class EntitasGenerator : IIncrementalGenerator
         // Warning: This will be triggered for ANY context or component change
         // Keep it as light as possible
         context.RegisterSourceOutput(combinedInput,
-            static (spc, source) => GenerateSharedSources(source, spc));
+            static (spc, source) => GenerateContextSharedSources(source, spc));
     }
 
-    static void GenerateSharedSources(
+    static void GenerateContextSharedSources(
         (bool, (EntitasGeneratorOptions, ((ImmutableArray<ContextData>, ImmutableArray<ComponentData>), ImmutableDictionary<string, ImmutableArray<ComponentData>>))) input,
         SourceProductionContext spc)
     {
@@ -108,7 +108,7 @@ public class EntitasGenerator : IIncrementalGenerator
             EventsGenerationHelper.GenerateEventSystems(spc, componentsByContextNameLookup, contextLookup);
     }
 
-    void RegisterIndividualComponentsGeneration(
+    void RegisterComponentOwnedSourcesGeneration(
         IncrementalGeneratorInitializationContext context,
         IncrementalValueProvider<bool> shouldRun,
         IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
@@ -138,10 +138,10 @@ public class EntitasGenerator : IIncrementalGenerator
         // - individual components that have changed, or
         // - all components belonging to a context that has changed.
         context.RegisterSourceOutput(conditionalComponentByContext,
-            static (spc, source) => GenerateIndividualEntityComponent(source, spc));
+            static (spc, source) => GenerateComponentOwnedSources(source, spc));
     }
 
-    static void GenerateIndividualEntityComponent(
+    static void GenerateComponentOwnedSources(
         (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData, ComponentData) ComponentByContext) input,
         SourceProductionContext spc)
     {
@@ -151,15 +151,34 @@ public class EntitasGenerator : IIncrementalGenerator
         var componentData = input.ComponentByContext.Item2;
         var contextData = input.ComponentByContext.Item1;
 
-        ComponentGenerationHelper.GenerateEntityComponent(spc, componentData, input.Options, contextData);
+        GenerateSlotDependentComponentSources(spc, componentData, input.Options, contextData);
 
         if (componentData.IsGenerated)
             return;
 
-        if (input.Options.ComponentEventsGenerationEnabled)
+        GeneratePerComponentEventAndCleanupSources(spc, componentData, input.Options, contextData);
+    }
+
+    static void GenerateSlotDependentComponentSources(
+        SourceProductionContext spc,
+        in ComponentData componentData,
+        in EntitasGeneratorOptions options,
+        in ContextData contextData)
+    {
+        ComponentGenerationHelper.GeneratePlainComponentApis(spc, componentData, options, contextData);
+        ComponentGenerationHelper.GenerateComponentMatcherApi(spc, componentData, options, contextData);
+    }
+
+    static void GeneratePerComponentEventAndCleanupSources(
+        SourceProductionContext spc,
+        in ComponentData componentData,
+        in EntitasGeneratorOptions options,
+        in ContextData contextData)
+    {
+        if (options.ComponentEventsGenerationEnabled)
             EventsGenerationHelper.GenerateComponentEvents(spc, componentData, contextData);
 
-        if (input.Options.CleanupGenerationEnabled && componentData.HasCleanupAttribute)
+        if (options.CleanupGenerationEnabled && componentData.HasCleanupAttribute)
             CleanupGenerationHelper.GenerateComponentCleanupSystem(spc, componentData, contextData);
     }
 

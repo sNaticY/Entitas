@@ -122,7 +122,7 @@ public static class ComponentGenerationHelper
         return null;
     }
     
-    public static void GenerateEntityComponent(SourceProductionContext spc,
+    public static void GeneratePlainComponentApis(SourceProductionContext spc,
         in ComponentData componentData,
         in EntitasGeneratorOptions options,
         in ContextData contextData)
@@ -151,7 +151,13 @@ public static class ComponentGenerationHelper
 
             spc.AddSource($"{fileName}.g.cs", SourceText.From(source.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
         }
+    }
 
+    public static void GenerateComponentMatcherApi(SourceProductionContext spc,
+        in ComponentData componentData,
+        in EntitasGeneratorOptions options,
+        in ContextData contextData)
+    {
         if (!options.ComponentMatcherGenerationEnabled)
             return;
 
