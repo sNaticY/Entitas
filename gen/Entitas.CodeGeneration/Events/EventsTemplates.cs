@@ -132,6 +132,16 @@ public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
 }
 ";
     
+    public const string EventSystemSchemaRegistrationTemplate =
+        @"public static class ${Event}EventSystemSchemaExtensions
+{
+    public static global::Entitas.ContextSchemaBuilder Add${Event}EventSystem(this global::Entitas.ContextSchemaBuilder builder)
+    {
+        return builder.AddEventSystem(""${Event}EventSystem"", ${priority}, contexts => new ${Event}EventSystem(contexts));
+    }
+}
+";
+    
     public const string EventSystemsTemplate =
         @"public sealed class ${ContextName}EventSystems : Entitas.Systems
 {

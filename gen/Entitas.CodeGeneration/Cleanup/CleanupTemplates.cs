@@ -42,6 +42,16 @@ public sealed class Destroy${CleanupSystemComponentName}${SystemType} : ICleanup
 }
 ";
 
+    public const string CleanupSystemSchemaRegistrationTemplate =
+        @"public static class ${CleanupSystemName}SchemaExtensions
+{
+    public static global::Entitas.ContextSchemaBuilder Add${CleanupSystemName}(this global::Entitas.ContextSchemaBuilder builder)
+    {
+        return builder.AddCleanupSystem(""${CleanupSystemName}"", contexts => new ${CleanupSystemName}(contexts));
+    }
+}
+";
+
     public static string GetDestroyEntityCleanupSystemSource(
         in ContextData contextData,
         in ComponentData componentData,
@@ -51,7 +61,7 @@ public sealed class Destroy${CleanupSystemComponentName}${SystemType} : ICleanup
         var matcherComponentName = componentData.GetComponentName();
         fileName = "Destroy" + cleanupSystemComponentName + contextData.SystemTypeName;
 
-        return DestroyEntityCleanupSystemTemplate
+        var source = DestroyEntityCleanupSystemTemplate
             .Replace("${CleanupSystemComponentName}", cleanupSystemComponentName)
             .Replace("${ComponentHandle}", ComponentTemplates.GetComponentHandleExpression(contextData, componentData))
             .Replace("${MatcherComponentName}", matcherComponentName)
@@ -60,6 +70,8 @@ public sealed class Destroy${CleanupSystemComponentName}${SystemType} : ICleanup
             .Replace("${SystemType}", contextData.SystemTypeName)
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${MatcherType}", contextData.MatcherTypeName);
+
+        return source + "\n" + GetCleanupSystemSchemaRegistrationSource(fileName);
     }
 
     public const string RemoveComponentCleanupSystemTemplate =
@@ -100,7 +112,7 @@ public sealed class Remove${CleanupSystemComponentName}${SystemType} : ICleanupS
             ? $"Set{actionComponentName}(false)"
             : $"Remove{actionComponentName}()";
 
-        return RemoveComponentCleanupSystemTemplate
+        var source = RemoveComponentCleanupSystemTemplate
             .Replace("${CleanupSystemComponentName}", cleanupSystemComponentName)
             .Replace("${ComponentHandle}", ComponentTemplates.GetComponentHandleExpression(contextData, componentData))
             .Replace("${MatcherComponentName}", matcherComponentName)
@@ -110,5 +122,11 @@ public sealed class Remove${CleanupSystemComponentName}${SystemType} : ICleanupS
             .Replace("${EntityType}", contextData.EntityTypeName)
             .Replace("${MatcherType}", contextData.MatcherTypeName)
             .Replace("${removeComponent}", removeComponentSource);
+
+        return source + "\n" + GetCleanupSystemSchemaRegistrationSource(fileName);
     }
+
+    static string GetCleanupSystemSchemaRegistrationSource(string cleanupSystemName) =>
+        CleanupSystemSchemaRegistrationTemplate
+            .Replace("${CleanupSystemName}", cleanupSystemName);
 }

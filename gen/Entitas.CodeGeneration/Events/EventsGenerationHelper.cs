@@ -178,6 +178,10 @@ public static class EventsGenerationHelper
             .Replace("${ComponentName}", componentData.GetComponentName())
             .Replace("${EventComponentName}", componentData.EventComponentName(eventData));
 
+        source += "\n" + EventsTemplates.EventSystemSchemaRegistrationTemplate
+            .Replace("${Event}", eventName)
+            .Replace("${priority}", eventData.Priority.ToString());
+
         var fileName = (eventName + "EventSystem").NamespacedHintName(componentData.Namespace);
         var wrappedSource = source.WrapInNamespace(componentData.Namespace);
         spc.AddSource(fileName + ".g.cs", SourceText.From(wrappedSource, Encoding.UTF8));

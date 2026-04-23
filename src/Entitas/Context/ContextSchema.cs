@@ -7,11 +7,19 @@ namespace Entitas
     public sealed class ContextSchema
     {
         readonly IComponentHandle[] _componentHandles;
+        readonly ContextSystemRegistration[] _cleanupSystems;
+        readonly ContextSystemRegistration[] _eventSystems;
 
-        internal ContextSchema(string name, IComponentHandle[] componentHandles)
+        internal ContextSchema(
+            string name,
+            IComponentHandle[] componentHandles,
+            ContextSystemRegistration[] cleanupSystems,
+            ContextSystemRegistration[] eventSystems)
         {
             Name = name;
             _componentHandles = componentHandles;
+            _cleanupSystems = cleanupSystems;
+            _eventSystems = eventSystems;
             ComponentNames = componentHandles.Select(handle => handle.Name).ToArray();
             ComponentTypes = componentHandles.Select(handle => handle.ComponentType).ToArray();
         }
@@ -33,12 +41,29 @@ namespace Entitas
 
             return new ContextInfo(Name, ComponentNames, ComponentTypes);
         }
+
+        public Systems CreateCleanupSystems(Contexts contexts) =>
+            CreateSystems(contexts, _cleanupSystems);
+
+        public Systems CreateEventSystems(Contexts contexts) =>
+            CreateSystems(contexts, _eventSystems);
+
+        static Systems CreateSystems(Contexts contexts, ContextSystemRegistration[] registrations)
+        {
+            var systems = new Systems();
+            for (var i = 0; i < registrations.Length; i++)
+                systems.Add(registrations[i].Factory(contexts));
+
+            return systems;
+        }
     }
 
     public sealed class ContextSchemaBuilder
     {
         readonly string _name;
         readonly List<IComponentHandle> _componentHandles = new List<IComponentHandle>();
+        readonly List<ContextSystemRegistration> _cleanupSystems = new List<ContextSystemRegistration>();
+        readonly List<ContextSystemRegistration> _eventSystems = new List<ContextSystemRegistration>();
 
         public ContextSchemaBuilder(string name)
         {
@@ -77,6 +102,12 @@ namespace Entitas
             return this;
         }
 
+        public ContextSchemaBuilder AddCleanupSystem(string name, Func<Contexts, ISystem> factory) =>
+            AddSystem(_cleanupSystems, name, priority: 0, factory);
+
+        public ContextSchemaBuilder AddEventSystem(string name, int priority, Func<Contexts, ISystem> factory) =>
+            AddSystem(_eventSystems, name, priority, factory);
+
         public ContextSchema Build()
         {
             var orderedHandles = _componentHandles
@@ -88,7 +119,53 @@ namespace Entitas
             for (var i = 0; i < orderedHandles.Length; i++)
                 orderedHandles[i].AssignIndex(i);
 
-            return new ContextSchema(_name, orderedHandles);
+            var cleanupSystems = _cleanupSystems
+                .OrderBy(registration => registration.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            var eventSystems = _eventSystems
+                .OrderBy(registration => registration.Priority)
+                .ThenBy(registration => registration.Name, StringComparer.Ordinal)
+                .ToArray();
+
+            return new ContextSchema(_name, orderedHandles, cleanupSystems, eventSystems);
         }
+
+        ContextSchemaBuilder AddSystem(
+            List<ContextSystemRegistration> registrations,
+            string name,
+            int priority,
+            Func<Contexts, ISystem> factory)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Context system registration name must not be empty.", nameof(name));
+
+            if (factory == null)
+                throw new ArgumentNullException(nameof(factory));
+
+            if (registrations.Any(registration => string.Equals(registration.Name, name, StringComparison.Ordinal)))
+            {
+                throw new EntitasException(
+                    $"Context schema '{_name}' already contains system registration '{name}'!",
+                    "Each generated system registration can only be added once per logical context.");
+            }
+
+            registrations.Add(new ContextSystemRegistration(name, priority, factory));
+            return this;
+        }
+    }
+
+    readonly struct ContextSystemRegistration
+    {
+        public ContextSystemRegistration(string name, int priority, Func<Contexts, ISystem> factory)
+        {
+            Name = name;
+            Priority = priority;
+            Factory = factory;
+        }
+
+        public string Name { get; }
+        public int Priority { get; }
+        public Func<Contexts, ISystem> Factory { get; }
     }
 }

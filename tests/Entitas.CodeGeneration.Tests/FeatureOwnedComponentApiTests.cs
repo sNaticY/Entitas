@@ -99,8 +99,12 @@ namespace Game.Feature
 
         GetGeneratedSources(feature.Result, fileName => fileName.Contains("Reactive", StringComparison.Ordinal))
             .Should().Contain(source => source.Contains("global::Entitas.Matcher<MainEntity>.AllOf(MainReactiveComponentHandle.Handle)", StringComparison.Ordinal));
+        GetGeneratedSources(feature.Result, fileName => fileName.Contains("Reactive", StringComparison.Ordinal))
+            .Should().Contain(source => source.Contains("builder.AddEventSystem", StringComparison.Ordinal));
         GetGeneratedSources(feature.Result, fileName => fileName.Contains("CleanupMe", StringComparison.Ordinal))
             .Should().Contain(source => source.Contains("global::Entitas.Matcher<MainEntity>.AllOf(MainCleanupMeComponentHandle.Handle)", StringComparison.Ordinal));
+        GetGeneratedSources(feature.Result, fileName => fileName.Contains("CleanupMe", StringComparison.Ordinal))
+            .Should().Contain(source => source.Contains("builder.AddCleanupSystem", StringComparison.Ordinal));
     }
 
     static void AssertNoErrors(IEnumerable<Diagnostic> diagnostics) =>

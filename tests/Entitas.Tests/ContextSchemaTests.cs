@@ -81,5 +81,77 @@ namespace Entitas.Tests
             FluentActions.Invoking(() => schema.CreateContextInfo("Config"))
                 .Should().Throw<EntitasException>();
         }
+
+        [Fact]
+        public void CreatesCleanupSystemsFromRegisteredFactories()
+        {
+            var cleanupA = new CleanupSpy();
+            var cleanupB = new CleanupSpy();
+            var contexts = new Contexts();
+            var schema = new ContextSchemaBuilder("Main")
+                .AddCleanupSystem("B", _ => cleanupB)
+                .AddCleanupSystem("A", _ => cleanupA)
+                .Build();
+
+            var systems = schema.CreateCleanupSystems(contexts);
+            systems.Cleanup();
+
+            cleanupA.Calls.Should().Be(1);
+            cleanupB.Calls.Should().Be(1);
+        }
+
+        [Fact]
+        public void CreatesEventSystemsByPriorityThenName()
+        {
+            var calls = new System.Collections.Generic.List<string>();
+            var contexts = new Contexts();
+            var schema = new ContextSchemaBuilder("Main")
+                .AddEventSystem("Late", 10, _ => new ExecuteSpy("Late", calls))
+                .AddEventSystem("EarlyB", 0, _ => new ExecuteSpy("EarlyB", calls))
+                .AddEventSystem("EarlyA", 0, _ => new ExecuteSpy("EarlyA", calls))
+                .Build();
+
+            var systems = schema.CreateEventSystems(contexts);
+            systems.Execute();
+
+            calls.Should().Equal("EarlyA", "EarlyB", "Late");
+        }
+
+        [Fact]
+        public void ThrowsWhenSystemRegistrationNameIsRegisteredTwice()
+        {
+            var builder = new ContextSchemaBuilder("Main")
+                .AddCleanupSystem("Cleanup", _ => new CleanupSpy());
+
+            FluentActions.Invoking(() => builder.AddCleanupSystem("Cleanup", _ => new CleanupSpy()))
+                .Should().Throw<EntitasException>();
+        }
+
+        sealed class CleanupSpy : ICleanupSystem
+        {
+            public int Calls { get; private set; }
+
+            public void Cleanup()
+            {
+                Calls++;
+            }
+        }
+
+        sealed class ExecuteSpy : IExecuteSystem
+        {
+            readonly string _name;
+            readonly System.Collections.Generic.List<string> _calls;
+
+            public ExecuteSpy(string name, System.Collections.Generic.List<string> calls)
+            {
+                _name = name;
+                _calls = calls;
+            }
+
+            public void Execute()
+            {
+                _calls.Add(_name);
+            }
+        }
     }
 }
