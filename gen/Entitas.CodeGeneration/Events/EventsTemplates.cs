@@ -56,7 +56,7 @@ public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
 
     public ${Event}EventSystem(global::Entitas.Contexts contexts) : base(contexts.Get${ContextName}())
     {
-        _listeners = contexts.Get${ContextName}().GetGroup(${MatcherType}.${EventListener}());
+        _listeners = contexts.Get${ContextName}().GetGroup(global::Entitas.Matcher<${EntityType}>.AllOf(${EventListenerHandle}));
         _entityBuffer = new System.Collections.Generic.List<${EntityType}>();
         _listenerBuffer = new System.Collections.Generic.List<I${EventListener}>();
     }
@@ -64,7 +64,7 @@ public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
     protected override Entitas.ICollector<${EntityType}> GetTrigger(Entitas.IContext<${EntityType}> context)
     {
         return Entitas.CollectorContextExtension.CreateCollector(
-            context, Entitas.TriggerOnEventMatcherExtension.${GroupEvent}(${MatcherType}.${ComponentName}())
+            context, Entitas.TriggerOnEventMatcherExtension.${GroupEvent}(global::Entitas.Matcher<${EntityType}>.AllOf(${ComponentHandle}))
         );
     }
 
@@ -107,7 +107,7 @@ public sealed class ${Event}EventSystem : Entitas.ReactiveSystem<${EntityType}>
     protected override Entitas.ICollector<${EntityType}> GetTrigger(Entitas.IContext<${EntityType}> context)
     {
         return Entitas.CollectorContextExtension.CreateCollector(
-            context, Entitas.TriggerOnEventMatcherExtension.${GroupEvent}(${MatcherType}.${ComponentName}())
+            context, Entitas.TriggerOnEventMatcherExtension.${GroupEvent}(global::Entitas.Matcher<${EntityType}>.AllOf(${ComponentHandle}))
         );
     }
 

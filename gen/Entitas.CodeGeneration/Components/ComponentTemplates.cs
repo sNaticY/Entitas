@@ -38,7 +38,12 @@ public sealed class ${FullComponentName} : Entitas.IComponent
     public static string GetComponentHandleExpression(
         in ContextData contextData,
         in ComponentData componentData) =>
-        GetComponentHandleTypeName(contextData, componentData) + "." + ComponentHandleMemberName;
+        GetComponentHandleExpression(contextData, componentData.GetScopedComponentName());
+
+    public static string GetComponentHandleExpression(
+        in ContextData contextData,
+        string scopedComponentName) =>
+        GetComponentHandleTypeName(contextData.ContextName, scopedComponentName) + "." + ComponentHandleMemberName;
 
     public static string GetGlobalComponentHandleExpression(
         in ContextData contextData,
@@ -53,7 +58,12 @@ public sealed class ${FullComponentName} : Entitas.IComponent
     static string GetComponentHandleTypeName(
         in ContextData contextData,
         in ComponentData componentData) =>
-        contextData.ContextName + componentData.GetScopedComponentName() + "ComponentHandle";
+        GetComponentHandleTypeName(contextData.ContextName, componentData.GetScopedComponentName());
+
+    static string GetComponentHandleTypeName(
+        string contextName,
+        string scopedComponentName) =>
+        contextName + scopedComponentName + "ComponentHandle";
 
     const string StandardComponentContextApiTemplate =
         @"public static class ${ContextExtensionsType}

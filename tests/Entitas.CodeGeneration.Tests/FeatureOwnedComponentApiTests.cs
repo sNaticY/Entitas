@@ -36,6 +36,17 @@ namespace Game.Feature
 
     [Main]
     public sealed class LoadingComponent : IComponent { }
+
+    [Main]
+    [Event(EventTarget.Any)]
+    public sealed class ReactiveComponent : IComponent
+    {
+        public int Value;
+    }
+
+    [Main]
+    [Cleanup(CleanupMode.RemoveComponent)]
+    public sealed class CleanupMeComponent : IComponent { }
 }
 ";
 
@@ -58,6 +69,8 @@ namespace Game.Feature
             fileName.EndsWith("LoadingComponent.g.cs", StringComparison.Ordinal));
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainComponentsLookup.g.cs");
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainMatcher.g.cs");
+        GetGeneratedFileNames(feature.Result).Should().NotContain("MainEventSystems.g.cs");
+        GetGeneratedFileNames(feature.Result).Should().NotContain("MainCleanupSystems.g.cs");
         GetGeneratedFileNames(feature.Result).Should().NotContain(fileName =>
             fileName.EndsWith("Matcher.g.cs", StringComparison.Ordinal));
 
@@ -73,6 +86,18 @@ namespace Game.Feature
         loadingSource.Should().Contain("public static class MainLoadingComponentHandle");
         loadingSource.Should().Contain("SetLoading(this MainEntity entity, bool value)");
         loadingSource.Should().NotContain("MainComponentsLookup");
+
+        GetGeneratedFileNames(feature.Result).Should().Contain(fileName =>
+            fileName.Contains("Reactive", StringComparison.Ordinal) && fileName.EndsWith("EventSystem.g.cs", StringComparison.Ordinal));
+        GetGeneratedFileNames(feature.Result).Should().Contain(fileName =>
+            fileName.Contains("Reactive", StringComparison.Ordinal) && fileName.Contains(".I", StringComparison.Ordinal));
+        GetGeneratedFileNames(feature.Result).Should().Contain(fileName =>
+            fileName.Contains("CleanupMe", StringComparison.Ordinal) && fileName.EndsWith("MainSystem.g.cs", StringComparison.Ordinal));
+
+        GetGeneratedSources(feature.Result, fileName => fileName.Contains("Reactive", StringComparison.Ordinal))
+            .Should().Contain(source => source.Contains("global::Entitas.Matcher<MainEntity>.AllOf(MainReactiveComponentHandle.Handle)", StringComparison.Ordinal));
+        GetGeneratedSources(feature.Result, fileName => fileName.Contains("CleanupMe", StringComparison.Ordinal))
+            .Should().Contain(source => source.Contains("global::Entitas.Matcher<MainEntity>.AllOf(MainCleanupMeComponentHandle.Handle)", StringComparison.Ordinal));
     }
 
     static void AssertNoErrors(IEnumerable<Diagnostic> diagnostics) =>
@@ -91,4 +116,10 @@ namespace Game.Feature
             .Single(tree => Path.GetFileName(tree.FilePath).EndsWith(fileNameSuffix, StringComparison.Ordinal))
             .GetText()
             .ToString();
+
+    static string[] GetGeneratedSources(GeneratorDriverRunResult result, Func<string, bool> predicate) =>
+        result.GeneratedTrees
+            .Where(tree => predicate(Path.GetFileName(tree.FilePath)))
+            .Select(tree => tree.GetText().ToString())
+            .ToArray();
 }

@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Text;
+using Entitas.CodeGeneration.Components;
 using Entitas.CodeGeneration.Components.Data;
 using Entitas.CodeGeneration.Components.Extensions;
 using Entitas.CodeGeneration.Contexts.Data;
@@ -37,6 +38,7 @@ public static class EventsGenerationHelper
                         ? listenerComponentTypeName
                         : componentData.Namespace + "." + listenerComponentTypeName,
                     contextNames: ImmutableArray.Create(contextName),
+                    hasExplicitContexts: componentData.HasExplicitContexts,
                     members: ImmutableArray.Create(
                         new MemberData($"System.Collections.Generic.List<I{listenerComponentName}>", "value")
                     ),
@@ -156,11 +158,15 @@ public static class EventsGenerationHelper
             : EventsTemplates.AnyTargetEventSystemTemplate;
 
         var eventName = componentData.EventName(contextData.ContextName, eventData);
+        var componentHandle = ComponentTemplates.GetComponentHandleExpression(contextData, componentData);
+        var eventListenerHandle = ComponentTemplates.GetComponentHandleExpression(contextData, eventListener);
         var source = template
             .Replace("${GroupEvent}", eventData.EventType.ToString())
             .Replace("${filter}", GetFilter(componentData, contextData.ContextName, eventData))
             .Replace("${cachedAccess}", cachedAccess)
             .Replace("${methodArgs}", methodArgs)
+            .Replace("${ComponentHandle}", componentHandle)
+            .Replace("${EventListenerHandle}", eventListenerHandle)
             .Replace("${Event}", eventName)
             .Replace("${EventType}", eventData.GetEventTypeSuffix())
             .Replace("${ContextName}", contextData.ContextName)

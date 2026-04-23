@@ -150,7 +150,7 @@ public class EntitasGenerator : IIncrementalGenerator
     }
 
     static bool ShouldGenerateFeatureOwnedPlainApis(in ComponentData componentData) =>
-        componentData.HasExplicitContexts && !componentData.IsGenerated;
+        componentData.HasExplicitContexts;
 
     static void GenerateComponentOwnedSources(
         (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData ContextData, ComponentData ComponentData, bool ContextRootIsLocal) ComponentByContext) input,
@@ -165,6 +165,9 @@ public class EntitasGenerator : IIncrementalGenerator
         if (!input.ComponentByContext.ContextRootIsLocal)
         {
             ComponentGenerationHelper.GeneratePlainComponentApis(spc, componentData, input.Options, contextData);
+            if (!componentData.IsGenerated)
+                GeneratePerComponentEventAndCleanupSources(spc, componentData, input.Options, contextData);
+
             return;
         }
 

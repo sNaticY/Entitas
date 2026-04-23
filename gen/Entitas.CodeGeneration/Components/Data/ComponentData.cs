@@ -85,7 +85,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
         FullComponentName = FullTypeName.RemoveDots().RemoveComponentSuffix();
         
         ContextNames = contextNames;
-        HasExplicitContexts = hasExplicitContexts || !contextNames.IsDefaultOrEmpty;
+        HasExplicitContexts = hasExplicitContexts;
         Events = events;
         FlagPrefix = flagPrefix;
         IsUnique = isUnique;

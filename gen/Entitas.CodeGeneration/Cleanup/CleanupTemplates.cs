@@ -1,5 +1,6 @@
 using Entitas.CodeGeneration.Components.Data;
 using Entitas.CodeGeneration.Components.Extensions;
+using Entitas.CodeGeneration.Components;
 using Entitas.CodeGeneration.Contexts.Data;
 using Entitas.CodeGeneration.Extensions;
 
@@ -28,7 +29,7 @@ public sealed class Destroy${CleanupSystemComponentName}${SystemType} : ICleanup
 
     public Destroy${CleanupSystemComponentName}${SystemType}(global::Entitas.Contexts contexts)
     {
-        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${MatcherComponentName}());
+        _group = contexts.Get${ContextName}().GetGroup(global::Entitas.Matcher<${EntityType}>.AllOf(${ComponentHandle}));
     }
 
     public void Cleanup()
@@ -52,6 +53,7 @@ public sealed class Destroy${CleanupSystemComponentName}${SystemType} : ICleanup
 
         return DestroyEntityCleanupSystemTemplate
             .Replace("${CleanupSystemComponentName}", cleanupSystemComponentName)
+            .Replace("${ComponentHandle}", ComponentTemplates.GetComponentHandleExpression(contextData, componentData))
             .Replace("${MatcherComponentName}", matcherComponentName)
             .Replace("${ContextName}", contextData.ContextName)
             .Replace("${ContextType}", contextData.ContextTypeName)
@@ -71,7 +73,7 @@ public sealed class Remove${CleanupSystemComponentName}${SystemType} : ICleanupS
 
     public Remove${CleanupSystemComponentName}${SystemType}(global::Entitas.Contexts contexts)
     {
-        _group = contexts.Get${ContextName}().GetGroup(${MatcherType}.${MatcherComponentName}());
+        _group = contexts.Get${ContextName}().GetGroup(global::Entitas.Matcher<${EntityType}>.AllOf(${ComponentHandle}));
     }
 
     public void Cleanup()
@@ -100,6 +102,7 @@ public sealed class Remove${CleanupSystemComponentName}${SystemType} : ICleanupS
 
         return RemoveComponentCleanupSystemTemplate
             .Replace("${CleanupSystemComponentName}", cleanupSystemComponentName)
+            .Replace("${ComponentHandle}", ComponentTemplates.GetComponentHandleExpression(contextData, componentData))
             .Replace("${MatcherComponentName}", matcherComponentName)
             .Replace("${ContextName}", contextData.ContextName)
             .Replace("${ContextType}", contextData.ContextTypeName)
