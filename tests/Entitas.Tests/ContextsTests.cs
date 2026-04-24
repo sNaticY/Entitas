@@ -59,6 +59,36 @@ namespace Entitas.Tests
         }
 
         [Fact]
+        public void RegisteringWithSchemaInitializesEntityIndices()
+        {
+            var calls = new System.Collections.Generic.List<string>();
+            var schema = new ContextSchemaBuilder("Test")
+                .AddEntityIndex("User", _ => calls.Add("User"))
+                .Build();
+
+            var context = new TestContext(CID.TotalComponents);
+            var contexts = new Contexts().Register(context, schema);
+
+            contexts.Get<TestContext>().Should().BeSameAs(context);
+            calls.Should().Equal("User");
+        }
+
+        [Fact]
+        public void RegisteringDuplicateContextWithSchemaKeepsExistingDuplicateBehavior()
+        {
+            var calls = new System.Collections.Generic.List<string>();
+            var schema = new ContextSchemaBuilder("Test")
+                .AddEntityIndex("User", _ => calls.Add("User"))
+                .Build();
+            var contexts = new Contexts().Register(new TestContext(CID.TotalComponents));
+
+            FluentActions.Invoking(() => contexts.Register(new TestContext(CID.TotalComponents), schema))
+                .Should().Throw<InvalidOperationException>()
+                .WithMessage("*TestContext*");
+            calls.Should().BeEmpty();
+        }
+
+        [Fact]
         public void ReturnsAllRegisteredContexts()
         {
             var main = new TestContext(CID.TotalComponents);

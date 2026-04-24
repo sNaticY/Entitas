@@ -23,6 +23,16 @@ namespace Entitas
             return this;
         }
 
+        public Contexts Register<TContext>(TContext context, ContextSchema schema) where TContext : class, IContext
+        {
+            if (schema == null)
+                throw new ArgumentNullException(nameof(schema));
+
+            Register(context);
+            schema.InitializeEntityIndices(this);
+            return this;
+        }
+
         public TContext Get<TContext>() where TContext : class, IContext
         {
             if (!TryGet<TContext>(out var context))

@@ -17,11 +17,8 @@ namespace Sample.MultiAssembly.Bootstrap
         public static Contexts Create()
         {
             var schema = CreateSchema();
-            var contexts = new Contexts()
-                .Register(new SharedContext(schema));
-
-            schema.InitializeEntityIndices(contexts);
-            return contexts;
+            return new Contexts()
+                .Register(new SharedContext(schema), schema);
         }
     }
 }
