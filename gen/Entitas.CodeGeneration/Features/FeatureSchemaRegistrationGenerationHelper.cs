@@ -42,8 +42,8 @@ public static class FeatureSchemaRegistrationGenerationHelper
         bool includeContextNameInMethod)
     {
         var methodPrefix = includeContextNameInMethod ? contextData.ContextName : string.Empty;
-        var extensionType = contextData.ContextName + options.FeatureName + "FeatureSchemaExtensions";
-        var methodName = "Add" + methodPrefix + options.FeatureName + "Feature";
+        var extensionType = contextData.ContextName + options.AssemblyName + "AssemblySchemaExtensions";
+        var methodName = "Add" + methodPrefix + options.AssemblyName + "Assembly";
         var calls = GetSchemaRegistrationCalls(contextData, componentsData, options);
 
         if (calls.Length == 0)

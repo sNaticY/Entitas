@@ -43,7 +43,7 @@ public readonly struct EntitasGeneratorOptions
         bool contextGenerationEnabled,
         bool contextEntityGenerationEnabled,
         bool contextMatcherGenerationEnabled,
-        string featureName,
+        string assemblyName,
         ImmutableHashSet<string> visualDebuggingAssemblyNames,
         bool visualDebuggingGenerationEnabled)
     {
@@ -60,7 +60,7 @@ public readonly struct EntitasGeneratorOptions
         ContextGenerationEnabled = contextGenerationEnabled;
         ContextEntityGenerationEnabled = contextEntityGenerationEnabled;
         ContextMatcherGenerationEnabled = contextMatcherGenerationEnabled;
-        FeatureName = featureName;
+        AssemblyName = assemblyName;
         VisualDebuggingAssemblyNames = visualDebuggingAssemblyNames;
         VisualDebuggingGenerationEnabled = visualDebuggingGenerationEnabled;
     }
@@ -78,7 +78,7 @@ public readonly struct EntitasGeneratorOptions
     public bool ContextGenerationEnabled { get; }
     public bool ContextEntityGenerationEnabled { get; }
     public bool ContextMatcherGenerationEnabled { get; }
-    public string FeatureName { get; }
+    public string AssemblyName { get; }
     public ImmutableHashSet<string> VisualDebuggingAssemblyNames { get; }
     public bool VisualDebuggingGenerationEnabled { get; }
 
@@ -106,7 +106,7 @@ public readonly struct EntitasGeneratorOptions
             GetBool(options, ContextContextKey, defaultValue: true),
             GetBool(options, ContextEntityKey, defaultValue: true),
             GetBool(options, ContextMatcherKey, defaultValue: true),
-            GetFeatureName(compilation),
+            GetAssemblyName(compilation),
             GetAssemblyNames(options, VisualDebuggingAssemblyNamesKey, DefaultVisualDebuggingAssemblyNames),
             GetBool(options, VisualDebuggingKey, defaultValue: true));
     }
@@ -159,17 +159,17 @@ public readonly struct EntitasGeneratorOptions
         return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
     }
 
-    static string GetFeatureName(Compilation compilation)
+    static string GetAssemblyName(Compilation compilation)
     {
         var configuredName = compilation.Assembly
             .GetAttributes()
             .FirstOrDefault(static attribute =>
-                attribute.AttributeClass?.ToDisplayString() == "Entitas.CodeGeneration.Attributes.EntitasFeatureAttribute")
+                attribute.AttributeClass?.ToDisplayString() == "Entitas.CodeGeneration.Attributes.EntitasAssemblyAttribute")
             ?.ConstructorArguments.FirstOrDefault().Value as string;
 
         return SanitizeIdentifierName(configuredName)
             ?? SanitizeIdentifierName(compilation.AssemblyName)
-            ?? "Feature";
+            ?? "Assembly";
     }
 
     static string? SanitizeIdentifierName(string? value)

@@ -2,7 +2,7 @@ using Entitas;
 using Entitas.CodeGeneration.Attributes;
 using Sample.MultiAssembly.Root;
 
-[assembly: EntitasFeature("Player")]
+[assembly: EntitasAssembly("Player")]
 
 namespace Sample.MultiAssembly.FeatureA
 {

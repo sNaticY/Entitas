@@ -3,11 +3,11 @@ using System;
 namespace Entitas.CodeGeneration.Attributes
 {
     [AttributeUsage(AttributeTargets.Assembly)]
-    public sealed class EntitasFeatureAttribute : Attribute
+    public sealed class EntitasAssemblyAttribute : Attribute
     {
         public readonly string Name;
 
-        public EntitasFeatureAttribute(string name)
+        public EntitasAssemblyAttribute(string name)
         {
             Name = name;
         }

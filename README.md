@@ -184,7 +184,7 @@ The incremental generator is the main generation path in this branch.
 
 - The single-assembly workflow remains the default and best-documented path.
 - The generator is compilation-scoped. If two different assemblies define two different contexts, each assembly generates its own local types and accessors from the source it can see.
-- Shared-context modular assemblies use an explicit handle/schema path: feature assemblies generate handle-based component APIs plus feature-level schema methods such as `AddPlayerFeature()` that register component handles, event systems, cleanup systems, and entity indices into a runtime `ContextSchema`.
+- Shared-context modular assemblies use an explicit handle/schema path: feature assemblies generate handle-based component APIs plus assembly-level schema methods such as `AddPlayerAssembly()` that register component handles, event systems, cleanup systems, and entity indices into a runtime `ContextSchema`.
 - Cross-assembly context composition stays application-owned through APIs such as `SharedContext.CreateSchemaBuilder()` and `new Contexts().Register(new SharedContext(schema), schema)`; there is still no generated root container that merges every feature assembly.
 
 Unity-side generator usage is also tied to Unity's Roslyn analyzer/source-generator support, so treat Unity 6 as the intended path for the incremental generator itself.

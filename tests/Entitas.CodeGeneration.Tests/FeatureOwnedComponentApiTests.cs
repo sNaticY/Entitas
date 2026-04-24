@@ -23,7 +23,7 @@ namespace Game.Root
     const string FeatureSource = @"
 using Entitas.CodeGeneration.Attributes;
 
-[assembly: EntitasFeature(""Player"")]
+[assembly: EntitasAssembly(""Player"")]
 
 using Entitas;
 using Game.Root;
@@ -127,35 +127,35 @@ namespace Game.Feature
         GetGeneratedSources(feature.Result, fileName => fileName.Contains("CleanupMe", StringComparison.Ordinal))
             .Should().Contain(source => source.Contains("builder.AddCleanupSystem", StringComparison.Ordinal));
 
-        var featureSchemaSource = GetGeneratedSource(feature.Result, "MainPlayerFeatureSchemaExtensions.g.cs");
-        featureSchemaSource.Should().Contain("public static global::Entitas.ContextSchemaBuilder AddPlayerFeature(this global::Entitas.ContextSchemaBuilder builder)");
-        featureSchemaSource.Should().Contain("builder = global::Game.Feature.MainUserComponentSchemaExtensions.AddMainUser(builder);");
-        featureSchemaSource.Should().Contain("builder = global::Game.Feature.MainUserEntityIndicesSchemaExtensions.AddMainUserEntityIndices(builder);");
-        featureSchemaSource.Should().Contain("builder = global::Game.Feature.MainReactiveComponentSchemaExtensions.AddMainReactive(builder);");
-        featureSchemaSource.Should().Contain("builder = global::Game.Feature.AnyReactiveAddedEventSystemSchemaExtensions.AddAnyReactiveAddedEventSystem(builder);");
-        featureSchemaSource.Should().Contain("builder = global::Game.Feature.RemoveGameFeatureCleanupMeMainSystemSchemaExtensions.AddRemoveGameFeatureCleanupMeMainSystem(builder);");
+        var assemblySchemaSource = GetGeneratedSource(feature.Result, "MainPlayerAssemblySchemaExtensions.g.cs");
+        assemblySchemaSource.Should().Contain("public static global::Entitas.ContextSchemaBuilder AddPlayerAssembly(this global::Entitas.ContextSchemaBuilder builder)");
+        assemblySchemaSource.Should().Contain("builder = global::Game.Feature.MainUserComponentSchemaExtensions.AddMainUser(builder);");
+        assemblySchemaSource.Should().Contain("builder = global::Game.Feature.MainUserEntityIndicesSchemaExtensions.AddMainUserEntityIndices(builder);");
+        assemblySchemaSource.Should().Contain("builder = global::Game.Feature.MainReactiveComponentSchemaExtensions.AddMainReactive(builder);");
+        assemblySchemaSource.Should().Contain("builder = global::Game.Feature.AnyReactiveAddedEventSystemSchemaExtensions.AddAnyReactiveAddedEventSystem(builder);");
+        assemblySchemaSource.Should().Contain("builder = global::Game.Feature.RemoveGameFeatureCleanupMeMainSystemSchemaExtensions.AddRemoveGameFeatureCleanupMeMainSystem(builder);");
     }
 
     [Fact]
-    public void FeatureAssemblyFallsBackToSanitizedAssemblyNameForFeatureRegistration()
+    public void AssemblyFallsBackToSanitizedAssemblyNameForAssemblyRegistration()
     {
         var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
         AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
         var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
 
         var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
-            FeatureSource.Replace("[assembly: EntitasFeature(\"Player\")]", string.Empty),
+            FeatureSource.Replace("[assembly: EntitasAssembly(\"Player\")]", string.Empty),
             "Game.Feature-Fallback",
             additionalReferences: new[] { rootReference });
 
         AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
-        GetGeneratedFileNames(feature.Result).Should().Contain("MainGameFeatureFallbackFeatureSchemaExtensions.g.cs");
-        GetGeneratedSource(feature.Result, "MainGameFeatureFallbackFeatureSchemaExtensions.g.cs")
-            .Should().Contain("AddGameFeatureFallbackFeature(this global::Entitas.ContextSchemaBuilder builder)");
+        GetGeneratedFileNames(feature.Result).Should().Contain("MainGameFeatureFallbackAssemblySchemaExtensions.g.cs");
+        GetGeneratedSource(feature.Result, "MainGameFeatureFallbackAssemblySchemaExtensions.g.cs")
+            .Should().Contain("AddGameFeatureFallbackAssembly(this global::Entitas.ContextSchemaBuilder builder)");
     }
 
     [Fact]
-    public void FeatureAssemblyGeneratesContextSpecificFeatureMethodsForMultipleContexts()
+    public void AssemblyGeneratesContextSpecificAssemblyMethodsForMultipleContexts()
     {
         const string rootSource = @"
 namespace Game.Root
@@ -177,7 +177,7 @@ using Entitas;
 using Entitas.CodeGeneration.Attributes;
 using Game.Root;
 
-[assembly: EntitasFeature(""Player"")]
+[assembly: EntitasAssembly(""Player"")]
 
 namespace Game.Feature
 {
@@ -199,10 +199,10 @@ namespace Game.Feature
             additionalReferences: new[] { rootReference });
 
         AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
-        GetGeneratedSource(feature.Result, "MainPlayerFeatureSchemaExtensions.g.cs")
-            .Should().Contain("AddMainPlayerFeature(this global::Entitas.ContextSchemaBuilder builder)");
-        GetGeneratedSource(feature.Result, "MetaPlayerFeatureSchemaExtensions.g.cs")
-            .Should().Contain("AddMetaPlayerFeature(this global::Entitas.ContextSchemaBuilder builder)");
+        GetGeneratedSource(feature.Result, "MainPlayerAssemblySchemaExtensions.g.cs")
+            .Should().Contain("AddMainPlayerAssembly(this global::Entitas.ContextSchemaBuilder builder)");
+        GetGeneratedSource(feature.Result, "MetaPlayerAssemblySchemaExtensions.g.cs")
+            .Should().Contain("AddMetaPlayerAssembly(this global::Entitas.ContextSchemaBuilder builder)");
     }
 
     static void AssertNoErrors(IEnumerable<Diagnostic> diagnostics) =>
