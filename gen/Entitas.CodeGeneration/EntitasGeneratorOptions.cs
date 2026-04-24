@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Entitas.CodeGeneration;
@@ -42,6 +43,7 @@ public readonly struct EntitasGeneratorOptions
         bool contextGenerationEnabled,
         bool contextEntityGenerationEnabled,
         bool contextMatcherGenerationEnabled,
+        string featureName,
         ImmutableHashSet<string> visualDebuggingAssemblyNames,
         bool visualDebuggingGenerationEnabled)
     {
@@ -58,6 +60,7 @@ public readonly struct EntitasGeneratorOptions
         ContextGenerationEnabled = contextGenerationEnabled;
         ContextEntityGenerationEnabled = contextEntityGenerationEnabled;
         ContextMatcherGenerationEnabled = contextMatcherGenerationEnabled;
+        FeatureName = featureName;
         VisualDebuggingAssemblyNames = visualDebuggingAssemblyNames;
         VisualDebuggingGenerationEnabled = visualDebuggingGenerationEnabled;
     }
@@ -75,6 +78,7 @@ public readonly struct EntitasGeneratorOptions
     public bool ContextGenerationEnabled { get; }
     public bool ContextEntityGenerationEnabled { get; }
     public bool ContextMatcherGenerationEnabled { get; }
+    public string FeatureName { get; }
     public ImmutableHashSet<string> VisualDebuggingAssemblyNames { get; }
     public bool VisualDebuggingGenerationEnabled { get; }
 
@@ -102,6 +106,7 @@ public readonly struct EntitasGeneratorOptions
             GetBool(options, ContextContextKey, defaultValue: true),
             GetBool(options, ContextEntityKey, defaultValue: true),
             GetBool(options, ContextMatcherKey, defaultValue: true),
+            GetFeatureName(compilation),
             GetAssemblyNames(options, VisualDebuggingAssemblyNamesKey, DefaultVisualDebuggingAssemblyNames),
             GetBool(options, VisualDebuggingKey, defaultValue: true));
     }
@@ -152,5 +157,38 @@ public readonly struct EntitasGeneratorOptions
             return defaultValue;
 
         return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
+    }
+
+    static string GetFeatureName(Compilation compilation)
+    {
+        var configuredName = compilation.Assembly
+            .GetAttributes()
+            .FirstOrDefault(static attribute =>
+                attribute.AttributeClass?.ToDisplayString() == "Entitas.CodeGeneration.Attributes.EntitasFeatureAttribute")
+            ?.ConstructorArguments.FirstOrDefault().Value as string;
+
+        return SanitizeIdentifierName(configuredName)
+            ?? SanitizeIdentifierName(compilation.AssemblyName)
+            ?? "Feature";
+    }
+
+    static string? SanitizeIdentifierName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var chars = value
+            .Where(static ch => char.IsLetterOrDigit(ch) || ch == '_')
+            .ToArray();
+
+        if (chars.Length == 0)
+            return null;
+
+        var name = new string(chars);
+        if (!char.IsLetter(name[0]) && name[0] != '_')
+            name = $"_{name}";
+
+        name = char.ToUpperInvariant(name[0]) + name.Substring(1);
+        return SyntaxFacts.IsValidIdentifier(name) ? name : null;
     }
 }
