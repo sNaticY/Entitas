@@ -7,6 +7,7 @@ using Entitas.CodeGeneration.Contexts;
 using Entitas.CodeGeneration.Contexts.Data;
 using Entitas.CodeGeneration.EntityIndex;
 using Entitas.CodeGeneration.Events;
+using Entitas.CodeGeneration.Features;
 using Entitas.CodeGeneration.VisualDebugging;
 using Microsoft.CodeAnalysis;
 
@@ -106,6 +107,8 @@ public class EntitasGenerator : IIncrementalGenerator
 
         if (options.ComponentEventSystemsGenerationEnabled)
             EventsGenerationHelper.GenerateEventSystems(spc, componentsByContextNameLookup, contextLookup);
+
+        FeatureSchemaRegistrationGenerationHelper.GenerateFeatureSchemaRegistrations(spc, componentsByContextNameLookup, contextLookup, options);
     }
 
     void RegisterComponentOwnedSourcesGeneration(
