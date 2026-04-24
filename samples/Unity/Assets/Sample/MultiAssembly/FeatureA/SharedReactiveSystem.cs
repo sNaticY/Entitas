@@ -27,6 +27,7 @@ namespace Sample.MultiAssembly.FeatureA
                 var entity = entities[i];
                 var playerHealth = entity.HasHealth() ? entity.GetHealth().Value : 0;
                 var resultHealth = playerHealth + 10;
+                entity.ReplaceRoot(13f);
                 entity.ReplaceHealth(resultHealth);
             }
         }
