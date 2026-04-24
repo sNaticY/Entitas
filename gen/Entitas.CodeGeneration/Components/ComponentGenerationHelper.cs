@@ -152,8 +152,7 @@ public static class ComponentGenerationHelper
 
         if (!string.IsNullOrEmpty(source))
         {
-            var fileName = (contextData.ContextName + componentData.FullComponentName.AddComponentSuffix())
-                .NamespacedHintName(componentData.Namespace);
+            var fileName = GetPlainComponentApiHintName(componentData, contextData);
 
             spc.AddSource($"{fileName}.g.cs", SourceText.From(source.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
         }
@@ -163,7 +162,23 @@ public static class ComponentGenerationHelper
         in ComponentData componentData,
         in EntitasGeneratorOptions options) =>
         options.ComponentEntityExtensionGenerationEnabled
+        || options.ComponentMatcherGenerationEnabled
         || (componentData.IsUnique && options.ComponentContextExtensionGenerationEnabled);
+
+    public static void GenerateFeatureOwnedComponentMatcherApis(SourceProductionContext spc,
+        ImmutableArray<ComponentData> componentsData,
+        in EntitasGeneratorOptions options,
+        in ContextData contextData)
+    {
+        if (!options.ComponentMatcherGenerationEnabled || componentsData.IsDefaultOrEmpty)
+            return;
+
+        var matcherNamespace = GetCommonNamespace(componentsData);
+        var matcherSource = ComponentTemplates.GetFeatureOwnedComponentMatcherApiSource(contextData, options.AssemblyName, componentsData);
+        var matcherFileName = (contextData.ContextName + options.AssemblyName + "Matcher")
+            .NamespacedHintName(matcherNamespace);
+        spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource.WrapInNamespace(matcherNamespace), Encoding.UTF8));
+    }
 
     public static void GenerateComponentMatcherApi(SourceProductionContext spc,
         in ComponentData componentData,
@@ -188,6 +203,42 @@ public static class ComponentGenerationHelper
             ComponentTemplates.GetStandardComponentContextApiSource(contextData, componentData);
 
         return source + "\n";
+    }
+
+    static string GetPlainComponentApiHintName(
+        in ComponentData componentData,
+        in ContextData contextData)
+    {
+        var needsContextSegment = componentData.IsGenerated || componentData.ContextNames.Length > 1;
+        var hintName = needsContextSegment
+            ? contextData.ContextName + "." + componentData.ShortTypeName
+            : componentData.ShortTypeName;
+
+        return hintName.NamespacedHintName(componentData.Namespace);
+    }
+
+    static string? GetCommonNamespace(ImmutableArray<ComponentData> componentsData)
+    {
+        string? commonNamespace = null;
+        var hasNamespace = false;
+
+        foreach (var componentData in componentsData)
+        {
+            if (componentData.Namespace is null)
+                return null;
+
+            if (!hasNamespace)
+            {
+                commonNamespace = componentData.Namespace;
+                hasNamespace = true;
+                continue;
+            }
+
+            if (!string.Equals(commonNamespace, componentData.Namespace, StringComparison.Ordinal))
+                return null;
+        }
+
+        return commonNamespace;
     }
     
     // New components can be generated on the fly (like events)

@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Entitas.CodeGeneration;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -94,11 +95,24 @@ static class CodeGenerationTestHelper
     {
         public static readonly MetadataReferencePathComparer Instance = new();
 
-        public bool Equals(MetadataReference? x, MetadataReference? y) =>
-            StringComparer.OrdinalIgnoreCase.Equals((x as PortableExecutableReference)?.FilePath, (y as PortableExecutableReference)?.FilePath);
+        public bool Equals(MetadataReference? x, MetadataReference? y)
+        {
+            var xPath = (x as PortableExecutableReference)?.FilePath;
+            var yPath = (y as PortableExecutableReference)?.FilePath;
 
-        public int GetHashCode([DisallowNull] MetadataReference obj) =>
-            StringComparer.OrdinalIgnoreCase.GetHashCode((obj as PortableExecutableReference)?.FilePath ?? string.Empty);
+            if (string.IsNullOrEmpty(xPath) || string.IsNullOrEmpty(yPath))
+                return ReferenceEquals(x, y);
+
+            return StringComparer.OrdinalIgnoreCase.Equals(xPath, yPath);
+        }
+
+        public int GetHashCode([DisallowNull] MetadataReference obj)
+        {
+            var path = (obj as PortableExecutableReference)?.FilePath;
+            return string.IsNullOrEmpty(path)
+                ? RuntimeHelpers.GetHashCode(obj)
+                : StringComparer.OrdinalIgnoreCase.GetHashCode(path);
+        }
     }
 
     sealed class TestAnalyzerConfigOptionsProvider : AnalyzerConfigOptionsProvider

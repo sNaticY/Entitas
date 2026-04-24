@@ -74,7 +74,7 @@ namespace MyGame
         GetGeneratedFileNames(result).Should().Contain(fileName =>
             fileName.Contains("Reactive", StringComparison.Ordinal) && fileName.EndsWith("EventSystem.g.cs", StringComparison.Ordinal));
         GetGeneratedFileNames(result).Should().Contain(fileName =>
-            fileName.Contains("Reactive", StringComparison.Ordinal) && fileName.StartsWith("I", StringComparison.Ordinal));
+            fileName.EndsWith("IMyGameAnyReactiveListener.g.cs", StringComparison.Ordinal));
     }
 
     [Fact]

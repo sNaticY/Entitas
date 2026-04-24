@@ -1,3 +1,4 @@
+using System;
 using Entitas;
 using Sample.MultiAssembly.FeatureA;
 using Sample.MultiAssembly.FeatureB;
@@ -7,9 +8,11 @@ namespace Sample.MultiAssembly.Bootstrap
 {
     public sealed class MultiAssemblyController : MonoBehaviour
     {
+        Systems _systems;
         SharedContext _sharedContext;
 
-        void Start()
+
+        void Awake()
         {
             var contexts = ContextFactory.Create();
             _sharedContext = contexts.GetShared();
@@ -18,15 +21,29 @@ namespace Sample.MultiAssembly.Bootstrap
             player.AddHealth(100);
 
             Debug.Log($"Created shared-context player '{_sharedContext.GetPlayer().Name}' from feature assemblies.");
+
+            _systems = new Systems();
+
+            _systems.Add(new SharedReactiveSystem(_sharedContext));
+        }
+
+        private void Start()
+        {
+            _systems.Initialize();
         }
 
         void Update()
         {
-            var player = _sharedContext.GetPlayerEntity();
-            if (player == null || !player.HasHealth())
-                return;
+            _systems.Execute();
+            _systems.Cleanup();
 
-            player.ReplaceHealth(player.GetHealth().Value + 1);
+            var player = _sharedContext.GetPlayerEntity();
+            player.ReplaceLevel(player.GetHealth().Value + 1);
+        }
+
+        private void OnDestroy()
+        {
+            _systems.TearDown();
         }
     }
 }

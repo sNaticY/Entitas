@@ -26,14 +26,12 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void CreatesContextFromGeneratedSchemaBuilder()
         {
-            var schema = MainContext.CreateSchemaBuilder()
-                .AddMainUser()
-                .Build();
+            var schema = MainContext.CreateSchemaBuilder().Build();
 
             var context = new MainContext(schema);
 
             context.ContextInfo.Name.Should().Be("Main");
-            context.TotalComponents.Should().Be(1);
+            context.TotalComponents.Should().Be(0);
         }
     }
 }

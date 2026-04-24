@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+using System.Text;
 using Entitas.CodeGeneration.Components.Data;
 using Entitas.CodeGeneration.Components.Extensions;
 using Entitas.CodeGeneration.Contexts.Data;
@@ -336,5 +338,57 @@ ${memberAssignmentList}
             .Replace("${Index}", componentIndex)
             .Replace("${componentNames}", componentNames)
             .Replace("${EntityType}", entityType);
+    }
+
+    const string FeatureOwnedComponentMatcherApiTemplate =
+        @"public static class ${MatcherType}
+{
+${Members}
+}
+";
+
+    const string FeatureOwnedComponentMatcherMemberTemplate =
+        @"    static global::Entitas.IMatcher<${EntityType}> _matcher${ComponentName};
+
+    public static global::Entitas.IMatcher<${EntityType}> ${ComponentName}()
+    {
+        if (_matcher${ComponentName} == null)
+        {
+            _matcher${ComponentName} = global::Entitas.Matcher<${EntityType}>.AllOf(${Handle});
+        }
+
+        return _matcher${ComponentName};
+    }
+";
+
+    public static string GetFeatureOwnedComponentMatcherApiSource(
+        in ContextData contextData,
+        string assemblyName,
+        ImmutableArray<ComponentData> componentsData)
+    {
+        var members = new StringBuilder();
+        foreach (var componentData in componentsData.OrderBy(static component => component.GetScopedComponentName()).ThenBy(static component => component.FullTypeName))
+        {
+            if (members.Length > 0)
+                members.AppendLine();
+
+            members.Append(GetFeatureOwnedComponentMatcherMemberSource(contextData, componentData));
+        }
+
+        return FeatureOwnedComponentMatcherApiTemplate
+            .Replace("${MatcherType}", contextData.ContextName + assemblyName + "Matcher")
+            .Replace("${Members}", members.ToString());
+    }
+
+    static string GetFeatureOwnedComponentMatcherMemberSource(
+        in ContextData contextData,
+        in ComponentData componentData)
+    {
+        var componentName = componentData.GetScopedComponentName();
+
+        return FeatureOwnedComponentMatcherMemberTemplate
+            .Replace("${ComponentName}", componentName)
+            .Replace("${Handle}", GetGlobalComponentHandleExpression(contextData, componentData))
+            .Replace("${EntityType}", contextData.EntityTypeName);
     }
 }

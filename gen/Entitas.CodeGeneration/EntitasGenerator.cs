@@ -150,6 +150,31 @@ public class EntitasGenerator : IIncrementalGenerator
         // - all components belonging to a context that has changed.
         context.RegisterSourceOutput(conditionalComponentByContext,
             static (spc, source) => GenerateComponentOwnedSources(source, spc));
+
+        var featureOwnedMatcherByContext = contextsData
+            .Combine(componentsByContextNameLookup)
+            .SelectMany((pair, _) =>
+            {
+                var (contexts, componentLookup) = pair;
+                var contextLookup = contexts.ToDictionary(contextData => contextData.ContextName);
+
+                return componentLookup
+                    .Where(contextComponentsPair => !contextLookup.ContainsKey(contextComponentsPair.Key))
+                    .Select(contextComponentsPair => (
+                        ContextData: new ContextData(contextComponentsPair.Key),
+                        ComponentsData: contextComponentsPair.Value
+                            .Where(component => ShouldGenerateFeatureOwnedPlainApis(component))
+                            .ToImmutableArray()))
+                    .Where(group => group.ComponentsData.Length > 0);
+            });
+
+        var conditionalFeatureOwnedMatcherByContext = featureOwnedMatcherByContext
+            .Combine(generatorOptions)
+            .Combine(shouldRun)
+            .Select((pair, _) => (ShouldRun: pair.Right, Options: pair.Left.Right, MatcherGroup: pair.Left.Left));
+
+        context.RegisterSourceOutput(conditionalFeatureOwnedMatcherByContext,
+            static (spc, source) => GenerateFeatureOwnedMatcherSources(source, spc));
     }
 
     static bool ShouldGenerateFeatureOwnedPlainApis(in ComponentData componentData) =>
@@ -185,6 +210,20 @@ public class EntitasGenerator : IIncrementalGenerator
             return;
 
         GeneratePerComponentEventAndCleanupSources(spc, componentData, input.Options, contextData);
+    }
+
+    static void GenerateFeatureOwnedMatcherSources(
+        (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData ContextData, ImmutableArray<ComponentData> ComponentsData) MatcherGroup) input,
+        SourceProductionContext spc)
+    {
+        if (!input.ShouldRun)
+            return;
+
+        ComponentGenerationHelper.GenerateFeatureOwnedComponentMatcherApis(
+            spc,
+            input.MatcherGroup.ComponentsData,
+            input.Options,
+            input.MatcherGroup.ContextData);
     }
 
     static void GenerateSlotDependentComponentSources(

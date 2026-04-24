@@ -98,7 +98,10 @@ namespace MyGame
     {
         var result = RunWithOption("entitas_generator.component.entity_extension", false);
 
-        GetGeneratedFileNames(result).Should().NotContain(fileName => fileName.EndsWith("HealthComponent.g.cs", System.StringComparison.Ordinal));
+        var source = GetGeneratedSourceBySuffix(result, "HealthComponent.g.cs");
+        source.Should().Contain("public static class MainHealthComponentHandle");
+        source.Should().NotContain("public static class MainHealthEntityExtensions");
+        source.Should().NotContain("AddHealth(this MainEntity entity");
     }
 
     [Fact]

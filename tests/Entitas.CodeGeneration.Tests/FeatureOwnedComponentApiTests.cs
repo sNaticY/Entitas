@@ -21,12 +21,11 @@ namespace Game.Root
 ";
 
     const string FeatureSource = @"
+using Entitas;
 using Entitas.CodeGeneration.Attributes;
+using Game.Root;
 
 [assembly: EntitasAssembly(""Player"")]
-
-using Entitas;
-using Game.Root;
 
 namespace Game.Feature
 {
@@ -81,8 +80,10 @@ namespace Game.Feature
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainEventSystems.g.cs");
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainCleanupSystems.g.cs");
         GetGeneratedFileNames(feature.Result).Should().NotContain("MainEntityIndices.g.cs");
+        GetGeneratedFileNames(feature.Result).Should().Contain(fileName =>
+            fileName.EndsWith("MainPlayerMatcher.g.cs", StringComparison.Ordinal));
         GetGeneratedFileNames(feature.Result).Should().NotContain(fileName =>
-            fileName.EndsWith("Matcher.g.cs", StringComparison.Ordinal));
+            fileName.EndsWith("MainUserMatcher.g.cs", StringComparison.Ordinal));
 
         var userSource = GetGeneratedSourceBySuffix(feature.Result, "UserComponent.g.cs");
         userSource.Should().Contain("public static class MainUserComponentHandle");
@@ -111,6 +112,15 @@ namespace Game.Feature
         loadingSource.Should().Contain("SetLoading(this MainEntity entity, bool value)");
         loadingSource.Should().NotContain("MainComponentsLookup");
 
+        var matcherSource = GetGeneratedSourceBySuffix(feature.Result, "MainPlayerMatcher.g.cs");
+        matcherSource.Should().Contain("public static class MainPlayerMatcher");
+        matcherSource.Should().Contain("public static global::Entitas.IMatcher<MainEntity> User()");
+        matcherSource.Should().Contain("public static global::Entitas.IMatcher<MainEntity> Loading()");
+        matcherSource.Should().Contain("global::Entitas.Matcher<MainEntity>.AllOf(global::Game.Feature.MainUserComponentHandle.Handle)");
+        matcherSource.Should().Contain("global::Entitas.Matcher<MainEntity>.AllOf(global::Game.Feature.MainLoadingComponentHandle.Handle)");
+        matcherSource.Should().NotContain("MainComponentsLookup");
+        matcherSource.Should().NotContain("MainMatcher");
+
         GetGeneratedFileNames(feature.Result).Should().Contain(fileName =>
             fileName.Contains("Reactive", StringComparison.Ordinal) && fileName.EndsWith("EventSystem.g.cs", StringComparison.Ordinal));
         GetGeneratedFileNames(feature.Result).Should().Contain(fileName =>
@@ -132,8 +142,99 @@ namespace Game.Feature
         assemblySchemaSource.Should().Contain("builder = global::Game.Feature.MainUserComponentSchemaExtensions.AddMainUser(builder);");
         assemblySchemaSource.Should().Contain("builder = global::Game.Feature.MainUserEntityIndicesSchemaExtensions.AddMainUserEntityIndices(builder);");
         assemblySchemaSource.Should().Contain("builder = global::Game.Feature.MainReactiveComponentSchemaExtensions.AddMainReactive(builder);");
-        assemblySchemaSource.Should().Contain("builder = global::Game.Feature.AnyReactiveAddedEventSystemSchemaExtensions.AddAnyReactiveAddedEventSystem(builder);");
+        assemblySchemaSource.Should().Contain("builder = global::Game.Feature.GameFeatureAnyReactiveEventSystemSchemaExtensions.AddGameFeatureAnyReactiveEventSystem(builder);");
         assemblySchemaSource.Should().Contain("builder = global::Game.Feature.RemoveGameFeatureCleanupMeMainSystemSchemaExtensions.AddRemoveGameFeatureCleanupMeMainSystem(builder);");
+    }
+
+    [Fact]
+    public void FeatureOwnedMatcherApisCompileInReactiveSystems()
+    {
+        var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
+        AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
+        var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
+
+        var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            FeatureSource,
+            "Game.Feature",
+            additionalReferences: new[] { rootReference });
+        AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
+        var featureReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(feature.Compilation);
+
+        const string systemSource = @"
+using System.Collections.Generic;
+using Entitas;
+using Game.Feature;
+
+public sealed class UserAddedSystem : ReactiveSystem<MainEntity>
+{
+    public UserAddedSystem(MainContext context) : base(context) { }
+
+    protected override ICollector<MainEntity> GetTrigger(IContext<MainEntity> context)
+    {
+        return context.CreateCollector(MainPlayerMatcher.User().Added());
+    }
+
+    protected override bool Filter(MainEntity entity)
+    {
+        return entity.HasUser();
+    }
+
+    protected override void Execute(List<MainEntity> entities)
+    {
+    }
+}
+";
+
+        var system = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            systemSource,
+            "Game.Systems",
+            additionalReferences: new[] { rootReference, featureReference });
+
+        AssertNoErrors(system.Diagnostics.Concat(system.Compilation.GetDiagnostics()));
+    }
+
+    [Fact]
+    public void FeatureOwnedComponentsInOneAssemblyShareMatcherClass()
+    {
+        var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
+        AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
+        var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
+
+        const string featureSource = @"
+using Entitas;
+using Entitas.CodeGeneration.Attributes;
+using Game.Root;
+
+[assembly: EntitasAssembly(""Player"")]
+
+namespace Game.Feature
+{
+    [Main]
+    public sealed class PlayerComponent : IComponent { }
+
+    [Main]
+    public sealed class PlayerBuffComponent : IComponent { }
+}
+";
+
+        var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            featureSource,
+            "Game.Feature",
+            additionalReferences: new[] { rootReference });
+
+        AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
+        GetGeneratedFileNames(feature.Result)
+            .Where(fileName => fileName.EndsWith("Matcher.g.cs", StringComparison.Ordinal))
+            .Should()
+            .ContainSingle(fileName => fileName == "Game.Feature.MainPlayerMatcher.g.cs");
+
+        var matcherSource = GetGeneratedSource(feature.Result, "Game.Feature.MainPlayerMatcher.g.cs");
+        matcherSource.Should().Contain("namespace Game.Feature");
+        matcherSource.Should().Contain("public static class MainPlayerMatcher");
+        matcherSource.Should().Contain("public static global::Entitas.IMatcher<MainEntity> Player()");
+        matcherSource.Should().Contain("public static global::Entitas.IMatcher<MainEntity> PlayerBuff()");
+        matcherSource.IndexOf("Player()", StringComparison.Ordinal)
+            .Should().BeLessThan(matcherSource.IndexOf("PlayerBuff()", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -150,8 +251,12 @@ namespace Game.Feature
 
         AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
         GetGeneratedFileNames(feature.Result).Should().Contain("MainGameFeatureFallbackAssemblySchemaExtensions.g.cs");
+        GetGeneratedFileNames(feature.Result).Should().Contain(fileName =>
+            fileName.EndsWith("MainGameFeatureFallbackMatcher.g.cs", StringComparison.Ordinal));
         GetGeneratedSource(feature.Result, "MainGameFeatureFallbackAssemblySchemaExtensions.g.cs")
             .Should().Contain("AddGameFeatureFallbackAssembly(this global::Entitas.ContextSchemaBuilder builder)");
+        GetGeneratedSourceBySuffix(feature.Result, "MainGameFeatureFallbackMatcher.g.cs")
+            .Should().Contain("public static class MainGameFeatureFallbackMatcher");
     }
 
     [Fact]
