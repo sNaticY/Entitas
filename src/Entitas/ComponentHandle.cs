@@ -34,8 +34,8 @@ namespace Entitas
                 if (!IsAssigned)
                 {
                     throw new EntitasException(
-                        $"Component handle '{Name}' has not been assigned to a context slot!",
-                        "Build or initialize the context schema before using generated component APIs.");
+                        $"Component handle '{Name}' for component type '{ComponentType.FullName}' has not been assigned to a context slot!",
+                        "Add the component or feature to the ContextSchemaBuilder, build the schema, and create the context with that schema before using generated component APIs.");
                 }
 
                 return _index;

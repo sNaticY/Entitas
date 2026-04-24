@@ -22,7 +22,8 @@ namespace Entitas.Tests
             var handle = new ComponentHandle<ComponentA>("ComponentA");
 
             FluentActions.Invoking(() => _ = handle.Index)
-                .Should().Throw<EntitasException>();
+                .Should().Throw<EntitasException>()
+                .WithMessage("*ComponentA*ContextSchemaBuilder*");
         }
 
         [Fact]
