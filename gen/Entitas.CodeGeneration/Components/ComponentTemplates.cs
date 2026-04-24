@@ -1,5 +1,3 @@
-using System.Collections.Immutable;
-using System.Text;
 using Entitas.CodeGeneration.Components.Data;
 using Entitas.CodeGeneration.Components.Extensions;
 using Entitas.CodeGeneration.Contexts.Data;
@@ -341,11 +339,20 @@ ${memberAssignmentList}
     }
 
     const string FeatureOwnedComponentMatcherApiTemplate =
-        @"public static class ${MatcherType}
+        @"public static partial class ${MatcherType}
 {
 ${Members}
 }
 ";
+
+    public static string GetFeatureOwnedComponentMatcherDeclarationSource(
+        in ContextData contextData,
+        string assemblyName)
+    {
+        return FeatureOwnedComponentMatcherApiTemplate
+            .Replace("${MatcherType}", contextData.ContextName + assemblyName + "Matcher")
+            .Replace("${Members}", string.Empty);
+    }
 
     const string FeatureOwnedComponentMatcherMemberTemplate =
         @"    static global::Entitas.IMatcher<${EntityType}> _matcher${ComponentName};
@@ -364,20 +371,11 @@ ${Members}
     public static string GetFeatureOwnedComponentMatcherApiSource(
         in ContextData contextData,
         string assemblyName,
-        ImmutableArray<ComponentData> componentsData)
+        in ComponentData componentData)
     {
-        var members = new StringBuilder();
-        foreach (var componentData in componentsData.OrderBy(static component => component.GetScopedComponentName()).ThenBy(static component => component.FullTypeName))
-        {
-            if (members.Length > 0)
-                members.AppendLine();
-
-            members.Append(GetFeatureOwnedComponentMatcherMemberSource(contextData, componentData));
-        }
-
         return FeatureOwnedComponentMatcherApiTemplate
             .Replace("${MatcherType}", contextData.ContextName + assemblyName + "Matcher")
-            .Replace("${Members}", members.ToString());
+            .Replace("${Members}", GetFeatureOwnedComponentMatcherMemberSource(contextData, componentData));
     }
 
     static string GetFeatureOwnedComponentMatcherMemberSource(

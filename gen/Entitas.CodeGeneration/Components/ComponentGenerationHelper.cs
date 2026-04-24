@@ -174,10 +174,19 @@ public static class ComponentGenerationHelper
             return;
 
         var matcherNamespace = GetCommonNamespace(componentsData);
-        var matcherSource = ComponentTemplates.GetFeatureOwnedComponentMatcherApiSource(contextData, options.AssemblyName, componentsData);
-        var matcherFileName = (contextData.ContextName + options.AssemblyName + "Matcher")
-            .NamespacedHintName(matcherNamespace);
-        spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource.WrapInNamespace(matcherNamespace), Encoding.UTF8));
+        var matcherTypeName = contextData.ContextName + options.AssemblyName + "Matcher";
+        var matcherDeclarationSource = ComponentTemplates.GetFeatureOwnedComponentMatcherDeclarationSource(contextData, options.AssemblyName);
+        spc.AddSource(
+            $"{matcherTypeName.NamespacedHintName(matcherNamespace)}.g.cs",
+            SourceText.From(matcherDeclarationSource.WrapInNamespace(matcherNamespace), Encoding.UTF8));
+
+        foreach (var componentData in componentsData)
+        {
+            var matcherSource = ComponentTemplates.GetFeatureOwnedComponentMatcherApiSource(contextData, options.AssemblyName, componentData);
+            var matcherFileName = (matcherTypeName + "." + componentData.GetScopedComponentName())
+                .NamespacedHintName(matcherNamespace);
+            spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource.WrapInNamespace(matcherNamespace), Encoding.UTF8));
+        }
     }
 
     public static void GenerateComponentMatcherApi(SourceProductionContext spc,
