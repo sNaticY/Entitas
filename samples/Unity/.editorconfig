@@ -38,4 +38,4 @@ ij_xml_attribute_wrap = off
 
 [*.cs]
 entitas_generator.visual_debugging = true
-entitas_generator.visual_debugging.assembly_names = Assembly-CSharp, Entitas.Sample.MultiAssembly.Bootstrap, Entitas.Sample.MultiAssembly.FeatureA, Entitas.Sample.MultiAssembly.FeatureB, Entitas.Sample.MultiAssembly.Root
+entitas_generator.visual_debugging.assembly_names = Assembly-CSharp, Entitas.Sample.MultiAssembly.Root
