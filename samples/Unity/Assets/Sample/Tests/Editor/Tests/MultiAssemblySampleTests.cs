@@ -1,3 +1,4 @@
+using Entitas;
 using NUnit.Framework;
 using Sample.MultiAssembly.Bootstrap;
 using Sample.MultiAssembly.FeatureA;
