@@ -9,9 +9,8 @@ namespace Sample.MultiAssembly.Bootstrap
         public static ContextSchema CreateSchema()
         {
             return new ContextSchemaBuilder("Shared")
-                .AddSharedPlayer()
-                .AddSharedPlayerEntityIndices()
-                .AddSharedHealth()
+                .AddPlayerFeature()
+                .AddHealthFeature()
                 .Build();
         }
 
