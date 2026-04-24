@@ -91,6 +91,7 @@ namespace MyGame
 
         GetGeneratedSourceBySuffix(result, "UniqueFlagComponent.g.cs").Should().NotContain("public static class MainMyGameUniqueFlagContextExtensions");
         GetGeneratedFileNames(result).Should().NotContain("MainContextsExtension.g.cs");
+        GetGeneratedFileNames(result).Should().NotContain("MainContextsRegistrationExtension.g.cs");
     }
 
     [Fact]

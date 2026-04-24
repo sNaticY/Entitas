@@ -139,6 +139,7 @@ Depending on the attributes in your project, the generator produces APIs such as
 | --- | --- |
 | `MainContext`, `MainEntity`, `MainMatcher` | Root context surface for the `Main` context. |
 | `contexts.GetMain()` | Extension method on the runtime `Entitas.Contexts` container. |
+| `contexts.RegisterMain()` | Extension method that registers `MainContext` and initializes generated entity indices for that context. |
 | `MainComponentsLookup` | Component lookup for single-assembly context-owned components. |
 | `entity.AddUser("Alice", 42)` | Entity component API generated in the component namespace. |
 | `entity.ReplaceUser(...)`, `entity.RemoveUser()`, `entity.GetUser()`, `entity.HasUser()` | Entity component helpers for member components. |
@@ -153,16 +154,21 @@ For namespaced components, direct entity and context extension methods are emitt
 
 ## Runtime Bootstrap
 
-Create and register contexts explicitly. Generated root properties like `contexts.main` are not part of the Entitas 2.0 runtime container.
+Use generated registration helpers as the public bootstrap API. The context name determines the method name, so a `Main` context gets `RegisterMain()` and `GetMain()`. Generated root properties like `contexts.main` are not part of the Entitas 2.0 runtime container.
+
+| Scenario | Registration call | What it does |
+| --- | --- | --- |
+| Single assembly or context-owned components | `contexts.RegisterMain()` | Creates and registers `MainContext`, then initializes generated `Main` entity indices when they exist. |
+| Schema-composed shared context | `contexts.RegisterShared(schema)` | Creates `SharedContext(schema)`, registers it, and initializes entity indices registered in the schema. |
+
+The lower-level `contexts.Register(context)` and `contexts.Register(context, schema)` APIs still exist, but generated helpers are the recommended path for application bootstrap code.
 
 ```csharp
 using Entitas;
 using MyFeature;
 
 var contexts = new Contexts()
-    .Register(new MainContext());
-
-contexts.InitializeMainEntityIndices();
+    .RegisterMain();
 
 var main = contexts.GetMain();
 var entity = main.CreateEntity();
@@ -176,21 +182,18 @@ if (main.IsLoading())
 }
 ```
 
-Only call generated `Initialize{Context}EntityIndices()` methods for contexts that actually have generated entity indices. If you do not use `[EntityIndex]` or `[PrimaryEntityIndex]`, that file and method are not generated.
-
-For multiple independent contexts, register each one and run each generated bootstrap method you need:
+For multiple independent contexts, chain the generated registration helpers:
 
 ```csharp
 var contexts = new Contexts()
-    .Register(new MainContext())
-    .Register(new ConfigContext());
-
-contexts.InitializeMainEntityIndices();
-contexts.InitializeConfigEntityIndices();
+    .RegisterMain()
+    .RegisterConfig();
 
 var main = contexts.GetMain();
 var config = contexts.GetConfig();
 ```
+
+You should not call generated `Initialize{Context}EntityIndices()` methods manually in normal bootstrap code. `Register{Context}()` handles that for single-assembly contexts, and `Register{Context}(schema)` handles schema-registered indices for shared contexts.
 
 If you use generated event or cleanup systems in a single assembly, add them to your system pipeline explicitly:
 
@@ -223,7 +226,7 @@ public sealed class LevelComponent : IComponent
 
 Feature assemblies generate handle-based component APIs, feature-owned matchers, and schema registration methods. For example, a `Player` feature assembly contributing `LevelComponent` to `SharedContext` generates `SharedPlayerMatcher.g.cs` plus `SharedPlayerMatcher.Level.g.cs`, and code can use `SharedPlayerMatcher.Level().Added()` normally.
 
-The application composes the shared context schema explicitly:
+The schema-composed registration flow uses the same generated registration-helper shape as the single-assembly flow:
 
 ```csharp
 var schema = SharedContext.CreateSchemaBuilder()
@@ -232,12 +235,12 @@ var schema = SharedContext.CreateSchemaBuilder()
     .Build();
 
 var contexts = new Contexts()
-    .Register(new SharedContext(schema), schema);
+    .RegisterShared(schema);
 
 var shared = contexts.GetShared();
 ```
 
-`Contexts.Register(context, schema)` initializes entity indices registered in the schema. Event and cleanup systems registered through feature schema methods can be created from the schema:
+Event and cleanup systems registered through feature schema methods can be created from the schema:
 
 ```csharp
 var systems = new Systems()
@@ -246,7 +249,7 @@ var systems = new Systems()
     .Add(schema.CreateCleanupSystems(contexts));
 ```
 
-There is intentionally no generated root `Contexts` container that merges every feature assembly. Cross-assembly composition stays application-owned through `ContextSchemaBuilder`, feature registration methods such as `AddPlayerAssembly()`, and explicit context registration.
+There is intentionally no generated root `Contexts` container that merges every feature assembly. Cross-assembly composition stays application-owned through `ContextSchemaBuilder`, feature registration methods such as `AddPlayerAssembly()`, and generated context registration helpers such as `RegisterShared(schema)`.
 
 See `samples/Unity/Assets/Sample/MultiAssembly/README.md` for the current Unity sample of this pattern.
 
@@ -290,9 +293,9 @@ The GitHub build workflow runs build, test, publish, pack, and coverage reportin
 - Replace `Entitas.Generators.Attributes` usages with `Entitas.CodeGeneration.Attributes`.
 - Remove Jenny generation steps from the active workflow; generated code is produced by the compiler.
 - Define context marker attributes in source instead of relying on old generator settings.
-- Register contexts explicitly with `new Contexts().Register(new MainContext())`.
+- Register contexts with generated helpers such as `new Contexts().RegisterMain()` or `new Contexts().RegisterShared(schema)`.
 - Use generated accessors such as `contexts.GetMain()` instead of generated root properties.
-- Initialize entity indices explicitly with generated `Initialize{Context}EntityIndices()` methods, or use `Contexts.Register(context, schema)` for schema-composed shared contexts.
+- Let generated `Register{Context}()` helpers initialize single-assembly entity indices. Schema-composed shared contexts initialize schema-registered entity indices through `Register{Context}(schema)`.
 - Expect direct APIs for namespaced components to use short names in the component namespace, while shared artifacts use flattened namespace-safe names.
 
 ## License

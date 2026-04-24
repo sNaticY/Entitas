@@ -55,6 +55,7 @@ namespace MyGame
             "MainMatcher.g.cs",
             "MainEntity.g.cs",
             "MainContextsExtension.g.cs",
+            "MainContextsRegistrationExtension.g.cs",
             "MainComponentsLookup.g.cs",
             "MainEntityIndices.g.cs",
             "MainCleanupSystems.g.cs",
@@ -123,6 +124,8 @@ namespace MyGame
         GetGeneratedSource(result, "MainComponentsLookup.g.cs").Should().Contain(
             "global::MyGame.MainHealthComponentHandle.Handle.AssignIndex(MyGameHealth);");
         GetGeneratedSource(result, "MainEntityIndices.g.cs").Should().Contain("MyGameHealth");
+        GetGeneratedSource(result, "MainContextsRegistrationExtension.g.cs").Should().Contain("RegisterMain(this global::Entitas.Contexts contexts)");
+        GetGeneratedSource(result, "MainContextsRegistrationExtension.g.cs").Should().Contain("InitializeMainEntityIndices(contexts);");
         GetGeneratedSource(result, "MainCleanupSystems.g.cs").Should().Contain("CleanupMe");
         GetGeneratedSource(result, "MainEventSystems.g.cs").Should().Contain("Reactive");
     }

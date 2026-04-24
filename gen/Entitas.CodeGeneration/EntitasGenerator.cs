@@ -109,6 +109,7 @@ public class EntitasGenerator : IIncrementalGenerator
             EventsGenerationHelper.GenerateEventSystems(spc, componentsByContextNameLookup, contextLookup);
 
         FeatureSchemaRegistrationGenerationHelper.GenerateFeatureSchemaRegistrations(spc, componentsByContextNameLookup, contextLookup, options);
+        ContextRegistrationGenerationHelper.GenerateContextRegistrations(spc, contextsData, componentsByContextNameLookup, options);
     }
 
     void RegisterComponentOwnedSourcesGeneration(

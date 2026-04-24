@@ -6,6 +6,19 @@ namespace Entitas.Generators.IntegrationTests;
 public class ContextsBootstrapTests
 {
     [Fact]
+    public void RegistersContextsViaGeneratedRegistrationExtensions()
+    {
+        var contexts = new Contexts()
+            .RegisterMain()
+            .RegisterConfig();
+
+        contexts.GetMain().Should().NotBeNull();
+        contexts.GetConfig().Should().NotBeNull();
+        contexts.GetMain().GetEntityIndex(MainEntityIndices.MyFeatureUserName).Should().NotBeNull();
+        contexts.GetConfig().GetEntityIndex(ConfigEntityIndices.MyFeatureSettingsKey).Should().NotBeNull();
+    }
+
+    [Fact]
     public void GetsMultipleRegisteredContextsViaGeneratedAccessors()
     {
         var contexts = TestContexts.Create();
