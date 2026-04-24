@@ -32,7 +32,7 @@ namespace Entitas.Generators.IntegrationTests
 
             var context = new MainContext(schema);
 
-            context.ContextInfo.name.Should().Be("Main");
+            context.ContextInfo.Name.Should().Be("Main");
             context.TotalComponents.Should().Be(1);
         }
     }
