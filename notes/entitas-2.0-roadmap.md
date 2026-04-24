@@ -35,9 +35,10 @@ Goal: make the 2.0 generator work intentionally for one context in a custom asmd
 - `[~]` Define and document the canonical "one context in one custom asmdef" workflow.
 - `[ ]` Validate the workflow in the Unity sample or a focused clean Unity project setup.
 - `[~]` Add an explicit sample or fixture that demonstrates one-context multi-assembly usage end-to-end.
-- `[~]` Document expected behavior for one asmdef, multiple asmdefs, and mixed `Assembly-CSharp` projects.
+- `[x]` Document expected generated matcher shape for feature assemblies that contribute components to a shared context.
+- `[~]` Document remaining expected behavior for one asmdef, multiple asmdefs, and mixed `Assembly-CSharp` projects.
 
-Current note: runtime-composed shared-context support now exists as an experimental handle/schema path. The repo has Roslyn multi-assembly tests for a root context assembly plus a feature assembly, including feature-local component APIs, event/cleanup systems, entity-index registration, and runtime schema metadata. Unity sample validation and user-facing setup docs are still pending before calling this the canonical modular workflow.
+Current note: runtime-composed shared-context support now exists as an experimental handle/schema path. The repo has Roslyn multi-assembly tests for a root context assembly plus a feature assembly, including feature-local component APIs, feature-owned partial matchers, event/cleanup systems, entity-index registration, and runtime schema metadata. Feature-owned matchers keep a stable base file such as `SharedPlayerMatcher.g.cs` and emit per-component partial files using short component names such as `SharedPlayerMatcher.Level.g.cs`. Unity sample validation and broader user-facing setup docs are still pending before calling this the canonical modular workflow.
 
 ### 3. Package Support
 

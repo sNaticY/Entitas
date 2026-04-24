@@ -43,6 +43,7 @@
 - Namespaced component behavior is intentionally split:
   - direct entity/context APIs are emitted in the component namespace and use short names like `AddUser`, `SetUser`, `SetLoading`
   - shared global artifacts stay namespace-safe and flattened, such as `MainMatcher.MyFeatureUser()`, `MainComponentsLookup.MyFeatureUser`, entity-index constants, event/listener type names, and cleanup system class names
+- Multi-assembly feature-owned matchers intentionally emit a stable base file plus partial member files: `{Context}{Assembly}Matcher.g.cs` declares the partial matcher type, while `{Context}{Assembly}Matcher.{ShortComponentName}.g.cs` contains each matcher member, e.g. `SharedPlayerMatcher.g.cs` and `SharedPlayerMatcher.Level.g.cs`.
 - For documentation changes, keep `README.md` Unity-first: prefer explaining Unity usage, incremental generator wiring, and migration from Entitas 1 over historical/community material.
 
 ## Style Constraints
