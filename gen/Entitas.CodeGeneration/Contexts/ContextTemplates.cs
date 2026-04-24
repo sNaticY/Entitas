@@ -18,6 +18,11 @@ public static class ${ContextName}ContextsExtension
     public const string ContextTemplate =
         @"public sealed partial class ${ContextType} : global::Entitas.Context<${EntityType}>
 {
+    public static global::Entitas.ContextSchemaBuilder CreateSchemaBuilder()
+    {
+        return new global::Entitas.ContextSchemaBuilder(""${ContextName}"");
+    }
+
     public ${ContextType}()
         : base(
             ${Lookup}.TotalComponents,

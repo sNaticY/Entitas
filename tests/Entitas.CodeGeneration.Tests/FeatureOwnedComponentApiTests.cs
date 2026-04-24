@@ -62,6 +62,8 @@ namespace Game.Feature
         var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
         AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
         GetGeneratedSource(root.Result, "MainContext.g.cs").Should().Contain("public MainContext(global::Entitas.ContextSchema schema)");
+        GetGeneratedSource(root.Result, "MainContext.g.cs").Should().Contain("public static global::Entitas.ContextSchemaBuilder CreateSchemaBuilder()");
+        GetGeneratedSource(root.Result, "MainContext.g.cs").Should().Contain("return new global::Entitas.ContextSchemaBuilder(\"Main\");");
         var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
 
         var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(

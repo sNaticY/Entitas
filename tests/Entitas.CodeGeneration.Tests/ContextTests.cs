@@ -22,5 +22,18 @@ namespace Entitas.Generators.IntegrationTests
             entity.Should().BeAssignableTo<MainEntity>();
             entity.TotalComponents.Should().Be(context.TotalComponents);
         }
+
+        [Fact]
+        public void CreatesContextFromGeneratedSchemaBuilder()
+        {
+            var schema = MainContext.CreateSchemaBuilder()
+                .AddMainUser()
+                .Build();
+
+            var context = new MainContext(schema);
+
+            context.ContextInfo.name.Should().Be("Main");
+            context.TotalComponents.Should().Be(1);
+        }
     }
 }
