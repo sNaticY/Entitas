@@ -96,8 +96,10 @@ namespace Game.Feature
         indexSource.Should().Contain("AddMainUserEntityIndices(this global::Entitas.ContextSchemaBuilder builder)");
         indexSource.Should().Contain("builder.AddEntityIndex(MainUserEntityIndices.GameFeatureUserName");
         indexSource.Should().Contain("global::Entitas.Matcher<MainEntity>.AllOf(MainUserComponentHandle.Handle)");
-        indexSource.Should().Contain("GetEntityWithGameFeatureUserName(this MainContext context, string Name)");
-        indexSource.Should().Contain("GetEntitiesWithGameFeatureUserAge(this MainContext context, int Age)");
+        indexSource.Should().Contain("GetEntityWithUserName(this MainContext context, string Name)");
+        indexSource.Should().Contain("GetEntitiesWithUserAge(this MainContext context, int Age)");
+        indexSource.Should().NotContain("GetEntityWithGameFeatureUserName");
+        indexSource.Should().NotContain("GetEntitiesWithGameFeatureUserAge");
         indexSource.Should().NotContain("MainEntityIndices");
         indexSource.Should().NotContain("MainMatcher");
 

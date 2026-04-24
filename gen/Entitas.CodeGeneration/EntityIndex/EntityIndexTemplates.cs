@@ -139,8 +139,6 @@ ${getIndices}
         var indexConstantsBuilder = new System.Text.StringBuilder();
         var indexRegistrationsBuilder = new System.Text.StringBuilder();
         var getIndicesBuilder = new System.Text.StringBuilder();
-        var entityIndexCount = componentData.GetEntityIndexCount();
-        var hasMultipleIndices = entityIndexCount > 1;
         var indexConstantsType = contextData.ContextName + componentData.GetScopedComponentName() + "EntityIndices";
         var componentHandle = ComponentTemplates.GetComponentHandleExpression(contextData, componentData);
 
@@ -149,9 +147,8 @@ ${getIndices}
             if (!memberData.IsEntityIndex)
                 continue;
 
-            var indexName = hasMultipleIndices
-                ? componentData.FullComponentName + memberData.Name.ToUpperFirst()
-                : componentData.FullComponentName;
+            var indexName = componentData.FullComponentName + memberData.Name.ToUpperFirst();
+            var apiIndexName = componentData.GetScopedComponentName() + memberData.Name.ToUpperFirst();
 
             indexConstantsBuilder.AppendLine(IndexConstantTemplate.Replace("${IndexName}", indexName));
             indexRegistrationsBuilder.AppendLine(ComponentIndexRegistrationTemplate
@@ -166,8 +163,8 @@ ${getIndices}
 
             var getIndexSource = memberData.EntityIndexType switch
             {
-                EntityIndexType.PrimaryEntityIndex => GetComponentPrimaryIndexSource(indexConstantsType, indexName, contextData, memberData),
-                EntityIndexType.EntityIndex => GetComponentIndexSource(indexConstantsType, indexName, contextData, memberData),
+                EntityIndexType.PrimaryEntityIndex => GetComponentPrimaryIndexSource(indexConstantsType, indexName, apiIndexName, contextData, memberData),
+                EntityIndexType.EntityIndex => GetComponentIndexSource(indexConstantsType, indexName, apiIndexName, contextData, memberData),
                 _ => string.Empty,
             };
             getIndicesBuilder.Append(getIndexSource + "\n\n");
@@ -185,12 +182,14 @@ ${getIndices}
     static string GetComponentIndexSource(
         string indexConstantsType,
         string indexName,
+        string apiIndexName,
         in ContextData contextData,
         in MemberData memberData) =>
         GetIndexTemplate
             .Replace("${ContextName}EntityIndices", indexConstantsType)
             .Replace("${ContextName}", contextData.ContextName)
-            .Replace("${IndexName}", indexName)
+            .Replace("${IndexName}", apiIndexName)
+            .Replace(indexConstantsType + "." + apiIndexName, indexConstantsType + "." + indexName)
             .Replace("${MemberName}", memberData.Name)
             .Replace("${KeyType}", memberData.Type)
             .Replace("${IndexType}", memberData.GetEntityIndexType());
@@ -198,12 +197,14 @@ ${getIndices}
     static string GetComponentPrimaryIndexSource(
         string indexConstantsType,
         string indexName,
+        string apiIndexName,
         in ContextData contextData,
         in MemberData memberData) =>
         GetPrimaryIndexTemplate
             .Replace("${ContextName}EntityIndices", indexConstantsType)
             .Replace("${ContextName}", contextData.ContextName)
-            .Replace("${IndexName}", indexName)
+            .Replace("${IndexName}", apiIndexName)
+            .Replace(indexConstantsType + "." + apiIndexName, indexConstantsType + "." + indexName)
             .Replace("${MemberName}", memberData.Name)
             .Replace("${KeyType}", memberData.Type)
             .Replace("${IndexType}", memberData.GetEntityIndexType());

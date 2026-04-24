@@ -15,7 +15,7 @@ public sealed class MultiAssemblySampleTests
         var player = shared.SetPlayer("Ada", 1);
         player.AddHealth(10);
 
-        Assert.AreSame(player, shared.GetEntityWithSampleMultiAssemblyFeatureAPlayer("Ada"));
+        Assert.AreSame(player, shared.GetEntityWithPlayerName("Ada"));
         Assert.AreSame(player, shared.GetPlayerEntity());
         Assert.AreEqual("Ada", shared.GetPlayer().Name);
         Assert.AreEqual(1, shared.GetPlayer().Level);
