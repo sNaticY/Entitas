@@ -17,8 +17,14 @@ namespace Sample.MultiAssembly.Bootstrap
         public static Contexts Create()
         {
             var schema = CreateSchema();
-            return new Contexts()
-                .Register(new SharedContext(schema), schema);
+            var contexts = new Contexts();
+            contexts.Register(new SharedContext(schema), schema);
+
+#if UNITY_EDITOR && !ENTITAS_DISABLE_VISUAL_DEBUGGING
+            contexts.InitializeAllContextObservers();
+#endif
+
+            return contexts;
         }
     }
 }

@@ -4,9 +4,6 @@ namespace Entitas.Unity
 {
     public static class ContextObserverExtension
     {
-#if !UNITY_EDITOR || ENTITAS_DISABLE_VISUAL_DEBUGGING
-        [System.Diagnostics.Conditional("false")]
-#endif
         public static void CreateContextObserver(this IContext context)
         {
             var contextObserver = new GameObject().AddComponent<ContextObserverBehaviour>();
