@@ -1,0 +1,18 @@
+{
+    "name": "Entitas.Sample.MultiAssembly.Bootstrap",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b1b6b3aa4da647a4917eb843184bb42d",
+        "GUID:709e59db4ea3461084e2eef67267f3f8",
+        "GUID:1fa5dcaba5dc4389afec17ecf201a1de"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,16 @@
+{
+    "name": "Entitas.Sample.MultiAssembly.FeatureA",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b1b6b3aa4da647a4917eb843184bb42d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
