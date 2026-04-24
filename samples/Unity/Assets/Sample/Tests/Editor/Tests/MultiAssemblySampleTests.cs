@@ -9,7 +9,7 @@ public sealed class MultiAssemblySampleTests
     [Test]
     public void CreatesSharedContextFromFeatureAssemblies()
     {
-        var contexts = MultiAssemblyContextFactory.Create();
+        var contexts = ContextFactory.Create();
         var shared = contexts.GetShared();
 
         var player = shared.SetPlayer("Ada", 1);

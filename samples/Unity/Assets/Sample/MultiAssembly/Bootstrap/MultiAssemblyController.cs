@@ -11,7 +11,7 @@ namespace Sample.MultiAssembly.Bootstrap
 
         void Start()
         {
-            var contexts = MultiAssemblyContextFactory.Create();
+            var contexts = ContextFactory.Create();
             _sharedContext = contexts.GetShared();
 
             var player = _sharedContext.SetPlayer("Ada", 1);

@@ -4,7 +4,7 @@ using Sample.MultiAssembly.FeatureB;
 
 namespace Sample.MultiAssembly.Bootstrap
 {
-    public static class MultiAssemblyContextFactory
+    public static class ContextFactory
     {
         public static ContextSchema CreateSchema()
         {
