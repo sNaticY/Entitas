@@ -56,15 +56,7 @@ namespace Entitas
             {
                 foreach (var entity in entities)
                 {
-                    if (entity.Aerc is SafeAERC safeAerc)
-                    {
-                        if (safeAerc.Owners.Contains(this))
-                            entity.Release(this);
-                    }
-                    else
-                    {
-                        entity.Release(this);
-                    }
+                    ReleaseEntity(entity);
                 }
             }
 
@@ -74,31 +66,13 @@ namespace Entitas
         protected override void AddEntity(TKey key, TEntity entity)
         {
             GetEntities(key).Add(entity);
-
-            if (entity.Aerc is SafeAERC safeAerc)
-            {
-                if (!safeAerc.Owners.Contains(this))
-                    entity.Retain(this);
-            }
-            else
-            {
-                entity.Retain(this);
-            }
+            RetainEntity(entity);
         }
 
         protected override void RemoveEntity(TKey key, TEntity entity)
         {
             GetEntities(key).Remove(entity);
-
-            if (entity.Aerc is SafeAERC safeAerc)
-            {
-                if (safeAerc.Owners.Contains(this))
-                    entity.Release(this);
-            }
-            else
-            {
-                entity.Release(this);
-            }
+            ReleaseEntity(entity);
         }
     }
 }

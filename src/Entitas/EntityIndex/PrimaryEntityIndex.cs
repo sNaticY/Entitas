@@ -49,15 +49,7 @@ namespace Entitas
         {
             foreach (var entity in _index.Values)
             {
-                if (entity.Aerc is SafeAERC safeAerc)
-                {
-                    if (safeAerc.Owners.Contains(this))
-                        entity.Release(this);
-                }
-                else
-                {
-                    entity.Release(this);
-                }
+                ReleaseEntity(entity);
             }
 
             _index.Clear();
@@ -71,31 +63,13 @@ namespace Entitas
                     "Only one entity for a primary key is allowed.");
 
             _index.Add(key, entity);
-
-            if (entity.Aerc is SafeAERC safeAerc)
-            {
-                if (!safeAerc.Owners.Contains(this))
-                    entity.Retain(this);
-            }
-            else
-            {
-                entity.Retain(this);
-            }
+            RetainEntity(entity);
         }
 
         protected override void RemoveEntity(TKey key, TEntity entity)
         {
             _index.Remove(key);
-
-            if (entity.Aerc is SafeAERC safeAerc)
-            {
-                if (safeAerc.Owners.Contains(this))
-                    entity.Release(this);
-            }
-            else
-            {
-                entity.Release(this);
-            }
+            ReleaseEntity(entity);
         }
     }
 }

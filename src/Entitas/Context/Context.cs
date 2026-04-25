@@ -71,8 +71,8 @@ namespace Entitas
         // Cache delegate to reduce gc allocations
         readonly EntityComponentChanged _onEntityChangedDelegate;
         readonly EntityComponentReplaced _onComponentReplacedDelegate;
-        readonly EntityEvent _OnEntityReleasedDelegate;
-        readonly EntityEvent _OnDestroyEntityDelegate;
+        readonly EntityEvent _onEntityReleasedDelegate;
+        readonly EntityEvent _onDestroyEntityDelegate;
 
         /// The preferred way to create a context is to use the generated methods
         /// from the code generator, e.g. var context = new MainContext();
@@ -138,7 +138,7 @@ namespace Entitas
                         groups[i].UpdateEntity((TEntity)entity, index, previousComponent, newComponent);
             };
 
-            _OnEntityReleasedDelegate = entity =>
+            _onEntityReleasedDelegate = entity =>
             {
                 if (entity.IsEnabled)
                     throw new EntityIsNotDestroyedException($"Cannot release {entity}!");
@@ -149,7 +149,7 @@ namespace Entitas
                 _reusableEntities.Push(tEntity);
             };
 
-            _OnDestroyEntityDelegate = entity =>
+            _onDestroyEntityDelegate = entity =>
             {
                 var tEntity = (TEntity)entity;
                 var removed = _entities.Remove(tEntity);
@@ -169,7 +169,7 @@ namespace Entitas
                 {
                     // Can be released immediately without
                     // adding to _retainedEntities
-                    tEntity.OnEntityReleased -= _OnEntityReleasedDelegate;
+                    tEntity.OnEntityReleased -= _onEntityReleasedDelegate;
                     _reusableEntities.Push(tEntity);
                     tEntity.Release(this);
                     tEntity.RemoveAllOnEntityReleasedHandlers();
@@ -206,8 +206,8 @@ namespace Entitas
             entity.OnComponentAdded += _onEntityChangedDelegate;
             entity.OnComponentRemoved += _onEntityChangedDelegate;
             entity.OnComponentReplaced += _onComponentReplacedDelegate;
-            entity.OnEntityReleased += _OnEntityReleasedDelegate;
-            entity.OnDestroyEntity += _OnDestroyEntityDelegate;
+            entity.OnEntityReleased += _onEntityReleasedDelegate;
+            entity.OnDestroyEntity += _onDestroyEntityDelegate;
 
             OnEntityCreated?.Invoke(this, entity);
 

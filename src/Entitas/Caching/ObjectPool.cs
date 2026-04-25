@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Entitas
 {
-    sealed class ObjectPool<T>
+    internal sealed class ObjectPool<T>
     {
         readonly Func<T> _factory;
         readonly Action<T> _reset;

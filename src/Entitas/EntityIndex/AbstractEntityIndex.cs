@@ -88,6 +88,32 @@ namespace Entitas
             }
         }
 
+        protected void RetainEntity(TEntity entity)
+        {
+            if (entity.Aerc is SafeAERC safeAerc)
+            {
+                if (!safeAerc.Owners.Contains(this))
+                    entity.Retain(this);
+            }
+            else
+            {
+                entity.Retain(this);
+            }
+        }
+
+        protected void ReleaseEntity(TEntity entity)
+        {
+            if (entity.Aerc is SafeAERC safeAerc)
+            {
+                if (safeAerc.Owners.Contains(this))
+                    entity.Release(this);
+            }
+            else
+            {
+                entity.Release(this);
+            }
+        }
+
         protected abstract void AddEntity(TKey key, TEntity entity);
 
         protected abstract void RemoveEntity(TKey key, TEntity entity);
