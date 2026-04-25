@@ -44,6 +44,8 @@ Add the runtime and generator pieces to your Unity project with the same split u
 | `Entitas.Unity.dll` or `src/Entitas.Unity` | Optional Unity runtime helpers such as entity links and debug systems. |
 | `Entitas.Unity.Editor.dll` or `src/Entitas.Unity.Editor` | Optional editor and visual-debugging integration. Keep it editor-only. |
 
+`Entitas.CodeGeneration.Attributes` is intentionally a normal assembly reference, not only analyzer metadata. The generator consumes its marker attributes at compile time, and the Unity editor integration also reads metadata attributes such as `ContextAttribute` and `DontDrawComponentAttribute` at editor time.
+
 In Unity, mark the `Entitas.CodeGeneration.dll` plugin with the `RoslynAnalyzer` label and keep it out of normal runtime/editor plugin references. Gameplay code should reference `Entitas` and `Entitas.CodeGeneration.Attributes`, not `Entitas.CodeGeneration`.
 
 If you use analyzer-config options in Unity, include a `csc.rsp` like the sample project does:
