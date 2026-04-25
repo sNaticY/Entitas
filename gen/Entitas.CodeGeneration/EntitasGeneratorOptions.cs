@@ -9,21 +9,36 @@ namespace Entitas.CodeGeneration;
 
 public readonly struct EntitasGeneratorOptions
 {
-    const string AssemblyNamesKey = "entitas_generator.assembly_names";
-    const string ComponentCleanupSystemsKey = "entitas_generator.component.cleanup_systems";
-    const string ComponentComponentIndexKey = "entitas_generator.component.component_index";
-    const string ComponentContextExtensionKey = "entitas_generator.component.context_extension";
-    const string ComponentEntityExtensionKey = "entitas_generator.component.entity_extension";
-    const string ComponentEntityIndexExtensionKey = "entitas_generator.component.entity_index_extension";
-    const string ComponentEventsKey = "entitas_generator.component.events";
-    const string ComponentEventSystemsExtensionKey = "entitas_generator.component.event_systems_extension";
-    const string ComponentMatcherKey = "entitas_generator.component.matcher";
-    const string ContextComponentIndexKey = "entitas_generator.context.component_index";
-    const string ContextContextKey = "entitas_generator.context.context";
-    const string ContextEntityKey = "entitas_generator.context.entity";
-    const string ContextMatcherKey = "entitas_generator.context.matcher";
-    const string VisualDebuggingKey = "entitas_generator.visual_debugging";
-    const string VisualDebuggingAssemblyNamesKey = "entitas_generator.visual_debugging.assembly_names";
+    static class AnalyzerConfigKeys
+    {
+        public const string AssemblyNames = "entitas_generator.assembly_names";
+
+        public static class Component
+        {
+            public const string CleanupSystems = "entitas_generator.component.cleanup_systems";
+            public const string ComponentIndex = "entitas_generator.component.component_index";
+            public const string ContextExtension = "entitas_generator.component.context_extension";
+            public const string EntityExtension = "entitas_generator.component.entity_extension";
+            public const string EntityIndexExtension = "entitas_generator.component.entity_index_extension";
+            public const string Events = "entitas_generator.component.events";
+            public const string EventSystemsExtension = "entitas_generator.component.event_systems_extension";
+            public const string Matcher = "entitas_generator.component.matcher";
+        }
+
+        public static class Context
+        {
+            public const string ComponentIndex = "entitas_generator.context.component_index";
+            public const string Generation = "entitas_generator.context.context";
+            public const string Entity = "entitas_generator.context.entity";
+            public const string Matcher = "entitas_generator.context.matcher";
+        }
+
+        public static class VisualDebugging
+        {
+            public const string Enabled = "entitas_generator.visual_debugging";
+            public const string AssemblyNames = "entitas_generator.visual_debugging.assembly_names";
+        }
+    }
 
     static readonly ImmutableHashSet<string> DefaultVisualDebuggingAssemblyNames = ImmutableHashSet.Create(
         StringComparer.Ordinal,
@@ -93,22 +108,22 @@ public readonly struct EntitasGeneratorOptions
             : optionsProvider.GlobalOptions;
 
         return new EntitasGeneratorOptions(
-            GetAssemblyNames(options, AssemblyNamesKey),
-            GetBool(options, ComponentCleanupSystemsKey, defaultValue: true),
-            GetBool(options, ComponentComponentIndexKey, defaultValue: true),
-            GetBool(options, ComponentContextExtensionKey, defaultValue: true),
-            GetBool(options, ComponentEntityExtensionKey, defaultValue: true),
-            GetBool(options, ComponentEntityIndexExtensionKey, defaultValue: true),
-            GetBool(options, ComponentEventsKey, defaultValue: true),
-            GetBool(options, ComponentEventSystemsExtensionKey, defaultValue: true),
-            GetBool(options, ComponentMatcherKey, defaultValue: true),
-            GetBool(options, ContextComponentIndexKey, defaultValue: true),
-            GetBool(options, ContextContextKey, defaultValue: true),
-            GetBool(options, ContextEntityKey, defaultValue: true),
-            GetBool(options, ContextMatcherKey, defaultValue: true),
+            GetAssemblyNames(options, AnalyzerConfigKeys.AssemblyNames),
+            GetBool(options, AnalyzerConfigKeys.Component.CleanupSystems, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Component.ComponentIndex, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Component.ContextExtension, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Component.EntityExtension, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Component.EntityIndexExtension, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Component.Events, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Component.EventSystemsExtension, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Component.Matcher, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Context.ComponentIndex, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Context.Generation, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Context.Entity, defaultValue: true),
+            GetBool(options, AnalyzerConfigKeys.Context.Matcher, defaultValue: true),
             GetAssemblyName(compilation),
-            GetAssemblyNames(options, VisualDebuggingAssemblyNamesKey, DefaultVisualDebuggingAssemblyNames),
-            GetBool(options, VisualDebuggingKey, defaultValue: true));
+            GetAssemblyNames(options, AnalyzerConfigKeys.VisualDebugging.AssemblyNames, DefaultVisualDebuggingAssemblyNames),
+            GetBool(options, AnalyzerConfigKeys.VisualDebugging.Enabled, defaultValue: true));
     }
 
     public bool ShouldRun(string? assemblyName) =>

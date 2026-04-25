@@ -43,22 +43,23 @@ public class EntitasGenerator : IIncrementalGenerator
         IncrementalValueProvider<EntitasGeneratorOptions> generatorOptions,
         in IncrementalValueProvider<ImmutableArray<ContextData>> contextsData)
     {
-        var combinedInput = shouldRun.Combine(generatorOptions.Combine(contextsData));
+        var combinedInput = shouldRun
+            .Combine(generatorOptions)
+            .Combine(contextsData)
+            .Select(static (input, _) => new ContextRootSourceInput(input.Left.Left, input.Left.Right, input.Right));
 
         // This will be triggered for any context change (ContextAttribute class)
         context.RegisterSourceOutput(combinedInput,
             static (spc, source) => GenerateContextRootSources(source, spc));
     }
 
-    static void GenerateContextRootSources(
-        (bool, (EntitasGeneratorOptions, ImmutableArray<ContextData>)) input,
-        SourceProductionContext spc)
+    static void GenerateContextRootSources(ContextRootSourceInput input, SourceProductionContext spc)
     {
-        if (!input.Item1) // check shouldRun
+        if (!input.ShouldRun)
             return;
 
-        var options = input.Item2.Item1;
-        var contextsData = input.Item2.Item2;
+        var options = input.Options;
+        var contextsData = input.ContextsData;
         if (contextsData.IsDefaultOrEmpty)
             return;
 
@@ -73,9 +74,15 @@ public class EntitasGenerator : IIncrementalGenerator
         in IncrementalValueProvider<ImmutableArray<ComponentData>> componentsData,
         in IncrementalValueProvider<ImmutableDictionary<string, ImmutableArray<ComponentData>>> componentsByContextNameLookup)
     {
-        var contextsAndComponents = contextsData.Combine(componentsData);
-        var contextsAndComponentsWithLookup = contextsAndComponents.Combine(componentsByContextNameLookup);
-        var combinedInput = shouldRun.Combine(generatorOptions.Combine(contextsAndComponentsWithLookup));
+        var contextSharedData = contextsData
+            .Combine(componentsData)
+            .Combine(componentsByContextNameLookup)
+            .Select(static (input, _) => new ContextSharedData(input.Left.Left, input.Left.Right, input.Right));
+
+        var combinedInput = shouldRun
+            .Combine(generatorOptions)
+            .Combine(contextSharedData)
+            .Select(static (input, _) => new ContextSharedSourceInput(input.Left.Left, input.Left.Right, input.Right));
 
         // Warning: This will be triggered for ANY context or component change
         // Keep it as light as possible
@@ -83,18 +90,16 @@ public class EntitasGenerator : IIncrementalGenerator
             static (spc, source) => GenerateContextSharedSources(source, spc));
     }
 
-    static void GenerateContextSharedSources(
-        (bool, (EntitasGeneratorOptions, ((ImmutableArray<ContextData>, ImmutableArray<ComponentData>), ImmutableDictionary<string, ImmutableArray<ComponentData>>))) input,
-        SourceProductionContext spc)
+    static void GenerateContextSharedSources(ContextSharedSourceInput input, SourceProductionContext spc)
     {
-        if (!input.Item1) // check shouldRun
+        if (!input.ShouldRun)
             return;
 
-        var options = input.Item2.Item1;
-        var contextsData = input.Item2.Item2.Item1.Item1;
+        var options = input.Options;
+        var contextsData = input.Data.ContextsData;
         var contextLookup = contextsData.ToDictionary(ctx => ctx.ContextName);
 
-        var componentsByContextNameLookup = input.Item2.Item2.Item2;
+        var componentsByContextNameLookup = input.Data.ComponentsByContextNameLookup;
 
         if (options.ComponentsLookupGenerationEnabled)
             ComponentsLookupGenerationHelper.GenerateComponentsLookups(spc, componentsByContextNameLookup, contextLookup, options);
@@ -137,14 +142,14 @@ public class EntitasGenerator : IIncrementalGenerator
 
                     return contextComponentsPair.Value
                         .Where(component => contextRootIsLocal || ShouldGenerateFeatureOwnedPlainApis(component))
-                        .Select(component => (contextData, component, contextRootIsLocal));
+                        .Select(component => new ComponentByContextSource(contextData, component, contextRootIsLocal));
                 });
             });
 
         var conditionalComponentByContext = componentByContext
             .Combine(generatorOptions)
             .Combine(shouldRun)
-            .Select((pair, _) => (ShouldRun: pair.Right, Options: pair.Left.Right, ComponentByContext: pair.Left.Left));
+            .Select(static (pair, _) => new ComponentOwnedSourceInput(pair.Right, pair.Left.Right, pair.Left.Left));
 
         // This is triggered for:
         // - individual components that have changed, or
@@ -161,9 +166,9 @@ public class EntitasGenerator : IIncrementalGenerator
 
                 return componentLookup
                     .Where(contextComponentsPair => !contextLookup.ContainsKey(contextComponentsPair.Key))
-                    .Select(contextComponentsPair => (
-                        ContextData: new ContextData(contextComponentsPair.Key),
-                        ComponentsData: contextComponentsPair.Value
+                    .Select(contextComponentsPair => new FeatureOwnedMatcherGroup(
+                        new ContextData(contextComponentsPair.Key),
+                        contextComponentsPair.Value
                             .Where(component => ShouldGenerateFeatureOwnedPlainApis(component))
                             .ToImmutableArray()))
                     .Where(group => group.ComponentsData.Length > 0);
@@ -172,7 +177,7 @@ public class EntitasGenerator : IIncrementalGenerator
         var conditionalFeatureOwnedMatcherByContext = featureOwnedMatcherByContext
             .Combine(generatorOptions)
             .Combine(shouldRun)
-            .Select((pair, _) => (ShouldRun: pair.Right, Options: pair.Left.Right, MatcherGroup: pair.Left.Left));
+            .Select(static (pair, _) => new FeatureOwnedMatcherSourceInput(pair.Right, pair.Left.Right, pair.Left.Left));
 
         context.RegisterSourceOutput(conditionalFeatureOwnedMatcherByContext,
             static (spc, source) => GenerateFeatureOwnedMatcherSources(source, spc));
@@ -181,9 +186,7 @@ public class EntitasGenerator : IIncrementalGenerator
     static bool ShouldGenerateFeatureOwnedPlainApis(in ComponentData componentData) =>
         componentData.HasExplicitContexts;
 
-    static void GenerateComponentOwnedSources(
-        (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData ContextData, ComponentData ComponentData, bool ContextRootIsLocal) ComponentByContext) input,
-        SourceProductionContext spc)
+    static void GenerateComponentOwnedSources(ComponentOwnedSourceInput input, SourceProductionContext spc)
     {
         if (!input.ShouldRun)
             return;
@@ -213,9 +216,7 @@ public class EntitasGenerator : IIncrementalGenerator
         GeneratePerComponentEventAndCleanupSources(spc, componentData, input.Options, contextData);
     }
 
-    static void GenerateFeatureOwnedMatcherSources(
-        (bool ShouldRun, EntitasGeneratorOptions Options, (ContextData ContextData, ImmutableArray<ComponentData> ComponentsData) MatcherGroup) input,
-        SourceProductionContext spc)
+    static void GenerateFeatureOwnedMatcherSources(FeatureOwnedMatcherSourceInput input, SourceProductionContext spc)
     {
         if (!input.ShouldRun)
             return;
@@ -259,23 +260,146 @@ public class EntitasGenerator : IIncrementalGenerator
         var shouldRun = context.CompilationProvider.Combine(generatorOptions)
             .Select(static (input, _) => input.Right.ShouldGenerateVisualDebugging(input.Left.AssemblyName));
 
-        var combinedInput = shouldRun.Combine(contextsData);
+        var combinedInput = shouldRun
+            .Combine(contextsData)
+            .Select(static (input, _) => new VisualDebuggingSourceInput(input.Left, input.Right));
         context.RegisterSourceOutput(combinedInput,
             static (spc, source) => GenerateVisualDebugging(source, spc));
     }
 
-    static void GenerateVisualDebugging(
-        (bool, ImmutableArray<ContextData>) input,
-        SourceProductionContext spc)
+    static void GenerateVisualDebugging(VisualDebuggingSourceInput input, SourceProductionContext spc)
     {
-        if (!input.Item1) // check shouldRun
+        if (!input.ShouldRun)
             return;
 
-        var contextsData = input.Item2;
+        var contextsData = input.ContextsData;
         if (contextsData.IsDefaultOrEmpty)
             return;
 
         // Context Observers, Feature
         VisualDebuggingGenerationHelper.Generate(spc, contextsData);
+    }
+
+    readonly struct ContextRootSourceInput
+    {
+        public readonly bool ShouldRun;
+        public readonly EntitasGeneratorOptions Options;
+        public readonly ImmutableArray<ContextData> ContextsData;
+
+        public ContextRootSourceInput(
+            bool shouldRun,
+            EntitasGeneratorOptions options,
+            ImmutableArray<ContextData> contextsData)
+        {
+            ShouldRun = shouldRun;
+            Options = options;
+            ContextsData = contextsData;
+        }
+    }
+
+    readonly struct ContextSharedData
+    {
+        public readonly ImmutableArray<ContextData> ContextsData;
+        public readonly ImmutableArray<ComponentData> ComponentsData;
+        public readonly ImmutableDictionary<string, ImmutableArray<ComponentData>> ComponentsByContextNameLookup;
+
+        public ContextSharedData(
+            ImmutableArray<ContextData> contextsData,
+            ImmutableArray<ComponentData> componentsData,
+            ImmutableDictionary<string, ImmutableArray<ComponentData>> componentsByContextNameLookup)
+        {
+            ContextsData = contextsData;
+            ComponentsData = componentsData;
+            ComponentsByContextNameLookup = componentsByContextNameLookup;
+        }
+    }
+
+    readonly struct ContextSharedSourceInput
+    {
+        public readonly bool ShouldRun;
+        public readonly EntitasGeneratorOptions Options;
+        public readonly ContextSharedData Data;
+
+        public ContextSharedSourceInput(bool shouldRun, EntitasGeneratorOptions options, ContextSharedData data)
+        {
+            ShouldRun = shouldRun;
+            Options = options;
+            Data = data;
+        }
+    }
+
+    readonly struct ComponentByContextSource
+    {
+        public readonly ContextData ContextData;
+        public readonly ComponentData ComponentData;
+        public readonly bool ContextRootIsLocal;
+
+        public ComponentByContextSource(
+            ContextData contextData,
+            ComponentData componentData,
+            bool contextRootIsLocal)
+        {
+            ContextData = contextData;
+            ComponentData = componentData;
+            ContextRootIsLocal = contextRootIsLocal;
+        }
+    }
+
+    readonly struct ComponentOwnedSourceInput
+    {
+        public readonly bool ShouldRun;
+        public readonly EntitasGeneratorOptions Options;
+        public readonly ComponentByContextSource ComponentByContext;
+
+        public ComponentOwnedSourceInput(
+            bool shouldRun,
+            EntitasGeneratorOptions options,
+            ComponentByContextSource componentByContext)
+        {
+            ShouldRun = shouldRun;
+            Options = options;
+            ComponentByContext = componentByContext;
+        }
+    }
+
+    readonly struct FeatureOwnedMatcherGroup
+    {
+        public readonly ContextData ContextData;
+        public readonly ImmutableArray<ComponentData> ComponentsData;
+
+        public FeatureOwnedMatcherGroup(ContextData contextData, ImmutableArray<ComponentData> componentsData)
+        {
+            ContextData = contextData;
+            ComponentsData = componentsData;
+        }
+    }
+
+    readonly struct FeatureOwnedMatcherSourceInput
+    {
+        public readonly bool ShouldRun;
+        public readonly EntitasGeneratorOptions Options;
+        public readonly FeatureOwnedMatcherGroup MatcherGroup;
+
+        public FeatureOwnedMatcherSourceInput(
+            bool shouldRun,
+            EntitasGeneratorOptions options,
+            FeatureOwnedMatcherGroup matcherGroup)
+        {
+            ShouldRun = shouldRun;
+            Options = options;
+            MatcherGroup = matcherGroup;
+        }
+    }
+
+    readonly struct VisualDebuggingSourceInput
+    {
+        public readonly bool ShouldRun;
+        public readonly ImmutableArray<ContextData> ContextsData;
+
+        public VisualDebuggingSourceInput(bool shouldRun, ImmutableArray<ContextData> contextsData)
+        {
+            ShouldRun = shouldRun;
+            ContextsData = contextsData;
+        }
     }
 }
