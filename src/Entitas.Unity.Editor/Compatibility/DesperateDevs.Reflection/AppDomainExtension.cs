@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace DesperateDevs.Reflection
+namespace Entitas.Unity.Editor.Compatibility.Reflection
 {
     public static class AppDomainExtension
     {

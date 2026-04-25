@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 
-namespace DesperateDevs.Unity.Editor
+namespace Entitas.Unity.Editor.Compatibility.UnityEditor
 {
     public sealed class ScriptingDefineSymbols
     {
@@ -38,9 +38,9 @@ namespace DesperateDevs.Unity.Editor
         }
 
         static string GetScriptingDefineSymbols(BuildTargetGroup buildTargetGroup) =>
-            PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup));
+            PlayerSettings.GetScriptingDefineSymbols(global::UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup));
 
         static void SetScriptingDefineSymbols(BuildTargetGroup buildTargetGroup, string symbols) =>
-            PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup), symbols);
+            PlayerSettings.SetScriptingDefineSymbols(global::UnityEditor.Build.NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup), symbols);
     }
 }

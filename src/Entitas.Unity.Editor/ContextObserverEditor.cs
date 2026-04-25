@@ -1,5 +1,5 @@
 using System.Linq;
-using DesperateDevs.Unity.Editor;
+using Entitas.Unity.Editor.Compatibility.UnityEditor;
 using UnityEditor;
 using UnityEngine;
 

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DesperateDevs.Extensions;
-using DesperateDevs.Reflection;
-using DesperateDevs.Unity.Editor;
+using Entitas.Unity.Editor.Compatibility.Extensions;
+using Entitas.Unity.Editor.Compatibility.Reflection;
+using Entitas.Unity.Editor.Compatibility.UnityEditor;
 using Entitas.CodeGeneration.Attributes;
 using UnityEditor;
 using UnityEngine;

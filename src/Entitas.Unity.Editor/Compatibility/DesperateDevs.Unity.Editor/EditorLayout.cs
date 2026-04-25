@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace DesperateDevs.Unity.Editor
+namespace Entitas.Unity.Editor.Compatibility.UnityEditor
 {
     public static class EditorLayout
     {

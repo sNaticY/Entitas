@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace DesperateDevs.Reflection
+namespace Entitas.Unity.Editor.Compatibility.Reflection
 {
     public static class TypeExtension
     {

@@ -1,4 +1,4 @@
-namespace DesperateDevs.Reflection
+namespace Entitas.Unity.Editor.Compatibility.Reflection
 {
     public static class ObjectExtension
     {

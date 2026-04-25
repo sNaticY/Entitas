@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace DesperateDevs.Reflection
+namespace Entitas.Unity.Editor.Compatibility.Reflection
 {
     public sealed class PublicMemberInfo
     {
