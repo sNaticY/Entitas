@@ -380,6 +380,64 @@ namespace Game.Feature
             .Should().Contain("AddMetaPlayerAssembly(this global::Entitas.ContextSchemaBuilder builder)");
     }
 
+    [Fact]
+    public void FeatureOwnedMatcherGenerationCoversMultiContextComponents()
+    {
+        const string rootSource = @"
+namespace Game.Root
+{
+    public sealed class MainAttribute : Entitas.CodeGeneration.Attributes.ContextAttribute
+    {
+        public MainAttribute() : base(""Main"") { }
+    }
+
+    public sealed class MetaAttribute : Entitas.CodeGeneration.Attributes.ContextAttribute
+    {
+        public MetaAttribute() : base(""Meta"") { }
+    }
+}
+";
+
+        const string featureSource = @"
+using Entitas;
+using Entitas.CodeGeneration.Attributes;
+using Game.Root;
+
+[assembly: EntitasAssembly(""Player"")]
+
+namespace Game.Feature
+{
+    [Main, Meta]
+    public sealed class SharedStateComponent : IComponent { }
+}
+";
+
+        var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(rootSource, "Game.Root");
+        AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
+        var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
+
+        var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            featureSource,
+            "Game.Feature",
+            additionalReferences: new[] { rootReference });
+
+        AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
+        var generatedFileNames = GetGeneratedFileNames(feature.Result);
+
+        generatedFileNames.Should().Contain("Game.Feature.MainPlayerMatcher.g.cs");
+        generatedFileNames.Should().Contain("Game.Feature.MainPlayerMatcher.SharedState.g.cs");
+        generatedFileNames.Should().Contain("Game.Feature.MetaPlayerMatcher.g.cs");
+        generatedFileNames.Should().Contain("Game.Feature.MetaPlayerMatcher.SharedState.g.cs");
+
+        GetGeneratedSource(feature.Result, "Game.Feature.MainPlayerMatcher.SharedState.g.cs")
+            .Should().Contain("public static global::Entitas.IMatcher<MainEntity> SharedState()")
+            .And.Contain("global::Entitas.Matcher<MainEntity>.AllOf(global::Game.Feature.MainSharedStateComponentHandle.Handle)");
+
+        GetGeneratedSource(feature.Result, "Game.Feature.MetaPlayerMatcher.SharedState.g.cs")
+            .Should().Contain("public static global::Entitas.IMatcher<MetaEntity> SharedState()")
+            .And.Contain("global::Entitas.Matcher<MetaEntity>.AllOf(global::Game.Feature.MetaSharedStateComponentHandle.Handle)");
+    }
+
     static void AssertNoErrors(IEnumerable<Diagnostic> diagnostics) =>
         diagnostics
             .Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error)
