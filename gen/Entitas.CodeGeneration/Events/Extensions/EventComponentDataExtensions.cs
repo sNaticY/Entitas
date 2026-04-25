@@ -3,7 +3,7 @@ using Entitas.CodeGeneration.Components.Extensions;
 
 namespace Entitas.CodeGeneration.Events.Extensions;
 
-public static class ComponentDataExtensions
+public static class EventComponentDataExtensions
 {
     // ex: AnyPosition3
     public static string EventComponentName(this ComponentData componentData, EventData eventData)
