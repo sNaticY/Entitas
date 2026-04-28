@@ -330,6 +330,93 @@ namespace Sample.MultiAssembly.FeatureA
     }
 
     [Fact]
+    public void AssemblyCSharpCanContributeFeatureOwnedComponentsToAnAsmdefRootContext()
+    {
+        var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
+        AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
+        var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
+
+        const string assemblyCSharpSource = @"
+using Entitas;
+using Entitas.CodeGeneration.Attributes;
+using Game.Root;
+
+[Main]
+[Event(EventTarget.Any)]
+public sealed class ManaComponent : IComponent
+{
+    [EntityIndex]
+    public int Value;
+}
+
+[Main, Unique]
+public sealed class SessionComponent : IComponent
+{
+    [PrimaryEntityIndex]
+    public string Id;
+}
+
+[Main]
+[Cleanup(CleanupMode.RemoveComponent)]
+public sealed class ExpiredComponent : IComponent { }
+
+public static class AssemblyCSharpBootstrap
+{
+    public static ContextSchema CreateSchema()
+    {
+        var builder = MainContext.CreateSchemaBuilder();
+        builder = MainAssemblyCSharpAssemblySchemaExtensions.AddAssemblyCSharpAssembly(builder);
+        return builder.Build();
+    }
+
+    public static void UseGeneratedApis(MainContext context)
+    {
+        var listener = context.CreateEntity();
+        listener.AddAnyManaListener(new ManaListener());
+
+        var entity = context.SetSession(""play-mode"");
+        entity.AddMana(3);
+        entity.SetExpired(true);
+
+        _ = MainAssemblyCSharpMatcher.Mana();
+        _ = context.GetEntityWithSessionId(""play-mode"");
+        _ = context.GetEntitiesWithManaValue(3);
+    }
+}
+
+public sealed class ManaListener : IAnyManaListener
+{
+    public void OnAnyMana(MainEntity entity, int value) { }
+}
+";
+
+        var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            assemblyCSharpSource,
+            "Assembly-CSharp",
+            additionalReferences: new[] { rootReference });
+
+        AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
+
+        var generatedFileNames = GetGeneratedFileNames(feature.Result);
+        generatedFileNames.Should().Contain("MainAssemblyCSharpAssemblySchemaExtensions.g.cs");
+        generatedFileNames.Should().Contain("MainAssemblyCSharpMatcher.g.cs");
+        generatedFileNames.Should().Contain("MainAssemblyCSharpMatcher.Mana.g.cs");
+        generatedFileNames.Should().Contain("MainAssemblyCSharpMatcher.Session.g.cs");
+
+        var assemblySchemaSource = GetGeneratedSource(feature.Result, "MainAssemblyCSharpAssemblySchemaExtensions.g.cs");
+        assemblySchemaSource.Should().Contain("AddAssemblyCSharpAssembly(this global::Entitas.ContextSchemaBuilder builder)");
+        assemblySchemaSource.Should().Contain("builder = MainManaComponentSchemaExtensions.AddMainMana(builder);");
+        assemblySchemaSource.Should().Contain("builder = MainManaEntityIndicesSchemaExtensions.AddMainManaEntityIndices(builder);");
+        assemblySchemaSource.Should().Contain("builder = AnyManaEventSystemSchemaExtensions.AddAnyManaEventSystem(builder);");
+        assemblySchemaSource.Should().Contain("builder = MainSessionEntityIndicesSchemaExtensions.AddMainSessionEntityIndices(builder);");
+        assemblySchemaSource.Should().Contain("builder = RemoveExpiredMainSystemSchemaExtensions.AddRemoveExpiredMainSystem(builder);");
+
+        GetGeneratedSource(feature.Result, "MainAssemblyCSharpMatcher.Mana.g.cs")
+            .Should().Contain("public static global::Entitas.IMatcher<MainEntity> Mana()")
+            .And.Contain("global::Entitas.Matcher<MainEntity>.AllOf(MainManaComponentHandle.Handle)");
+    }
+
+    [Fact]
     public void AssemblyGeneratesContextSpecificAssemblyMethodsForMultipleContexts()
     {
         const string rootSource = @"
