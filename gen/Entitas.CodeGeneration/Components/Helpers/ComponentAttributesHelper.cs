@@ -62,7 +62,10 @@ public static class ComponentAttributesHelper
         hasExplicitContexts = contextNamesBuilder.Count != 0;
 
         if (!hasExplicitContexts)
+        {
             contextNamesBuilder.Add(ContextGenerationHelper.DefaultContextName);
+            hasExplicitContexts = true;
+        }
         
         contextNames = contextNamesBuilder.ToImmutable();
         events = eventsDataBuilder.ToImmutable();

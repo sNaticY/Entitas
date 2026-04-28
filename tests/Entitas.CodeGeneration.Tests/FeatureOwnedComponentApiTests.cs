@@ -152,6 +152,49 @@ namespace Game.Feature
     }
 
     [Fact]
+    public void FeatureAssemblySchemaRegistrationComposesEventAndCleanupSystems()
+    {
+        var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
+        AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
+        var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
+
+        var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            FeatureSource,
+            "Game.Feature",
+            additionalReferences: new[] { rootReference });
+        AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
+        var featureReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(feature.Compilation);
+
+        const string bootstrapSource = @"
+using Entitas;
+using Game.Feature;
+
+public sealed class BootstrapSystems : Systems
+{
+    public BootstrapSystems(Contexts contexts)
+    {
+        var schema = MainContext.CreateSchemaBuilder()
+            .AddPlayerAssembly()
+            .Build();
+
+        contexts.RegisterMain(schema);
+        schema.InitializeEntityIndices(contexts);
+
+        Add(schema.CreateEventSystems(contexts));
+        Add(schema.CreateCleanupSystems(contexts));
+    }
+}
+";
+
+        var bootstrap = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            bootstrapSource,
+            "Game.Bootstrap",
+            additionalReferences: new[] { rootReference, featureReference });
+
+        AssertNoErrors(bootstrap.Diagnostics.Concat(bootstrap.Compilation.GetDiagnostics()));
+    }
+
+    [Fact]
     public void FeatureOwnedMatcherApisCompileInReactiveSystems()
     {
         var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(RootSource, "Game.Root");
@@ -523,6 +566,58 @@ namespace Game.Feature
         GetGeneratedSource(feature.Result, "Game.Feature.MetaPlayerMatcher.SharedState.g.cs")
             .Should().Contain("public static global::Entitas.IMatcher<MetaEntity> SharedState()")
             .And.Contain("global::Entitas.Matcher<MetaEntity>.AllOf(global::Game.Feature.MetaSharedStateComponentHandle.Handle)");
+    }
+
+    [Fact]
+    public void FeatureComponentWithNoContextAttributeFallsBackToGameContext()
+    {
+        const string rootSource = @"
+namespace Game.Root
+{
+    public sealed class GameAttribute : Entitas.CodeGeneration.Attributes.ContextAttribute
+    {
+        public GameAttribute() : base(""Game"") { }
+    }
+}
+";
+
+        const string featureSource = @"
+using Entitas;
+using Entitas.CodeGeneration.Attributes;
+
+[assembly: EntitasAssembly(""Player"")]
+
+public sealed class ScoreComponent : IComponent
+{
+    public int Value;
+}
+";
+
+        var root = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(rootSource, "Game.Root");
+        AssertNoErrors(root.Diagnostics.Concat(root.Compilation.GetDiagnostics()));
+        var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(root.Compilation);
+
+        var feature = CodeGenerationTestHelper.RunGeneratorAndUpdateCompilation(
+            featureSource,
+            "Game.Feature",
+            additionalReferences: new[] { rootReference });
+
+        AssertNoErrors(feature.Diagnostics.Concat(feature.Compilation.GetDiagnostics()));
+
+        var generatedFileNames = GetGeneratedFileNames(feature.Result);
+        generatedFileNames.Should().Contain("GamePlayerAssemblySchemaExtensions.g.cs");
+        generatedFileNames.Should().Contain(fileName =>
+            fileName.EndsWith("GamePlayerMatcher.g.cs", StringComparison.Ordinal));
+        generatedFileNames.Should().Contain(fileName =>
+            fileName.EndsWith("GamePlayerMatcher.Score.g.cs", StringComparison.Ordinal));
+
+        var scoreSource = GetGeneratedSourceBySuffix(feature.Result, "ScoreComponent.g.cs");
+        scoreSource.Should().Contain("GameScoreComponentHandle");
+        scoreSource.Should().Contain("AddScore(this GameEntity");
+
+        var assemblySchemaSource = GetGeneratedSource(feature.Result, "GamePlayerAssemblySchemaExtensions.g.cs");
+        assemblySchemaSource.Should().Contain("AddPlayerAssembly");
+        assemblySchemaSource.Should().Contain("AddGameScore");
     }
 
     static void AssertNoErrors(IEnumerable<Diagnostic> diagnostics) =>
