@@ -422,8 +422,8 @@ public static class AssemblyCSharpBootstrap
         entity.SetExpired(true);
 
         _ = MainAssemblyCSharpMatcher.Mana();
-        _ = context.GetEntityWithSessionId(""play-mode"");
-        _ = context.GetEntitiesWithManaValue(3);
+        _ = context.GetEntityWithSession(""play-mode"");
+        _ = context.GetEntitiesWithMana(3);
     }
 }
 
@@ -457,6 +457,14 @@ public sealed class ManaListener : IAnyManaListener
         GetGeneratedSource(feature.Result, "MainAssemblyCSharpMatcher.Mana.g.cs")
             .Should().Contain("public static global::Entitas.IMatcher<MainEntity> Mana()")
             .And.Contain("global::Entitas.Matcher<MainEntity>.AllOf(MainManaComponentHandle.Handle)");
+
+        var sessionIndexSource = GetGeneratedSourceBySuffix(feature.Result, "SessionEntityIndices.g.cs");
+        sessionIndexSource.Should().Contain("GetEntityWithSession(this MainContext context, string Id)");
+        sessionIndexSource.Should().NotContain("GetEntityWithSessionId");
+
+        var manaIndexSource = GetGeneratedSourceBySuffix(feature.Result, "ManaEntityIndices.g.cs");
+        manaIndexSource.Should().Contain("GetEntitiesWithMana(this MainContext context, int Value)");
+        manaIndexSource.Should().NotContain("GetEntitiesWithManaValue");
     }
 
     [Fact]

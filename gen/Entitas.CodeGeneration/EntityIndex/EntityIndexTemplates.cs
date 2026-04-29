@@ -141,14 +141,19 @@ ${getIndices}
         var getIndicesBuilder = new System.Text.StringBuilder();
         var indexConstantsType = contextData.ContextName + componentData.GetScopedComponentName() + "EntityIndices";
         var componentHandle = ComponentTemplates.GetComponentHandleExpression(contextData, componentData);
+        var hasMultipleIndices = componentData.GetEntityIndexCount() > 1;
 
         foreach (var memberData in componentData.Members)
         {
             if (!memberData.IsEntityIndex)
                 continue;
 
-            var indexName = componentData.FullComponentName + memberData.Name.ToUpperFirst();
-            var apiIndexName = componentData.GetScopedComponentName() + memberData.Name.ToUpperFirst();
+            var indexName = hasMultipleIndices
+                ? componentData.FullComponentName + memberData.Name.ToUpperFirst()
+                : componentData.FullComponentName;
+            var apiIndexName = hasMultipleIndices
+                ? componentData.GetScopedComponentName() + memberData.Name.ToUpperFirst()
+                : componentData.GetScopedComponentName();
 
             indexConstantsBuilder.AppendLine(IndexConstantTemplate.Replace("${IndexName}", indexName));
             indexRegistrationsBuilder.AppendLine(ComponentIndexRegistrationTemplate
