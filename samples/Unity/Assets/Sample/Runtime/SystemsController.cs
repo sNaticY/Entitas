@@ -43,7 +43,7 @@ public class SystemsController : MonoBehaviour
 
     void Update()
     {
-        _gameContext.GetGroup(GameMatcher.MyString()).GetSingleEntity()
+        _gameContext.GetGroup(_gameContext.Matcher.MyString()).GetSingleEntity()
             .ReplaceMyString(Random.value.ToString());
 
         _systems.Execute();

@@ -24,7 +24,17 @@ namespace Entitas.Generators.IntegrationTests
         [Fact]
         public void GeneratesNamedMatcher()
         {
-            var matcher = MainMatcher.MyFeatureUser();
+            var matcher = MainMatcher.Instance.User();
+            matcher.Should().BeAssignableTo<IMatcher<MainEntity>>();
+        }
+
+        [Fact]
+        public void ExposesMatcherFromContext()
+        {
+            var context = new MainContext();
+
+            var matcher = context.Matcher.User();
+
             matcher.Should().BeAssignableTo<IMatcher<MainEntity>>();
         }
     }

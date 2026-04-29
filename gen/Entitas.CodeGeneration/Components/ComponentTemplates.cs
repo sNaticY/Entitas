@@ -297,17 +297,17 @@ ${memberAssignmentList}
     }
 
     const string ComponentMatcherApiTemplate =
-        @"public sealed partial class ${MatcherType}
+        @"public static class ${MatcherExtensionsType}
 {
-    static Entitas.IMatcher<${EntityType}> _matcher${ComponentName};
+    static global::Entitas.IMatcher<${EntityType}> _matcher${ComponentName};
 
-    public static Entitas.IMatcher<${EntityType}> ${ComponentName}()
+    public static global::Entitas.IMatcher<${EntityType}> ${ComponentName}(this ${MatcherType} matcher)
     {
         if (_matcher${ComponentName} == null)
         {
-            var matcher = (Entitas.Matcher<${EntityType}>)Entitas.Matcher<${EntityType}>.AllOf(${Index});
-            matcher.ComponentNames = ${componentNames};
-            _matcher${ComponentName} = matcher;
+            var generatedMatcher = (global::Entitas.Matcher<${EntityType}>)global::Entitas.Matcher<${EntityType}>.AllOf(${Index});
+            generatedMatcher.ComponentNames = ${componentNames};
+            _matcher${ComponentName} = generatedMatcher;
         }
 
         return _matcher${ComponentName};
@@ -321,11 +321,12 @@ ${memberAssignmentList}
     {
         var entityType = contextData.EntityTypeName;
         var matcherType = contextData.MatcherTypeName;
-        var componentName = componentData.GetComponentName();
+        var componentName = componentData.GetScopedComponentName();
         var componentIndex = componentData.GetComponentIndex(contextData);
         var componentNames = $"{contextData.ContextName}{ComponentGenerationHelper.ComponentsLookupName}.componentNames";
 
         return ComponentMatcherApiTemplate
+            .Replace("${MatcherExtensionsType}", contextData.ContextName + componentName + "MatcherExtensions")
             .Replace("${MatcherType}", matcherType)
             .Replace("${ComponentName}", componentName)
             .Replace("${Index}", componentIndex)
@@ -334,25 +335,11 @@ ${memberAssignmentList}
     }
 
     const string FeatureOwnedComponentMatcherApiTemplate =
-        @"public static partial class ${MatcherType}
+        @"public static class ${MatcherExtensionsType}
 {
-${Members}
-}
-";
+    static global::Entitas.IMatcher<${EntityType}> _matcher${ComponentName};
 
-    public static string GetFeatureOwnedComponentMatcherDeclarationSource(
-        in ContextData contextData,
-        string assemblyName)
-    {
-        return FeatureOwnedComponentMatcherApiTemplate
-            .Replace("${MatcherType}", contextData.ContextName + assemblyName + "Matcher")
-            .Replace("${Members}", string.Empty);
-    }
-
-    const string FeatureOwnedComponentMatcherMemberTemplate =
-        @"    static global::Entitas.IMatcher<${EntityType}> _matcher${ComponentName};
-
-    public static global::Entitas.IMatcher<${EntityType}> ${ComponentName}()
+    public static global::Entitas.IMatcher<${EntityType}> ${ComponentName}(this ${MatcherType} matcher)
     {
         if (_matcher${ComponentName} == null)
         {
@@ -361,25 +348,18 @@ ${Members}
 
         return _matcher${ComponentName};
     }
+}
 ";
 
     public static string GetFeatureOwnedComponentMatcherApiSource(
-        in ContextData contextData,
-        string assemblyName,
-        in ComponentData componentData)
-    {
-        return FeatureOwnedComponentMatcherApiTemplate
-            .Replace("${MatcherType}", contextData.ContextName + assemblyName + "Matcher")
-            .Replace("${Members}", GetFeatureOwnedComponentMatcherMemberSource(contextData, componentData));
-    }
-
-    static string GetFeatureOwnedComponentMatcherMemberSource(
         in ContextData contextData,
         in ComponentData componentData)
     {
         var componentName = componentData.GetScopedComponentName();
 
-        return FeatureOwnedComponentMatcherMemberTemplate
+        return FeatureOwnedComponentMatcherApiTemplate
+            .Replace("${MatcherExtensionsType}", contextData.ContextName + componentName + "MatcherExtensions")
+            .Replace("${MatcherType}", contextData.MatcherTypeName)
             .Replace("${ComponentName}", componentName)
             .Replace("${Handle}", GetGlobalComponentHandleExpression(contextData, componentData))
             .Replace("${EntityType}", contextData.EntityTypeName);

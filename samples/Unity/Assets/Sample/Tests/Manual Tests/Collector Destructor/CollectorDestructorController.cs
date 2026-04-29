@@ -12,7 +12,7 @@ public class CollectorDestructorController : MonoBehaviour
     {
         _gameContext = SampleContexts.Create().GetGame();
         _gameContext.CreateContextObserver();
-        _gameContext.GetGroup(GameMatcher.Test()).CreateCollector();
+        _gameContext.GetGroup(_gameContext.Matcher.Test()).CreateCollector();
         _initialEntity = _gameContext.CreateEntity();
         _initialEntity.SetTest(true);
         _initialEntity.Destroy();

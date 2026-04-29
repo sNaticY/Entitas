@@ -19,10 +19,10 @@ public class ComponentsController : MonoBehaviour
 
     void CreateTestGroups(GameContext context)
     {
-        context.GetGroup(GameMatcher.MyVector3());
-        context.GetGroup(GameMatcher.MyGameObject());
-        context.GetGroup(GameMatcher.AllOf(GameMatcher.MyGameObject(), GameMatcher.MyVector3()));
-        context.GetGroup(GameMatcher.AllOf(GameMatcher.MyGameObject(), GameMatcher.MyVector3()));
+        context.GetGroup(context.Matcher.MyVector3());
+        context.GetGroup(context.Matcher.MyGameObject());
+        context.GetGroup(GameMatcher.AllOf(context.Matcher.MyGameObject(), context.Matcher.MyVector3()));
+        context.GetGroup(GameMatcher.AllOf(context.Matcher.MyGameObject(), context.Matcher.MyVector3()));
     }
 
     void CreateTestEntities(GameContext context)

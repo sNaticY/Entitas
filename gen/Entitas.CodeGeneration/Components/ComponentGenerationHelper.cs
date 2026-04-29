@@ -173,19 +173,12 @@ public static class ComponentGenerationHelper
         if (!options.ComponentMatcherGenerationEnabled || componentsData.IsDefaultOrEmpty)
             return;
 
-        var matcherNamespace = GetCommonNamespace(componentsData);
-        var matcherTypeName = contextData.ContextName + options.AssemblyName + "Matcher";
-        var matcherDeclarationSource = ComponentTemplates.GetFeatureOwnedComponentMatcherDeclarationSource(contextData, options.AssemblyName);
-        spc.AddSource(
-            $"{matcherTypeName.NamespacedHintName(matcherNamespace)}.g.cs",
-            SourceText.From(matcherDeclarationSource.WrapInNamespace(matcherNamespace), Encoding.UTF8));
-
         foreach (var componentData in componentsData)
         {
-            var matcherSource = ComponentTemplates.GetFeatureOwnedComponentMatcherApiSource(contextData, options.AssemblyName, componentData);
-            var matcherFileName = (matcherTypeName + "." + componentData.GetScopedComponentName())
-                .NamespacedHintName(matcherNamespace);
-            spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource.WrapInNamespace(matcherNamespace), Encoding.UTF8));
+            var matcherSource = ComponentTemplates.GetFeatureOwnedComponentMatcherApiSource(contextData, componentData);
+            var matcherFileName = (contextData.ContextName + componentData.GetScopedComponentName() + "MatcherExtensions")
+                .NamespacedHintName(componentData.Namespace);
+            spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
         }
     }
 
@@ -198,8 +191,9 @@ public static class ComponentGenerationHelper
             return;
 
         var matcherSource = ComponentTemplates.GetComponentMatcherApiSource(contextData, componentData);
-        var matcherFileName = contextData.ContextName + componentData.FullComponentName + "Matcher";
-        spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource, Encoding.UTF8));
+        var matcherFileName = (contextData.ContextName + componentData.GetScopedComponentName() + "MatcherExtensions")
+            .NamespacedHintName(componentData.Namespace);
+        spc.AddSource($"{matcherFileName}.g.cs", SourceText.From(matcherSource.WrapInNamespace(componentData.Namespace), Encoding.UTF8));
     }
     
     // Unique components are accessible directly from Context
@@ -226,30 +220,6 @@ public static class ComponentGenerationHelper
         return hintName.NamespacedHintName(componentData.Namespace);
     }
 
-    static string? GetCommonNamespace(ImmutableArray<ComponentData> componentsData)
-    {
-        string? commonNamespace = null;
-        var hasNamespace = false;
-
-        foreach (var componentData in componentsData)
-        {
-            if (componentData.Namespace is null)
-                return null;
-
-            if (!hasNamespace)
-            {
-                commonNamespace = componentData.Namespace;
-                hasNamespace = true;
-                continue;
-            }
-
-            if (!string.Equals(commonNamespace, componentData.Namespace, StringComparison.Ordinal))
-                return null;
-        }
-
-        return commonNamespace;
-    }
-    
     // New components can be generated on the fly (like events)
     public static void GenerateExtraComponent(SourceProductionContext spc, 
         in ComponentData componentData)

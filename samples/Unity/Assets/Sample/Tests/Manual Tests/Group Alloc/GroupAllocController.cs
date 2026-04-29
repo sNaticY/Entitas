@@ -16,7 +16,7 @@ public class GroupAllocController : MonoBehaviour
     {
         _gameContext = SampleContexts.Create().GetGame();
         _gameContext.CreateContextObserver();
-        _group = _gameContext.GetGroup(GameMatcher.MyInt());
+        _group = _gameContext.GetGroup(_gameContext.Matcher.MyInt());
     }
 
     void Update()

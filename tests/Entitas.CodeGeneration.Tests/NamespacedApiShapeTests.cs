@@ -66,15 +66,17 @@ namespace MyGame
     }
 
     [Fact]
-    public void KeepsSharedMatcherArtifactNamespaceSafe()
+    public void EmitsMatcherExtensionInsideComponentNamespace()
     {
         var result = CodeGenerationTestHelper.RunGenerator(Source, "My.Gameplay");
 
-        GetGeneratedFileNames(result).Should().Contain("MainMyGameUserMatcher.g.cs");
+        GetGeneratedFileNames(result).Should().Contain("MyGame.MainUserMatcherExtensions.g.cs");
 
-        var source = GetGeneratedSource(result, "MainMyGameUserMatcher.g.cs");
-        source.Should().Contain("public static Entitas.IMatcher<MainEntity> MyGameUser()");
-        source.Should().NotContain("public static Entitas.IMatcher<MainEntity> User()");
+        var source = GetGeneratedSource(result, "MyGame.MainUserMatcherExtensions.g.cs");
+        source.Should().Contain("namespace MyGame");
+        source.Should().Contain("public static class MainUserMatcherExtensions");
+        source.Should().Contain("public static global::Entitas.IMatcher<MainEntity> User(this MainMatcher matcher)");
+        source.Should().NotContain("MyGameUser(");
     }
 
     static string[] GetGeneratedFileNames(Microsoft.CodeAnalysis.GeneratorDriverRunResult result) =>

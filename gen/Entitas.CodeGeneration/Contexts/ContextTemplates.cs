@@ -18,6 +18,8 @@ public static class ${ContextName}ContextsExtension
     public const string ContextTemplate =
         @"public sealed partial class ${ContextType} : global::Entitas.Context<${EntityType}>
 {
+${MatcherProperty}
+
     public static global::Entitas.ContextSchemaBuilder CreateSchemaBuilder()
     {
         return new global::Entitas.ContextSchemaBuilder(""${ContextName}"");
@@ -62,11 +64,25 @@ public static class ${ContextName}ContextsExtension
     }
 }
 ";
+    public const string ContextMatcherPropertyTemplate =
+        @"    public ${MatcherType} Matcher => ${MatcherType}.Instance;";
+
     
     public const string ContextMatcherTemplate =
         @"public sealed partial class ${MatcherType} 
 {
-    public static global::Entitas.IAllOfMatcher<${EntityType}> AllOf(params int[] indices) 
+    public static readonly ${MatcherType} Instance = new ${MatcherType}();
+
+    ${MatcherType}()
+    {
+    }
+
+${StaticMatcherMembers}
+}
+";
+
+    public const string ContextMatcherStaticMembersTemplate =
+        @"    public static global::Entitas.IAllOfMatcher<${EntityType}> AllOf(params int[] indices) 
     {
         return global::Entitas.Matcher<${EntityType}>.AllOf(indices);
     }
@@ -85,7 +101,6 @@ public static class ${ContextName}ContextsExtension
     {
         return global::Entitas.Matcher<${EntityType}>.AnyOf(matchers);
     }
-}
 ";
     
     public const string ContextEntityTemplate =

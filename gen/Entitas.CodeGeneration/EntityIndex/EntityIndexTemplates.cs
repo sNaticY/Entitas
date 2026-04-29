@@ -37,7 +37,7 @@ ${getIndices}
     const string AddIndexTemplate =
         @"        ${contextName}.AddEntityIndex(new ${IndexType}<${ContextName}Entity, ${KeyType}>(
             ${ContextName}EntityIndices.${IndexName},
-            ${contextName}.GetGroup(${ContextName}Matcher.${Matcher}()),
+            ${contextName}.GetGroup(global::Entitas.Matcher<${ContextName}Entity>.AllOf(${ComponentHandle})),
             (e, c) => ((${ComponentType})c).${MemberName}));";
     
     public static string GetAddIndexSource(
@@ -49,7 +49,7 @@ ${getIndices}
         var contextName = contextData.ContextName;
         var contextNameLower = contextName.ToLowerFirst();
         var indexType = memberData.GetEntityIndexType();
-        var matcher = componentData.GetComponentName();
+        var componentHandle = ComponentTemplates.GetComponentHandleExpression(contextData, componentData);
         
         return AddIndexTemplate
             .Replace("${ContextName}", contextName)
@@ -59,7 +59,7 @@ ${getIndices}
             .Replace("${MemberName}", memberData.Name)
             .Replace("${KeyType}", memberData.Type)
             .Replace("${IndexType}", indexType)
-            .Replace("${Matcher}", matcher);
+            .Replace("${ComponentHandle}", componentHandle);
     }
 
     // const string ADD_CUSTOM_INDEX_TEMPLATE =

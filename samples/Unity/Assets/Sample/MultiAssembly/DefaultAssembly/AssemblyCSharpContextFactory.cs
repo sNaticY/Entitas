@@ -7,10 +7,10 @@ public static class AssemblyCSharpContextFactory
     public static ContextSchema CreateSchema()
     {
         var builder = SharedContext.CreateSchemaBuilder()
-            .AddPlayerAssembly()
-            .AddHealthAssembly();
+            .AddEntitasSampleMultiAssemblyFeatureASchema()
+            .AddEntitasSampleMultiAssemblyFeatureBSchema();
 
-        builder = SharedAssemblyCSharpAssemblySchemaExtensions.AddAssemblyCSharpAssembly(builder);
+        builder = SharedAssemblyCSharpSchemaExtensions.AddAssemblyCSharpSchema(builder);
         return builder.Build();
     }
 

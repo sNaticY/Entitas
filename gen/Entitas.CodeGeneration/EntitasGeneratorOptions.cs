@@ -229,18 +229,8 @@ public readonly struct EntitasGeneratorOptions : IEquatable<EntitasGeneratorOpti
         return bool.TryParse(value, out var parsed) ? parsed : defaultValue;
     }
 
-    static string GetAssemblyName(Compilation compilation)
-    {
-        var configuredName = compilation.Assembly
-            .GetAttributes()
-            .FirstOrDefault(static attribute =>
-                attribute.AttributeClass?.ToDisplayString() == "Entitas.CodeGeneration.Attributes.EntitasAssemblyAttribute")
-            ?.ConstructorArguments.FirstOrDefault().Value as string;
-
-        return SanitizeIdentifierName(configuredName)
-            ?? SanitizeIdentifierName(compilation.AssemblyName)
-            ?? "Assembly";
-    }
+    static string GetAssemblyName(Compilation compilation) =>
+        SanitizeIdentifierName(compilation.AssemblyName) ?? "Assembly";
 
     static string? SanitizeIdentifierName(string? value)
     {

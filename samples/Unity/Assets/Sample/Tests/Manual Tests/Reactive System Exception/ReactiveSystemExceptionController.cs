@@ -31,7 +31,7 @@ public class ExceptionReactiveSystem : ReactiveSystem<GameEntity>
     public ExceptionReactiveSystem(GameContext context) : base(context) { }
 
     protected override ICollector<GameEntity> GetTrigger(IContext<GameEntity> context) =>
-        context.CreateCollector(GameMatcher.MyString());
+        context.CreateCollector(GameMatcher.Instance.MyString());
 
     protected override bool Filter(GameEntity entity) => true;
 

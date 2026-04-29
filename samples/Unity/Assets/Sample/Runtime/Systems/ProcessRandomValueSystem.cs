@@ -6,7 +6,7 @@ public class ProcessRandomValueSystem : ReactiveSystem<GameEntity>
     public ProcessRandomValueSystem(GameContext context) : base(context) { }
 
     protected override ICollector<GameEntity> GetTrigger(IContext<GameEntity> context) =>
-        context.CreateCollector(GameMatcher.MyFloat());
+        context.CreateCollector(GameMatcher.Instance.MyFloat());
 
     protected override bool Filter(GameEntity entity) => true;
 

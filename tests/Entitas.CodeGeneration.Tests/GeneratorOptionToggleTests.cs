@@ -57,6 +57,17 @@ namespace MyGame
         GetGeneratedFileNames(result).Should().NotContain(fileName);
     }
 
+    [Fact]
+    public void KeepsMatcherReceiverWhenOnlyContextMatcherHelpersAreDisabled()
+    {
+        var result = RunWithOption("entitas_generator.context.matcher", false);
+
+        GetGeneratedFileNames(result).Should().Contain("MainMatcherReceiver.g.cs");
+        var source = GetGeneratedSource(result, "MainMatcherReceiver.g.cs");
+        source.Should().Contain("public static readonly MainMatcher Instance = new MainMatcher();");
+        source.Should().NotContain("public static global::Entitas.IAllOfMatcher<MainEntity> AllOf");
+    }
+
     [Theory]
     [InlineData("entitas_generator.component.component_index")]
     [InlineData("entitas_generator.context.component_index")]
@@ -110,7 +121,7 @@ namespace MyGame
     {
         var result = RunWithOption("entitas_generator.component.matcher", false);
 
-        GetGeneratedFileNames(result).Should().NotContain("MainMyGameHealthMatcher.g.cs");
+        GetGeneratedFileNames(result).Should().NotContain("MyGame.MainHealthMatcherExtensions.g.cs");
     }
 
     static Microsoft.CodeAnalysis.GeneratorDriverRunResult RunWithOption(string optionKey, bool value) =>

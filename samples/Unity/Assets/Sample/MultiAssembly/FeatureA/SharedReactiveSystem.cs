@@ -12,7 +12,7 @@ namespace Sample.MultiAssembly.FeatureA
 
         protected override ICollector<SharedEntity> GetTrigger(IContext<SharedEntity> context)
         {
-            return context.CreateCollector(SharedPlayerMatcher.Level().Added());
+            return context.CreateCollector(SharedMatcher.Instance.Level().Added());
         }
 
         protected override bool Filter(SharedEntity entity)

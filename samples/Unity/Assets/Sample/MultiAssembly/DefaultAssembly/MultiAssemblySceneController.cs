@@ -28,8 +28,8 @@ public sealed class MultiAssemblySceneController : MonoBehaviour, global::IAnyMa
         _contexts = AssemblyCSharpContextFactory.Create(schema);
         _sharedContext = _contexts.GetShared();
 
-        _manaGroup = _sharedContext.GetGroup(SharedAssemblyCSharpMatcher.Mana());
-        _manaCollector = _sharedContext.CreateCollector(SharedAssemblyCSharpMatcher.Mana().Added());
+        _manaGroup = _sharedContext.GetGroup(_sharedContext.Matcher.Mana());
+        _manaCollector = _sharedContext.CreateCollector(_sharedContext.Matcher.Mana().Added());
         _systems = new Systems()
             .Add(schema.CreateEventSystems(_contexts))
             .Add(new SharedReactiveSystem(_sharedContext))

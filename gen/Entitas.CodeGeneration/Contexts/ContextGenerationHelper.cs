@@ -94,10 +94,12 @@ public static class ContextGenerationHelper
         foreach (var contextData in contextsData)
         {
             if (options.ContextGenerationEnabled)
-                GenerateContext(spc, contextData);
+                GenerateContext(spc, contextData, options);
 
             if (options.ContextMatcherGenerationEnabled)
-                GenerateContextMatcher(spc, contextData);
+                GenerateContextMatcher(spc, contextData, includeStaticMembers: true, dataHintName: contextData.MatcherTypeName);
+            else if (options.ComponentMatcherGenerationEnabled)
+                GenerateContextMatcher(spc, contextData, includeStaticMembers: false, dataHintName: contextData.MatcherTypeName + "Receiver");
 
             if (options.ContextEntityGenerationEnabled)
                 GenerateContextEntity(spc, contextData);
@@ -107,24 +109,40 @@ public static class ContextGenerationHelper
         }
     }
     
-    public static void GenerateContext(SourceProductionContext spc, ContextData data)
+    public static void GenerateContext(SourceProductionContext spc, ContextData data, in EntitasGeneratorOptions options)
     {
+        var matcherProperty = options.ContextMatcherGenerationEnabled || options.ComponentMatcherGenerationEnabled
+            ? ContextTemplates.ContextMatcherPropertyTemplate
+                .Replace("${MatcherType}", data.MatcherTypeName)
+            : string.Empty;
+
         var generatedSource = ContextTemplates.ContextTemplate
             .Replace("${ContextName}", data.ContextName)
             .Replace("${ContextType}", data.ContextTypeName)
             .Replace("${EntityType}", data.EntityTypeName)
+            .Replace("${MatcherProperty}", matcherProperty)
             .Replace("${Lookup}", data.ContextName + ComponentGenerationHelper.ComponentsLookupName);
         
         spc.AddSource(data.ContextTypeName + ".g.cs", SourceText.From(generatedSource, Encoding.UTF8));
     }
 
-    public static void GenerateContextMatcher(SourceProductionContext spc, ContextData data)
+    public static void GenerateContextMatcher(
+        SourceProductionContext spc,
+        ContextData data,
+        bool includeStaticMembers,
+        string dataHintName)
     {
+        var staticMembers = includeStaticMembers
+            ? ContextTemplates.ContextMatcherStaticMembersTemplate
+                .Replace("${EntityType}", data.EntityTypeName)
+            : string.Empty;
+
         var generatedSource = ContextTemplates.ContextMatcherTemplate
             .Replace("${MatcherType}", data.MatcherTypeName)
+            .Replace("${StaticMatcherMembers}", staticMembers)
             .Replace("${EntityType}", data.EntityTypeName);
-            
-        spc.AddSource(data.MatcherTypeName + ".g.cs", SourceText.From(generatedSource, Encoding.UTF8));
+             
+        spc.AddSource(dataHintName + ".g.cs", SourceText.From(generatedSource, Encoding.UTF8));
     }
 
     public static void GenerateContextEntity(SourceProductionContext spc, ContextData data)

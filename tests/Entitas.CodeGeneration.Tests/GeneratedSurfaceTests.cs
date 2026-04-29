@@ -60,11 +60,13 @@ namespace MyGame
             "MainEntityIndices.g.cs",
             "MainCleanupSystems.g.cs",
             "MainEventSystems.g.cs",
-            "MainMyGameHealthMatcher.g.cs",
-            "MainMyGameUniqueFlagMatcher.g.cs",
-            "MainMyGameCleanupMeMatcher.g.cs",
-            "MainMyGameReactiveMatcher.g.cs",
+            "MyGame.MainHealthMatcherExtensions.g.cs",
+            "MyGame.MainUniqueFlagMatcherExtensions.g.cs",
+            "MyGame.MainCleanupMeMatcherExtensions.g.cs",
+            "MyGame.MainReactiveMatcherExtensions.g.cs",
         });
+
+        GetGeneratedSource(result, "MainContext.g.cs").Should().Contain("public MainMatcher Matcher => MainMatcher.Instance;");
 
         GetGeneratedFileNames(result).Should().Contain(fileName =>
             fileName.EndsWith("HealthComponent.g.cs", StringComparison.Ordinal));
@@ -116,10 +118,10 @@ namespace MyGame
     {
         var result = RunGenerator();
 
-        GetGeneratedSource(result, "MainMyGameHealthMatcher.g.cs").Should().Contain(
-            "Entitas.Matcher<MainEntity>.AllOf(MainComponentsLookup.MyGameHealth)");
-        GetGeneratedSource(result, "MainMyGameHealthMatcher.g.cs").Should().Contain(
-            "matcher.ComponentNames = MainComponentsLookup.componentNames;");
+        GetGeneratedSource(result, "MyGame.MainHealthMatcherExtensions.g.cs").Should().Contain(
+            "global::Entitas.Matcher<MainEntity>.AllOf(MainComponentsLookup.MyGameHealth)");
+        GetGeneratedSource(result, "MyGame.MainHealthMatcherExtensions.g.cs").Should().Contain(
+            "generatedMatcher.ComponentNames = MainComponentsLookup.componentNames;");
         GetGeneratedSource(result, "MainComponentsLookup.g.cs").Should().Contain("public const int MyGameHealth = ");
         GetGeneratedSource(result, "MainComponentsLookup.g.cs").Should().Contain(
             "global::MyGame.MainHealthComponentHandle.Handle.AssignIndex(MyGameHealth);");
