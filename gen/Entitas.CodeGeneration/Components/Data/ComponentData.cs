@@ -28,7 +28,7 @@ public readonly struct ComponentData : IEquatable<ComponentData>
     public ImmutableArray<MemberData> Members { get; }
     public bool IsGenerated { get; }
 
-    public bool HasEvents => Events != null && Events.Length > 0;
+    public bool HasEvents => !Events.IsDefaultOrEmpty;
     
     public ComponentData(INamedTypeSymbol type)
     {

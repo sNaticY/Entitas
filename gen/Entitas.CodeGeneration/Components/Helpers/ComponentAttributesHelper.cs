@@ -1,16 +1,18 @@
 using System.Collections.Immutable;
 using Entitas.CodeGeneration.Components.Data;
 using Entitas.CodeGeneration.Contexts;
+using Entitas.CodeGeneration.Extensions;
 using Microsoft.CodeAnalysis;
 
 namespace Entitas.CodeGeneration.Components.Helpers;
 
 public static class ComponentAttributesHelper
 {
-    readonly static string? EventAttributeTypeName = "Entitas.CodeGeneration.Attributes.EventAttribute";
-    readonly static string? UniqueAttributeTypeName = "Entitas.CodeGeneration.Attributes.UniqueAttribute";
-    readonly static string? FlagPrefixAttributeTypeName = "Entitas.CodeGeneration.Attributes.FlagPrefixAttribute";
-    readonly static string? CleanupAttributeTypeName = "Entitas.CodeGeneration.Attributes.CleanupAttribute";
+    const string AttributeSuffix = "Attribute";
+    const string EventAttributeTypeName = "Entitas.CodeGeneration.Attributes.EventAttribute";
+    const string UniqueAttributeTypeName = "Entitas.CodeGeneration.Attributes.UniqueAttribute";
+    const string FlagPrefixAttributeTypeName = "Entitas.CodeGeneration.Attributes.FlagPrefixAttribute";
+    const string CleanupAttributeTypeName = "Entitas.CodeGeneration.Attributes.CleanupAttribute";
 
     public static void ParseComponentAttributes(INamedTypeSymbol type, 
         out ImmutableArray<string> contextNames,
@@ -45,7 +47,7 @@ public static class ComponentAttributesHelper
                 hasCleanupAttribute = true;
                 cleanupMode = GetCleanupMode(attribute);
             }
-            if (TryGetEventData(attribute, attributeName, out var eventData))
+            else if (TryGetEventData(attribute, attributeName, out var eventData))
             {
                 eventsDataBuilder.Add(eventData);
             }
@@ -93,14 +95,12 @@ public static class ComponentAttributesHelper
         // Derived usage: [Game], where GameAttribute : ContextAttribute
         if (attrClass.BaseType?.ToDisplayString() == ContextGenerationHelper.ContextAttributeTypeName)
         {
-            var attrName = attrClass.Name; // e.g., "GameAttribute"
-            if (attrName.EndsWith("Attribute"))
-            {
-                var contextName = attrName.Substring(0, attrName.Length - "Attribute".Length);
-                contextNameResult = contextName;
-                return true;
-            }
-            return false;
+            var attrName = attrClass.Name;
+            if (!attrName.EndsWith(AttributeSuffix))
+                return false;
+
+            contextNameResult = attrName.RemoveLast(AttributeSuffix);
+            return true;
         }
 
         return false;

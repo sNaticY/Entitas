@@ -266,9 +266,8 @@ public static class EventsGenerationHelper
 
     static string GenerateAddSystem(string contextName, (ComponentData component, EventData eventData) data)
     {
-        var eventTypeName = string.IsNullOrWhiteSpace(data.component.Namespace)
-            ? data.component.EventName(contextName, data.eventData)
-            : data.component.Namespace + "." + data.component.EventName(contextName, data.eventData);
+        var eventTypeName = data.component.EventName(contextName, data.eventData)
+            .Qualify(data.component.Namespace);
 
         return EventsTemplates.EventSystemAddTemplate
             .Replace("${priority}", data.eventData.Priority.ToString())

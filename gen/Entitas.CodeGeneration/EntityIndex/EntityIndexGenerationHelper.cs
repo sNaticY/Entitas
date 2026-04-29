@@ -15,8 +15,8 @@ public static class EntityIndexGenerationHelper
     public const string PrimaryEntityIndexTypeName = "Entitas.PrimaryEntityIndex";
     public const string EntityIndexTypeName = "Entitas.EntityIndex";
 
-    const string? EntityIndexAttributeName = "EntityIndexAttribute";
-    const string? PrimaryEntityIndexAttributeName = "PrimaryEntityIndexAttribute";
+    const string EntityIndexAttributeName = "EntityIndexAttribute";
+    const string PrimaryEntityIndexAttributeName = "PrimaryEntityIndexAttribute";
 
     public static bool TryFindEntityIndexType(ISymbol symbol, out EntityIndexType entityIndexType)
     {

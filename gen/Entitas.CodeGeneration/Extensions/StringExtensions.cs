@@ -25,13 +25,14 @@ public static class StringExtensions
         return name;
     }
 
-    public static string RemoveLast(this string str, string pattern)
-    {
-        if (str.EndsWith(pattern))
-            return str.Substring(0, str.Length - pattern.Length);
+    public static bool HasSuffix(this string str, string suffix) =>
+        str.EndsWith(suffix, System.StringComparison.Ordinal);
 
-        return str;
-    }
+    public static string AddSuffix(this string str, string suffix) =>
+        str.HasSuffix(suffix) ? str : str + suffix;
+
+    public static string RemoveLast(this string str, string pattern) =>
+        str.HasSuffix(pattern) ? str.Substring(0, str.Length - pattern.Length) : str;
 
     public static string WrapInNamespace(this string content, string? namespaceName)
     {
@@ -49,4 +50,12 @@ public static class StringExtensions
         string.IsNullOrWhiteSpace(namespaceName)
             ? hintName
             : $"{namespaceName}.{hintName}";
+
+    public static string Qualify(this string typeName, string? namespaceName, bool global = false)
+    {
+        if (string.IsNullOrWhiteSpace(namespaceName))
+            return typeName;
+
+        return global ? $"global::{namespaceName}.{typeName}" : $"{namespaceName}.{typeName}";
+    }
 }

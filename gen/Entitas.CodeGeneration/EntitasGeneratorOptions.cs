@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Entitas.CodeGeneration;
 
-public readonly struct EntitasGeneratorOptions
+public readonly struct EntitasGeneratorOptions : IEquatable<EntitasGeneratorOptions>
 {
     static class AnalyzerConfigKeys
     {
@@ -134,6 +134,61 @@ public readonly struct EntitasGeneratorOptions
         VisualDebuggingGenerationEnabled
         && assemblyName is not null
         && VisualDebuggingAssemblyNames.Contains(assemblyName);
+
+    public bool Equals(EntitasGeneratorOptions other) =>
+        CleanupGenerationEnabled == other.CleanupGenerationEnabled &&
+        ComponentComponentIndexGenerationEnabled == other.ComponentComponentIndexGenerationEnabled &&
+        ComponentContextExtensionGenerationEnabled == other.ComponentContextExtensionGenerationEnabled &&
+        ComponentEntityExtensionGenerationEnabled == other.ComponentEntityExtensionGenerationEnabled &&
+        ComponentEntityIndexGenerationEnabled == other.ComponentEntityIndexGenerationEnabled &&
+        ComponentEventsGenerationEnabled == other.ComponentEventsGenerationEnabled &&
+        ComponentEventSystemsGenerationEnabled == other.ComponentEventSystemsGenerationEnabled &&
+        ComponentMatcherGenerationEnabled == other.ComponentMatcherGenerationEnabled &&
+        ContextComponentIndexGenerationEnabled == other.ContextComponentIndexGenerationEnabled &&
+        ContextGenerationEnabled == other.ContextGenerationEnabled &&
+        ContextEntityGenerationEnabled == other.ContextEntityGenerationEnabled &&
+        ContextMatcherGenerationEnabled == other.ContextMatcherGenerationEnabled &&
+        VisualDebuggingGenerationEnabled == other.VisualDebuggingGenerationEnabled &&
+        string.Equals(AssemblyName, other.AssemblyName, StringComparison.Ordinal) &&
+        AssemblyNamesEqual(AssemblyNames, other.AssemblyNames) &&
+        VisualDebuggingAssemblyNames.SetEquals(other.VisualDebuggingAssemblyNames);
+
+    public override bool Equals(object? obj) => obj is EntitasGeneratorOptions other && Equals(other);
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            int hash = 17;
+            hash = hash * 31 + (AssemblyName?.GetHashCode() ?? 0);
+            hash = hash * 31 + (AssemblyNames?.Count ?? -1);
+            hash = hash * 31 + VisualDebuggingAssemblyNames.Count;
+            hash = hash * 31 + CleanupGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ComponentComponentIndexGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ComponentContextExtensionGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ComponentEntityExtensionGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ComponentEntityIndexGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ComponentEventsGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ComponentEventSystemsGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ComponentMatcherGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ContextComponentIndexGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ContextGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ContextEntityGenerationEnabled.GetHashCode();
+            hash = hash * 31 + ContextMatcherGenerationEnabled.GetHashCode();
+            hash = hash * 31 + VisualDebuggingGenerationEnabled.GetHashCode();
+            return hash;
+        }
+    }
+
+    public static bool operator ==(EntitasGeneratorOptions left, EntitasGeneratorOptions right) => left.Equals(right);
+    public static bool operator !=(EntitasGeneratorOptions left, EntitasGeneratorOptions right) => !left.Equals(right);
+
+    static bool AssemblyNamesEqual(ImmutableHashSet<string>? left, ImmutableHashSet<string>? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return left.SetEquals(right);
+    }
 
     static ImmutableHashSet<string>? GetAssemblyNames(
         AnalyzerConfigOptions options,

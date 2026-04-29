@@ -69,13 +69,8 @@ public sealed class ${FullComponentName} : Entitas.IComponent
 
     public static string GetGlobalComponentHandleExpression(
         in ContextData contextData,
-        in ComponentData componentData)
-    {
-        var expression = GetComponentHandleExpression(contextData, componentData);
-        return componentData.Namespace is null
-            ? expression
-            : "global::" + componentData.Namespace + "." + expression;
-    }
+        in ComponentData componentData) =>
+        GetComponentHandleExpression(contextData, componentData).Qualify(componentData.Namespace, global: true);
 
     static string GetComponentHandleTypeName(
         in ContextData contextData,

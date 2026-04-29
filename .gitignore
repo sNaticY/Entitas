@@ -33,3 +33,5 @@ samples/Unity/Assets/Plugins
 samples/Unity/Assets/Generated
 coverage
 dist
+# Added by code-review-graph
+.code-review-graph/

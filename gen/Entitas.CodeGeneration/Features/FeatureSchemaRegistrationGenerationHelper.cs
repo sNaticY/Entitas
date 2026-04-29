@@ -7,6 +7,7 @@ using Entitas.CodeGeneration.Components.Extensions;
 using Entitas.CodeGeneration.Contexts.Data;
 using Entitas.CodeGeneration.EntityIndex.Extensions;
 using Entitas.CodeGeneration.Events.Extensions;
+using Entitas.CodeGeneration.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
@@ -101,12 +102,8 @@ public static class {{extensionType}}
 
     static void AppendCall(StringBuilder builder, string? namespaceName, string typeName, string methodName)
     {
-        var qualifiedType = string.IsNullOrWhiteSpace(namespaceName)
-            ? typeName
-            : "global::" + namespaceName + "." + typeName;
-
         builder.Append("        builder = ")
-            .Append(qualifiedType)
+            .Append(typeName.Qualify(namespaceName, global: true))
             .Append('.')
             .Append(methodName)
             .AppendLine("(builder);");

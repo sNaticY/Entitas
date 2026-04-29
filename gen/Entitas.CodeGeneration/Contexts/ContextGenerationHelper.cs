@@ -13,11 +13,11 @@ namespace Entitas.CodeGeneration.Contexts;
 public static class ContextGenerationHelper
 {
     public const string DefaultContextName = "Game";
-    
-    public readonly static string? ContextAttributeName = "ContextAttribute";
-    public readonly static string? ContextAttributeTypeName = "Entitas.CodeGeneration.Attributes.ContextAttribute";
 
-    const string AttributeName = "Attribute";
+    public const string ContextAttributeName = "ContextAttribute";
+    public const string ContextAttributeTypeName = "Entitas.CodeGeneration.Attributes.ContextAttribute";
+
+    const string AttributeSuffix = "Attribute";
     
     public static IncrementalValueProvider<ImmutableArray<ContextData>> GetContextsData(IncrementalGeneratorInitializationContext context)
     {
@@ -37,7 +37,7 @@ public static class ContextGenerationHelper
         if (node is not ClassDeclarationSyntax c || c.BaseList == null)
             return false;
 
-        if (!c.Identifier.Text.EndsWith(AttributeName))
+        if (!c.Identifier.Text.EndsWith(AttributeSuffix))
             return false;
         
         foreach (var baseTypeSyntax in c.BaseList.Types)
@@ -82,7 +82,7 @@ public static class ContextGenerationHelper
                 return new ContextData(contextName);
         }
 
-        var fallbackContextName = classSyntax.Identifier.Text.Replace(AttributeName, string.Empty);
+        var fallbackContextName = classSyntax.Identifier.Text.RemoveLast(AttributeSuffix);
         return new ContextData(fallbackContextName);
     }
     

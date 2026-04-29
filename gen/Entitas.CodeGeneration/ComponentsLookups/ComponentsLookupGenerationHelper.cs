@@ -62,10 +62,9 @@ public static class ComponentsLookupGenerationHelper
         {
             var contextName = contextEntry.Key;
             if (!componentsByContextNameLookup.TryGetValue(contextName, out var components)
-                || componentsByContextNameLookup[contextName].IsDefaultOrEmpty)
+                || components.IsDefaultOrEmpty)
             {
-                var emptyComponentsArray = ImmutableArray<ComponentData>.Empty;
-                GenerateComponentsLookup(spc, contextEntry.Value, emptyComponentsArray, options);
+                GenerateComponentsLookup(spc, contextEntry.Value, ImmutableArray<ComponentData>.Empty, options);
             }
         }
     }

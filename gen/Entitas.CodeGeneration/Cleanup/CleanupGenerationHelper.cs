@@ -39,10 +39,7 @@ public static class CleanupGenerationHelper
                     (c.CleanupMode == CleanupMode.DestroyEntity ? "Destroy" : "Remove") +
                     c.GetComponentName() + contextSystemName;
 
-                if (!string.IsNullOrWhiteSpace(c.Namespace))
-                    systemTypeName = "global::" + c.Namespace + "." + systemTypeName;
-
-                return "        Add(new " + systemTypeName + "(contexts));";
+                return "        Add(new " + systemTypeName.Qualify(c.Namespace, global: true) + "(contexts));";
             }));
 
         var componentSource = CleanupTemplates.CleanupSystemsTemplate

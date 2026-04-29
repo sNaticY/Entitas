@@ -7,6 +7,7 @@ using Entitas.CodeGeneration.Contexts;
 using Entitas.CodeGeneration.Contexts.Data;
 using Entitas.CodeGeneration.EntityIndex;
 using Entitas.CodeGeneration.Events;
+using Entitas.CodeGeneration.Extensions;
 using Entitas.CodeGeneration.Features;
 using Entitas.CodeGeneration.VisualDebugging;
 using Microsoft.CodeAnalysis;
@@ -23,8 +24,9 @@ public class EntitasGenerator : IIncrementalGenerator
         var generatorOptions = compilationAndOptions
             .Select(static (input, _) => EntitasGeneratorOptions.From(input.Right, input.Left));
 
-        var shouldRun = compilationAndOptions
-            .Select(static (input, _) => EntitasGeneratorOptions.From(input.Right, input.Left).ShouldRun(input.Left.AssemblyName));
+        var shouldRun = generatorOptions
+            .Combine(context.CompilationProvider)
+            .Select(static (pair, _) => pair.Left.ShouldRun(pair.Right.AssemblyName));
 
         var contextsData = ContextGenerationHelper.GetContextsData(context);
         RegisterContextRootGeneration(context, shouldRun, generatorOptions, contextsData);
@@ -280,7 +282,7 @@ public class EntitasGenerator : IIncrementalGenerator
         VisualDebuggingGenerationHelper.Generate(spc, contextsData);
     }
 
-    readonly struct ContextRootSourceInput
+    readonly struct ContextRootSourceInput : IEquatable<ContextRootSourceInput>
     {
         public readonly bool ShouldRun;
         public readonly EntitasGeneratorOptions Options;
@@ -295,9 +297,28 @@ public class EntitasGenerator : IIncrementalGenerator
             Options = options;
             ContextsData = contextsData;
         }
+
+        public bool Equals(ContextRootSourceInput other) =>
+            ShouldRun == other.ShouldRun &&
+            Options.Equals(other.Options) &&
+            ContextsData.SequenceEqual(other.ContextsData);
+
+        public override bool Equals(object? obj) => obj is ContextRootSourceInput o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ShouldRun.GetHashCode();
+                hash = hash * 31 + Options.GetHashCode();
+                hash = hash * 31 + ContextsData.GetSequenceHashCode();
+                return hash;
+            }
+        }
     }
 
-    readonly struct ContextSharedData
+    readonly struct ContextSharedData : IEquatable<ContextSharedData>
     {
         public readonly ImmutableArray<ContextData> ContextsData;
         public readonly ImmutableArray<ComponentData> ComponentsData;
@@ -312,9 +333,28 @@ public class EntitasGenerator : IIncrementalGenerator
             ComponentsData = componentsData;
             ComponentsByContextNameLookup = componentsByContextNameLookup;
         }
+
+        public bool Equals(ContextSharedData other) =>
+            ContextsData.SequenceEqual(other.ContextsData) &&
+            ComponentsData.SequenceEqual(other.ComponentsData) &&
+            ComponentsByContextNameLookup.DictionaryValueEquals(other.ComponentsByContextNameLookup);
+
+        public override bool Equals(object? obj) => obj is ContextSharedData o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ContextsData.GetSequenceHashCode();
+                hash = hash * 31 + ComponentsData.GetSequenceHashCode();
+                hash = hash * 31 + ComponentsByContextNameLookup.GetDictionaryValueHashCode();
+                return hash;
+            }
+        }
     }
 
-    readonly struct ContextSharedSourceInput
+    readonly struct ContextSharedSourceInput : IEquatable<ContextSharedSourceInput>
     {
         public readonly bool ShouldRun;
         public readonly EntitasGeneratorOptions Options;
@@ -326,9 +366,28 @@ public class EntitasGenerator : IIncrementalGenerator
             Options = options;
             Data = data;
         }
+
+        public bool Equals(ContextSharedSourceInput other) =>
+            ShouldRun == other.ShouldRun &&
+            Options.Equals(other.Options) &&
+            Data.Equals(other.Data);
+
+        public override bool Equals(object? obj) => obj is ContextSharedSourceInput o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ShouldRun.GetHashCode();
+                hash = hash * 31 + Options.GetHashCode();
+                hash = hash * 31 + Data.GetHashCode();
+                return hash;
+            }
+        }
     }
 
-    readonly struct ComponentByContextSource
+    readonly struct ComponentByContextSource : IEquatable<ComponentByContextSource>
     {
         public readonly ContextData ContextData;
         public readonly ComponentData ComponentData;
@@ -343,9 +402,28 @@ public class EntitasGenerator : IIncrementalGenerator
             ComponentData = componentData;
             ContextRootIsLocal = contextRootIsLocal;
         }
+
+        public bool Equals(ComponentByContextSource other) =>
+            ContextData.Equals(other.ContextData) &&
+            ComponentData.Equals(other.ComponentData) &&
+            ContextRootIsLocal == other.ContextRootIsLocal;
+
+        public override bool Equals(object? obj) => obj is ComponentByContextSource o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ContextData.GetHashCode();
+                hash = hash * 31 + ComponentData.GetHashCode();
+                hash = hash * 31 + ContextRootIsLocal.GetHashCode();
+                return hash;
+            }
+        }
     }
 
-    readonly struct ComponentOwnedSourceInput
+    readonly struct ComponentOwnedSourceInput : IEquatable<ComponentOwnedSourceInput>
     {
         public readonly bool ShouldRun;
         public readonly EntitasGeneratorOptions Options;
@@ -360,9 +438,28 @@ public class EntitasGenerator : IIncrementalGenerator
             Options = options;
             ComponentByContext = componentByContext;
         }
+
+        public bool Equals(ComponentOwnedSourceInput other) =>
+            ShouldRun == other.ShouldRun &&
+            Options.Equals(other.Options) &&
+            ComponentByContext.Equals(other.ComponentByContext);
+
+        public override bool Equals(object? obj) => obj is ComponentOwnedSourceInput o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ShouldRun.GetHashCode();
+                hash = hash * 31 + Options.GetHashCode();
+                hash = hash * 31 + ComponentByContext.GetHashCode();
+                return hash;
+            }
+        }
     }
 
-    readonly struct FeatureOwnedMatcherGroup
+    readonly struct FeatureOwnedMatcherGroup : IEquatable<FeatureOwnedMatcherGroup>
     {
         public readonly ContextData ContextData;
         public readonly ImmutableArray<ComponentData> ComponentsData;
@@ -372,9 +469,26 @@ public class EntitasGenerator : IIncrementalGenerator
             ContextData = contextData;
             ComponentsData = componentsData;
         }
+
+        public bool Equals(FeatureOwnedMatcherGroup other) =>
+            ContextData.Equals(other.ContextData) &&
+            ComponentsData.SequenceEqual(other.ComponentsData);
+
+        public override bool Equals(object? obj) => obj is FeatureOwnedMatcherGroup o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ContextData.GetHashCode();
+                hash = hash * 31 + ComponentsData.GetSequenceHashCode();
+                return hash;
+            }
+        }
     }
 
-    readonly struct FeatureOwnedMatcherSourceInput
+    readonly struct FeatureOwnedMatcherSourceInput : IEquatable<FeatureOwnedMatcherSourceInput>
     {
         public readonly bool ShouldRun;
         public readonly EntitasGeneratorOptions Options;
@@ -389,9 +503,28 @@ public class EntitasGenerator : IIncrementalGenerator
             Options = options;
             MatcherGroup = matcherGroup;
         }
+
+        public bool Equals(FeatureOwnedMatcherSourceInput other) =>
+            ShouldRun == other.ShouldRun &&
+            Options.Equals(other.Options) &&
+            MatcherGroup.Equals(other.MatcherGroup);
+
+        public override bool Equals(object? obj) => obj is FeatureOwnedMatcherSourceInput o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ShouldRun.GetHashCode();
+                hash = hash * 31 + Options.GetHashCode();
+                hash = hash * 31 + MatcherGroup.GetHashCode();
+                return hash;
+            }
+        }
     }
 
-    readonly struct VisualDebuggingSourceInput
+    readonly struct VisualDebuggingSourceInput : IEquatable<VisualDebuggingSourceInput>
     {
         public readonly bool ShouldRun;
         public readonly ImmutableArray<ContextData> ContextsData;
@@ -400,6 +533,23 @@ public class EntitasGenerator : IIncrementalGenerator
         {
             ShouldRun = shouldRun;
             ContextsData = contextsData;
+        }
+
+        public bool Equals(VisualDebuggingSourceInput other) =>
+            ShouldRun == other.ShouldRun &&
+            ContextsData.SequenceEqual(other.ContextsData);
+
+        public override bool Equals(object? obj) => obj is VisualDebuggingSourceInput o && Equals(o);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + ShouldRun.GetHashCode();
+                hash = hash * 31 + ContextsData.GetSequenceHashCode();
+                return hash;
+            }
         }
     }
 }
