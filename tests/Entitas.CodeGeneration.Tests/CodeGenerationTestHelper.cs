@@ -41,6 +41,9 @@ static class CodeGenerationTestHelper
         return (driver.GetRunResult(), outputCompilation, diagnostics);
     }
 
+    public static CSharpCompilation CreateCompilationFromSource(string source, string assemblyName) =>
+        CreateCompilation(source, assemblyName, null);
+
     public static MetadataReference CreateReferenceFromCompilation(Compilation compilation)
     {
         using var stream = new MemoryStream();

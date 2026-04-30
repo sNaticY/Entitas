@@ -274,12 +274,8 @@ public class EntitasGenerator : IIncrementalGenerator
         if (!input.ShouldRun)
             return;
 
-        var contextsData = input.ContextsData;
-        if (contextsData.IsDefaultOrEmpty)
-            return;
-
         // Context Observers, Feature
-        VisualDebuggingGenerationHelper.Generate(spc, contextsData);
+        VisualDebuggingGenerationHelper.Generate(spc, input.ContextsData);
     }
 
     readonly struct ContextRootSourceInput : IEquatable<ContextRootSourceInput>

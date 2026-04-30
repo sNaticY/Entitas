@@ -100,6 +100,26 @@ namespace MyGame
         source.Should().Contain("ToSpacedCamelCase(GetShortTypeName(GetType()))");
     }
 
+    [Fact]
+    public void GeneratesVisualDebuggingWhenContextIsInReferencedAssembly()
+    {
+        // Context attribute defined in a separate "root" assembly, not in Assembly-CSharp
+        var rootAssembly = CodeGenerationTestHelper.CreateCompilationFromSource(ContextSource, "Game.Root");
+        var rootReference = CodeGenerationTestHelper.CreateReferenceFromCompilation(rootAssembly);
+
+        // Assembly-CSharp has no context attribute in its own source
+        var result = CodeGenerationTestHelper.RunGenerator(
+            source: "",
+            assemblyName: "Assembly-CSharp",
+            additionalReferences: new[] { rootReference });
+
+        GetGeneratedFileNames(result).Should().Contain(new[]
+        {
+            "Feature.g.cs",
+            "ContextObservers.g.cs",
+        });
+    }
+
     static string[] GetGeneratedFileNames(Microsoft.CodeAnalysis.GeneratorDriverRunResult result) =>
         result.GeneratedTrees
             .Select(tree => Path.GetFileName(tree.FilePath))
